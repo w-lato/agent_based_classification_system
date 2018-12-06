@@ -33,38 +33,35 @@ public class AGDSImpl {
 
 
     // calculate associate weights from given nodeID
-    public void associateFrom( int RNodeID ) {
-
+    public void associateFrom( int RNodeID )
+    {
         // set 0s to all Xs
         resetAllXs();
         // find all vals associated to given R and set X = 1 and calculated all lefts and rigts
         // and then add weights to connected Rs
         Node n = R.get(RNodeID);
-        for (int i = 0; i < n.vals.length; i++) {
+        for (int i = 0; i < n.vals.length; i++)
+        {
             iterateOverGroup(  n.vals[i], i );
         }
 
     }
 
 
-    private void iterateOverGroup( Double srcVal, int groupID ) {
-
-
-
+    private void iterateOverGroup( Double srcVal, int groupID )
+    {
         Node src = params[ groupID ].get( srcVal );
         //System.out.println("===========================" + srcVal + "       " + groupID);
         src.X = 1.0;
         addWeightsToR( src );
 
-
         // class
-        if( groupID == 4 ) {
-            return;
-        }
+        if( groupID == 4 ) return;
 
         Double prevX = src.X;
         Double prevVal = src.value;
-        while( src.left != null ) {
+        while( src.left != null )
+        {
             src = params[ groupID ].get( src.left );
             src.X = prevX * ( 1.0 -  Math.abs(prevVal - src.value)/param_range[groupID]  );
             addWeightsToR( src );
@@ -76,7 +73,8 @@ public class AGDSImpl {
         src = params[ groupID ].get( srcVal );
         prevX = src.X;
         prevVal = src.value;
-        while( src.right != null ) {
+        while( src.right != null )
+        {
             src = params[ groupID ].get( src.right );
             src.X = prevX * ( 1.0 -  Math.abs(prevVal - src.value)/param_range[groupID]  );
             addWeightsToR( src );
@@ -88,9 +86,8 @@ public class AGDSImpl {
     }
 
     private void addWeightsToR(Node n) {
-
-        for (int i = 0; i < n.connected_Rs.size(); i++) {
-
+        for (int i = 0; i < n.connected_Rs.size(); i++)
+        {
             R.get( n.connected_Rs.get(i) ).X += n.X / 5.0;
 //            R.get( n.connected_Rs.get(i) ).X += n.X / n.connected_Rs.size();
 
@@ -104,10 +101,11 @@ public class AGDSImpl {
 
     }
 
-    public void loadRdata(XLSParser parser) {
-
+    public void loadRdata(XLSParser parser)
+    {
         this.R = new ArrayList<Node>();
-        for (int i = 0; i < parser.rows.size(); i++) {
+        for (int i = 0; i < parser.rows.size(); i++)
+        {
             this.R.add(
                 new Node( Node.ROW, parser.rows.get(i), parser.int_classes.get(i) )
             );

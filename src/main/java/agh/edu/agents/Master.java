@@ -6,8 +6,13 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Master extends AbstractActor
 {
+
+    private List<ActorRef> slaves;
     private final String message;
     private final ActorRef printerActor;
     private String greeting = "";
@@ -43,6 +48,32 @@ public class Master extends AbstractActor
     }
 
 
+    static public class Init
+    {
+        public final int numberOfAgents;
+        public final int algName;
+
+        public Init(int numberOfAgents, int algName)
+        {
+            this.numberOfAgents = numberOfAgents;
+            this.algName = algName;
+        }
+    }
+
+    static public class GetList
+    {
+
+    }
+
+    static public class Kill
+    {
+        public final int num;
+
+        public Kill(int num)
+        {
+            this.num = num;
+        }
+    }
 
     public Master(String message, ActorRef printerActor) {
         this.message = message;
@@ -55,6 +86,39 @@ public class Master extends AbstractActor
                 .match(WhoToGreet.class, wtg -> {
                     this.greeting = message + ", " + wtg.who;
                 })
+                .match(GetList.class, x -> {
+
+                    slaves.forEach( slave -> {
+                         slave.tell( new M.Classify("abc"), self() );
+                    } );
+
+                    System.out.println( "childs" );
+                    int ctr = 0;
+                    for (int i = 0; i <1000; i++) {
+                        ctr += 2;
+                    }
+
+                    getContext().getChildren().forEach( child -> {
+                        child.tell( new M.Classify("abc"), self() );
+                    });
+                })
+                .match(Init.class, x -> {
+
+                    slaves = new ArrayList<>();
+                    for (int i = 0; i < x.numberOfAgents; i++)
+                        slaves.add( getContext().actorOf( Slave.props( x.algName ) )  );
+                })
+
+
+                .match(Kill.class, x -> {
+
+                    for (int i = 0; i < x.num; i++)
+                    {
+                        getContext().stop( slaves.get( i ) );
+                    }
+                    slaves.removeIf(ActorRef::isTerminated);
+                })
+
                 .match(M.Classify.class,x -> {
 
                     //#greeter-send-message
@@ -66,18 +130,4 @@ public class Master extends AbstractActor
                 .build();
     }
 
-    public static void main(String[] args)
-    {
-        ActorSystem system = ActorSystem.create("testSystem");
-        ActorRef m = system.actorOf( Master.props() ,"master" );
-
-
-        ActorRef m2 = system.actorOf( Master.props() ,"master1" );
-        m2.tell( new M.Classify( "007" ), m );
-        System.out.println( system.child("master") );
-        System.out.println( system.child("master") );
-        System.out.println(m.path() );
-
-
-    }
 }

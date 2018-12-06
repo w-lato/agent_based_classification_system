@@ -1,20 +1,24 @@
 package agh.edu.agents;
 
-import agh.edu.learning.MLA;
 import agh.edu.messages.M;
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
 import akka.actor.Props;
 
 public class Slave extends AbstractActor
 {
 
-    MLA alg;
+    int alg;
 
-    static public Props props(String message, ActorRef printerActor) {
-        return Props.create(Master.class, () -> new Master(message, printerActor));
+    static public Props props(int machine_algorithm)
+    {
+        return Props.create(Slave.class, () -> new Slave(machine_algorithm));
     }
 
+
+    public Slave(int ML_alg)
+    {
+        this.alg = ML_alg;
+    }
 
     @Override
     public AbstractActor.Receive createReceive()
@@ -22,7 +26,7 @@ public class Slave extends AbstractActor
         return receiveBuilder()
                 .match(M.Classify.class, x ->
                 {
-                    System.out.println( "Classify received" );
+                    System.out.println( "Classify received " + sender() + " " + getSelf() );
                 })
 
                 .match(M.Learn.class, x ->
@@ -37,4 +41,10 @@ public class Slave extends AbstractActor
 
                 .build();
     }
+
+    @Override
+    public void postStop() {
+        System.out.println("KIA " + getSelf());
+    }
+
 }
