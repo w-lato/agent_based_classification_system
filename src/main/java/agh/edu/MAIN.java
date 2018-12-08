@@ -12,6 +12,7 @@ import weka.classifiers.bayes.BayesNet;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.evaluation.NominalPrediction;
 import weka.classifiers.evaluation.output.prediction.CSV;
+import weka.classifiers.functions.SMO;
 import weka.classifiers.rules.*;
 import weka.classifiers.trees.*;
 import weka.core.FastVector;
@@ -196,7 +197,8 @@ public class MAIN
                     new HoeffdingTree(),
                     new LMT(),
                     new JRip(),
-                    new ZeroR()
+                    new ZeroR(),
+                    new SMO()
             };
 // Run for each model
             for (int j = 0; j < models.length; j++)

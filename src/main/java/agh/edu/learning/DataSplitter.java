@@ -1,5 +1,13 @@
 package agh.edu.learning;
 
+import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
+import weka.classifiers.evaluation.NominalPrediction;
+import weka.classifiers.evaluation.Prediction;
+import weka.classifiers.functions.SMO;
+import weka.classifiers.rules.PART;
+import weka.classifiers.trees.J48;
+import weka.core.FastVector;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
@@ -62,6 +70,14 @@ public class DataSplitter
         return arr;
     }
 
+    public static List<Instances> splitIntoTrainAndTest( Instances rows, double train_ratio )
+    {
+        int train_rows = ((int) (rows.size() * train_ratio));
+        List<Instances> l = new ArrayList<>();
+        l.add( new Instances(rows, 0, train_rows) );
+        l.add( new Instances(rows, train_rows + 1, rows.size() - train_rows - 1) );
+        return l;
+    }
 
     public static void printRowsList( List<Instances>  arr)
     {
@@ -75,9 +91,50 @@ public class DataSplitter
             }
         }
     }
+
+
+
+    public static Evaluation classify(Classifier model,
+                                      Instances trainingSet, Instances testingSet) throws Exception {
+        Evaluation evaluation = new Evaluation(trainingSet);
+
+        model.buildClassifier(trainingSet);
+        evaluation.evaluateModel(model, testingSet);
+
+        return evaluation;
+    }
+
+    public static double calculateAccuracy(FastVector predictions) {
+        double correct = 0;
+
+        for (int i = 0; i < predictions.size(); i++) {
+            NominalPrediction np = (NominalPrediction) predictions.elementAt(i);
+            if (np.predicted() == np.actual()) {
+                correct++;
+            }
+        }
+
+        return 100 * correct / predictions.size();
+    }
+
+
+    /**
+     *
+     *
+     * Accuracy of J48: 95.13%
+     * ---------------------------------
+     * Accuracy of PART: 95.31%
+     * ---------------------------------
+     * Accuracy of SMO: 96.54%
+     * ---------------------------------
+     *
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
 //        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
-        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\iris.arff");
+//        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\iris.arff");
+        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\pendigits.arff");
 
         Instances rows = source.getDataSet();
         rows.setClassIndex( rows.numAttributes() - 1 );
@@ -95,11 +152,47 @@ public class DataSplitter
         System.out.println("========================================================");
         System.out.println("========================================================");
 
-        l = overlapDivide( rows, 10, 0.9 );
+        l = splitIntoTrainAndTest( rows, 0.8 );
+        Instances train = l.get(0);
+        Instances test = l.get( 1 );
+
+
+//        l = overlapDivide( train, 12, 0.3 );
+        l = divideEqual( train, 3);
         printRowsList( l );
 
 
+        Classifier[] models = {
+                new J48(), // a decision tree
+                new PART(),
+                new SMO()
+        };
+        try {
+            for (int j = 0; j < models.length; j++)
+            {
+                FastVector predictions = new FastVector();
+                for (int i = 0; i < l.size(); i++)
+                {
+                    Evaluation validation = classify(models[j], l.get(i), test);
+//                    Evaluation validation = classify(models[j], train, test);
+                    predictions.appendElements(validation.predictions());
+                }
+                double accuracy = calculateAccuracy(predictions);
+                System.out.println("Accuracy of " + models[j].getClass().getSimpleName() + ": "
+                        + String.format("%.2f%%", accuracy)
+                        + "\n---------------------------------");
+            }
+            WekaEval we = new WekaEval(0);
+            we.setModel( new SMO() );
+            we.train( train );
+            we.train( train );
+            ArrayList<Prediction> p = we.eval( test );
+            p.forEach(x -> {
+                System.out.println( x.actual() + " " + x.predicted() + " " + x.weight() );
+            });
 
-//        System.out.println(  rows );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
