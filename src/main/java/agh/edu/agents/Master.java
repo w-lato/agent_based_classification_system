@@ -5,6 +5,7 @@ import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import weka.classifiers.evaluation.Prediction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,14 +76,23 @@ public class Master extends AbstractActor
         }
     }
 
+    public class WekaEvalResp
+    {
+        final Prediction results;
+        public WekaEvalResp(Prediction results) {
+            this.results = results;
+        }
+    }
+
     public Master(String message, ActorRef printerActor) {
         this.message = message;
         this.printerActor = printerActor;
     }
 
     @Override
-    public AbstractActor.Receive createReceive() {
+    public Receive createReceive() {
         return receiveBuilder()
+
                 .match(WhoToGreet.class, wtg -> {
                     this.greeting = message + ", " + wtg.who;
                 })
@@ -118,6 +128,9 @@ public class Master extends AbstractActor
                     }
                     slaves.removeIf(ActorRef::isTerminated);
                 })
+                .match(WekaEvalResp.class, x -> {
+
+                })
 
                 .match(M.Classify.class,x -> {
 
@@ -128,6 +141,9 @@ public class Master extends AbstractActor
                     //#greeter-send-message
                 })
                 .build();
+
+
+
     }
 
 }
