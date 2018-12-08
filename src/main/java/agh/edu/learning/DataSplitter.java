@@ -185,7 +185,7 @@ public class DataSplitter
             WekaEval we = new WekaEval(0);
             we.setModel( new SMO() );
             we.train( train );
-            we.train( train );
+            we.train( l.get(0) );
             ArrayList<Prediction> p = we.eval( test );
             p.forEach(x -> {
                 System.out.println( x.actual() + " " + x.predicted() + " " + x.weight() );
