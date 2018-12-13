@@ -76,6 +76,10 @@ public class DataSplitter
         List<Instances> l = new ArrayList<>();
         l.add( new Instances(rows, 0, train_rows) );
         l.add( new Instances(rows, train_rows + 1, rows.size() - train_rows - 1) );
+
+        // set class idx
+        l.get(0).setClassIndex( l.get(0).numAttributes() - 1 );
+        l.get(1).setClassIndex( l.get(0).numAttributes() - 1 );
         return l;
     }
 
@@ -104,12 +108,14 @@ public class DataSplitter
         return evaluation;
     }
 
-    public static double calculateAccuracy(FastVector predictions) {
+    public static double calculateAccuracy(ArrayList<Prediction> predictions) {
         double correct = 0;
 
-        for (int i = 0; i < predictions.size(); i++) {
-            NominalPrediction np = (NominalPrediction) predictions.elementAt(i);
-            if (np.predicted() == np.actual()) {
+        for (int i = 0; i < predictions.size(); i++)
+        {
+            NominalPrediction np = (NominalPrediction) predictions.get(i);
+            if (np.predicted() == np.actual())
+            {
                 correct++;
             }
         }
@@ -170,14 +176,13 @@ public class DataSplitter
         try {
             for (int j = 0; j < models.length; j++)
             {
-                FastVector predictions = new FastVector();
+                ArrayList<Prediction> results = new ArrayList<>();
                 for (int i = 0; i < l.size(); i++)
                 {
                     Evaluation validation = classify(models[j], l.get(i), test);
-//                    Evaluation validation = classify(models[j], train, test);
-                    predictions.appendElements(validation.predictions());
+                    results.addAll( validation.predictions() );
                 }
-                double accuracy = calculateAccuracy(predictions);
+                double accuracy = calculateAccuracy( results );
                 System.out.println("Accuracy of " + models[j].getClass().getSimpleName() + ": "
                         + String.format("%.2f%%", accuracy)
                         + "\n---------------------------------");

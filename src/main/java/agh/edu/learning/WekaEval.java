@@ -3,6 +3,9 @@ package agh.edu.learning;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.Prediction;
+import weka.classifiers.functions.SMO;
+import weka.classifiers.rules.PART;
+import weka.classifiers.trees.J48;
 import weka.core.Instances;
 
 import java.util.ArrayList;
@@ -12,6 +15,9 @@ public class WekaEval
 //    public static final int WEKA = 0;
 //    public static final int SPARK = 1;
 //    public static final int OTHER = 2;
+    public static final int J48  = 0;
+    public static final int PART = 1;
+    public static final int SMO  = 2;
 
     private int class_type;
     private Evaluation evaluation;
@@ -20,7 +26,13 @@ public class WekaEval
     public WekaEval(int class_type)
     {
         this.class_type = class_type;
-        // TODO SET MODEL DEPENDING ON TYPE
+        switch( class_type )
+        {
+            case J48:  model = new J48();  return;
+            case PART: model = new PART(); return;
+            case SMO:  model = new SMO();  return;
+            default: return;
+        }
     }
 
     public int getType() {
@@ -37,7 +49,6 @@ public class WekaEval
 
     public void train( Instances trainingSet )
     {
-//        if( type != WEKA ) System.out.println("CAN'T USE Instances with model other than weka.");
         try {
             if( evaluation != null )
             {
@@ -53,8 +64,8 @@ public class WekaEval
 
     public ArrayList<Prediction> eval(Instances test)
     {
-        System.out.println( evaluation );
-        System.out.println( model );
+//        System.out.println( evaluation );
+//        System.out.println( model );
         try {
             evaluation.evaluateModel( model, test );
             return evaluation.predictions();

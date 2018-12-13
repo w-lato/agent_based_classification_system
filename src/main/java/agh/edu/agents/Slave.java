@@ -4,7 +4,11 @@ import agh.edu.learning.WekaEval;
 import agh.edu.messages.M;
 import akka.actor.AbstractActor;
 import akka.actor.Props;
+import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Slave extends AbstractActor
 {
@@ -24,7 +28,19 @@ public class Slave extends AbstractActor
         we = new WekaEval(ML_alg);
     }
 
-    public class WekaTrain
+
+    @Override
+    public void postStop() {
+        System.out.println("KIA " + getSelf());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //                                    MESSAGES
+
+
+    public static class WekaTrain
     {
         final Instances trainData;
         public WekaTrain(Instances trainData) {
@@ -32,7 +48,7 @@ public class Slave extends AbstractActor
         }
     }
 
-    public class WekaEvaluate
+    public static class WekaEvaluate
     {
         final Instances testData;
         public WekaEvaluate(Instances testData) {
@@ -62,16 +78,20 @@ public class Slave extends AbstractActor
                     System.out.println( "Set received" );
                 })
 
+                // TRAIN
                 .match(WekaTrain.class, M ->
                 {
-                    this.we.train( M.trainData );
-                    System.out.println( "Training stopped" );
+                    we = new WekaEval( alg );
+                    we.train( M.trainData );
+                    System.out.println( "Training ended, size =  " + M.trainData.size() + ", " + self() );
                 })
 
                 .match(WekaEvaluate.class, M ->
                 {
-                    this.we.eval( M.testData );
-                    System.out.println( "Training stopped" );
+                    System.out.println( "EVAL stopped" );
+                    getSender().tell( new WekaGroupHandler.EvalResp(
+                            we.eval( M.testData )
+                    ), self());
                 })
 
                 .match(PoisonPill.class, M ->
@@ -79,14 +99,10 @@ public class Slave extends AbstractActor
                     getContext().stop( self() );
                 })
 
+                .matchAny(o -> System.out.println("Slave received unknown message: " + o))
                 .build();
     }
 
 
-
-    @Override
-    public void postStop() {
-        System.out.println("KIA " + getSelf());
-    }
 
 }
