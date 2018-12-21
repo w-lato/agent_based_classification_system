@@ -1,6 +1,7 @@
 package agh.edu;
 
 import agh.edu.agents.Master;
+import agh.edu.learning.DataSplitter;
 import agh.edu.messages.M;
 import agh.edu.utils.CSVReader;
 import akka.actor.ActorRef;
@@ -139,7 +140,7 @@ public class MAIN
         System.out.println( system.child("master") );
         System.out.println(m.path() );
 
-        m.tell( new Master.Init(10,10), m);
+        m.tell( new Master.Init(10,1,1,0.2), m);
         m.tell(new Master.GetList(), m);
 
 
@@ -180,6 +181,8 @@ public class MAIN
             Instances[] trainingSplits = split[0];
             Instances[] testingSplits = split[1];
 
+
+
             System.out.println("\nDataset:\n");
             System.out.println(trainingSplits.length);
 
@@ -188,16 +191,16 @@ public class MAIN
 
             // Use a set of classifiers
             Classifier[] models = {
-                    new NaiveBayes(),
-                    new BayesNet(),
-                    new J48(), // a decision tree
-                    new PART(),
-                    new DecisionTable(),//decision table majority classifier
-                    new DecisionStump(), //one-level decision tree
-                    new HoeffdingTree(),
-                    new LMT(),
-                    new JRip(),
-                    new ZeroR(),
+//                    new NaiveBayes(),
+//                    new BayesNet(),
+//                    new J48(), // a decision tree
+//                    new PART(),
+//                    new DecisionTable(),//decision table majority classifier
+//                    new DecisionStump(), //one-level decision tree
+//                    new HoeffdingTree(),
+//                    new LMT(),
+//                    new JRip(),
+//                    new ZeroR(),
                     new SMO()
             };
 // Run for each model

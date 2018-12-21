@@ -7,7 +7,6 @@ import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.rules.PART;
 import weka.classifiers.trees.J48;
-import weka.core.FastVector;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
@@ -21,7 +20,18 @@ public class DataSplitter
     public static final int OVERLAP_DIVIDE = 1;
     public static final int MULTIFOLD = 2;
 
-    public static List<Instances> divideEqual(Instances rows, int N)
+
+    public static List<Instances> split(Instances rows, int N, int method, double OL)
+    {
+        switch (method)
+        {
+            case SIMPLE_DIVIDE: return divideEqual(rows,N);
+            case OVERLAP_DIVIDE: return overlapDivide(rows, N, OL);
+            default: return null;
+        }
+    }
+
+    private static List<Instances> divideEqual(Instances rows, int N)
     {
         rows.randomize(new Random(System.currentTimeMillis()));
         List<Instances> arr = new ArrayList<Instances>();
@@ -43,7 +53,7 @@ public class DataSplitter
     }
 
 
-    public static List<Instances> overlapDivide(Instances rows, int n, double OL)
+    private static List<Instances> overlapDivide(Instances rows, int n, double OL)
     {
         //rows.randomize(new Random(System.currentTimeMillis()));
 
@@ -73,7 +83,8 @@ public class DataSplitter
         return arr;
     }
 
-    public static Instances[][] crossValidationSplit(Instances data, int numberOfFolds) {
+    public static Instances[][] crossValidationSplit(Instances data, int numberOfFolds)
+    {
         Instances[][] split = new Instances[2][numberOfFolds];
 
         for (int i = 0; i < numberOfFolds; i++)
@@ -153,9 +164,9 @@ public class DataSplitter
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-//        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
+        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
 //        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\iris.arff");
-        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\pendigits.arff");
+//        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\pendigits.arff");
 
         Instances rows = source.getDataSet();
         rows.setClassIndex( rows.numAttributes() - 1 );
@@ -173,14 +184,15 @@ public class DataSplitter
         System.out.println("========================================================");
         System.out.println("========================================================");
 
-        l = splitIntoTrainAndTest( rows, 0.8 );
+        l = splitIntoTrainAndTest( rows, 0.7 );
         Instances train = l.get(0);
-        Instances test = l.get( 1 );
+        Instances test = l.get(1);
 
+        System.out.println( train.size() + "  " + test.size());
 
 //        l = overlapDivide( train, 12, 0.3 );
-        l = divideEqual( train, 3);
-        printRowsList( l );
+//        l = divideEqual( train, 8);
+//        printRowsList( l );
 
 
         Classifier[] models = {
@@ -192,9 +204,9 @@ public class DataSplitter
             for (int j = 0; j < models.length; j++)
             {
                 ArrayList<Prediction> results = new ArrayList<>();
-                for (int i = 0; i < l.size(); i++)
+                for (int i = 0; i < 1; i++)
                 {
-                    Evaluation validation = classify(models[j], l.get(i), test);
+                    Evaluation validation = classify(models[j], train, test);
                     results.addAll( validation.predictions() );
                 }
                 double accuracy = calculateAccuracy( results );
@@ -207,9 +219,9 @@ public class DataSplitter
             we.train( train );
             we.train( l.get(0) );
             ArrayList<Prediction> p = we.eval( test );
-            p.forEach(x -> {
-                System.out.println( x.actual() + " " + x.predicted() + " " + x.weight() );
-            });
+//            p.forEach(x -> {
+//                System.out.println( x.actual() + " " + x.predicted() + " " + x.weight() );
+//            });
         } catch (Exception e) {
             e.printStackTrace();
         }

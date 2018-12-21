@@ -1,6 +1,7 @@
 package agh.edu.agents;
 
 import agh.edu.learning.DataSplitter;
+import agh.edu.learning.WekaEval;
 import agh.edu.messages.M;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -8,7 +9,6 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import scala.concurrent.duration.FiniteDuration;
 import weka.classifiers.evaluation.Prediction;
-import weka.classifiers.evaluation.ThresholdCurve;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
@@ -53,13 +53,10 @@ public class Master extends AbstractActor
             slaves.add( getContext().actorOf( Slave.props( m.algName ) )  );
 
         // divide and train
-        List<Instances> parts = DataSplitter.divideEqual( train, slaves.size() );
+        List<Instances> parts = DataSplitter.split( train, slaves.size(), m.splitMethod, m.OL );
         for (int i = 0; i < slaves.size(); i++)
             slaves.get(i).tell(new Slave.WekaTrain( parts.get(i) ), self());
 
-        for (int i = 0; i < parts.size(); i++) {
-
-        }
     }
 
     private void onKill(Kill m)
@@ -81,24 +78,27 @@ public class Master extends AbstractActor
     private void onEvalFinished(WekaEvalFinished m)
     {
         System.out.println(" EVAL FISNIHED ");
-        ThresholdCurve ROC = new ThresholdCurve();
+
         m.results.forEach( (k,v) -> {
-            System.out.println( k );
             int ctr = 0;
             for (Prediction pred : v)
             {
                 if (Double.compare( pred.predicted(), pred.actual()) == 0) ctr ++;
+//                System.out.println("\t" + pred.predicted() + " : " + pred.actual());
             }
-//            m.results.get(k).forEach( xd ->{
-//                System.out.println( xd.actual() + " : " +  xd.predicted() + " " + xd.weight() );
-//            } );
-            Instances curve = ROC.getCurve(new ArrayList<>(v));
-            curve.forEach(  xd -> {
-                System.out.println( xd );
-            });
-            System.out.println( k + " :" + "  " + ctr + "  /" + v.size() +" : " + curve.size() + " " +
-                    ThresholdCurve.getROCArea( curve ) );
+            System.out.println( k + " :" + "  " + ctr + "  /" + v.size() +" : ");
         });
+
+        ClassChooser cc = new ClassChooser();
+        cc.setWeights( m.results );
+        List<Integer> p = cc.chooseClasses( m.results, ClassChooser.WEIGHTED_VOTE );
+        List<Prediction> test = m.results.entrySet().iterator().next().getValue();
+
+        int ctr = 0;
+        for (int i = 0; i < test.size(); i++) {
+            if (p.get(i) == test.get(i).actual()) ctr++;
+        }
+        System.out.println("============ " + (((double) ctr) / ((double) p.size()) + " %"));
     }
 
 
@@ -111,11 +111,15 @@ public class Master extends AbstractActor
     {
         public final int numberOfAgents;
         public final int algName;
+        public final int splitMethod;
+        public final double OL;
 
-        public Init(int numberOfAgents, int algName)
-        {
+
+        public Init(int numberOfAgents, int algName, int splitMethod, double OL) {
             this.numberOfAgents = numberOfAgents;
             this.algName = algName;
+            this.splitMethod = splitMethod;
+            this.OL = OL;
         }
     }
 
@@ -188,10 +192,10 @@ public class Master extends AbstractActor
             // DATA loading to master
             source = new ConverterUtils.DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
             Instances data = source.getDataSet();
-            ActorRef m = system.actorOf( Master.props(data, 0.8 ) ,"master" );
+            ActorRef m = system.actorOf( Master.props(data, 0.7 ) ,"master" );
 
             // split data into portions and send them to X agents
-            m.tell( new Init(10, 0), ActorRef.noSender() );
+            m.tell( new Init(8, WekaEval.SMO, DataSplitter.SIMPLE_DIVIDE, 0.5), ActorRef.noSender() );
 
             // eval after training
             m.tell( new EvaluateTest(), ActorRef.noSender());

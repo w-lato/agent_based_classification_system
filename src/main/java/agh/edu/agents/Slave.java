@@ -5,15 +5,10 @@ import agh.edu.messages.M;
 import akka.actor.AbstractActor;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
-import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Slave extends AbstractActor
 {
-
     int alg;
     WekaEval we;
 
