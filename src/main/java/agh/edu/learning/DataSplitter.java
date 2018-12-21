@@ -17,6 +17,9 @@ import java.util.Random;
 
 public class DataSplitter
 {
+    public static final int SIMPLE_DIVIDE = 0;
+    public static final int OVERLAP_DIVIDE = 1;
+    public static final int MULTIFOLD = 2;
 
     public static List<Instances> divideEqual(Instances rows, int N)
     {
@@ -68,6 +71,18 @@ public class DataSplitter
             }
         }
         return arr;
+    }
+
+    public static Instances[][] crossValidationSplit(Instances data, int numberOfFolds) {
+        Instances[][] split = new Instances[2][numberOfFolds];
+
+        for (int i = 0; i < numberOfFolds; i++)
+        {
+            split[0][i] = data.trainCV(numberOfFolds, i);
+            split[1][i] = data.testCV(numberOfFolds, i);
+        }
+
+        return split;
     }
 
     public static List<Instances> splitIntoTrainAndTest( Instances rows, double train_ratio )
@@ -195,7 +210,6 @@ public class DataSplitter
             p.forEach(x -> {
                 System.out.println( x.actual() + " " + x.predicted() + " " + x.weight() );
             });
-
         } catch (Exception e) {
             e.printStackTrace();
         }

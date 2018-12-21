@@ -114,10 +114,7 @@ public class WekaGroupHandler extends AbstractActor
         return receiveBuilder()
                 .match(EvalData.class, this::onEval)
                 .match(EvalResp.class, this::onEvalResp)
-                .match(Terminated.class, t -> {
-                    slaves.remove( getSender() );
-                })
-
+                .match(Terminated.class, t -> { slaves.remove( getSender() ); })
                 .match(EndOfTime.class, t -> {
                     System.out.println("  END ----------------- OF TIME + " + results.size());
                     getContext().stop(getSelf());

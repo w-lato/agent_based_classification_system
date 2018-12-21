@@ -3,6 +3,7 @@ package agh.edu.agents;
 import agh.edu.learning.WekaEval;
 import agh.edu.messages.M;
 import akka.actor.AbstractActor;
+import akka.actor.PoisonPill;
 import akka.actor.Props;
 import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
@@ -56,8 +57,7 @@ public class Slave extends AbstractActor
         }
     }
 
-    // good practice to stop agent
-    public class PoisonPill {}
+
 
     @Override
     public AbstractActor.Receive createReceive()

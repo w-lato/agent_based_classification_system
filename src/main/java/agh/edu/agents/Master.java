@@ -8,6 +8,7 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import scala.concurrent.duration.FiniteDuration;
 import weka.classifiers.evaluation.Prediction;
+import weka.classifiers.evaluation.ThresholdCurve;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
@@ -18,11 +19,9 @@ import java.util.concurrent.TimeUnit;
 
 public class Master extends AbstractActor
 {
-
     private List<ActorRef> slaves;
     private Instances train;
     private Instances test;
-
 
     static public Props props() {
         return Props.create(Master.class);
@@ -36,6 +35,7 @@ public class Master extends AbstractActor
     {
         System.out.println("default constructor");
     }
+
     public Master(Instances data, double ratio)
     {
         List<Instances> x = DataSplitter.splitIntoTrainAndTest( data, ratio );
@@ -56,6 +56,10 @@ public class Master extends AbstractActor
         List<Instances> parts = DataSplitter.divideEqual( train, slaves.size() );
         for (int i = 0; i < slaves.size(); i++)
             slaves.get(i).tell(new Slave.WekaTrain( parts.get(i) ), self());
+
+        for (int i = 0; i < parts.size(); i++) {
+
+        }
     }
 
     private void onKill(Kill m)
@@ -77,15 +81,23 @@ public class Master extends AbstractActor
     private void onEvalFinished(WekaEvalFinished m)
     {
         System.out.println(" EVAL FISNIHED ");
+        ThresholdCurve ROC = new ThresholdCurve();
         m.results.forEach( (k,v) -> {
             System.out.println( k );
             int ctr = 0;
-            for (Prediction pred : v) {
-                if (Double.compare( pred.predicted(), pred.actual()) == 0)
-                    ctr ++;
-                System.out.println( k + " :" + "  " + ctr + "  /" + v.size() );
+            for (Prediction pred : v)
+            {
+                if (Double.compare( pred.predicted(), pred.actual()) == 0) ctr ++;
             }
-
+//            m.results.get(k).forEach( xd ->{
+//                System.out.println( xd.actual() + " : " +  xd.predicted() + " " + xd.weight() );
+//            } );
+            Instances curve = ROC.getCurve(new ArrayList<>(v));
+            curve.forEach(  xd -> {
+                System.out.println( xd );
+            });
+            System.out.println( k + " :" + "  " + ctr + "  /" + v.size() +" : " + curve.size() + " " +
+                    ThresholdCurve.getROCArea( curve ) );
         });
     }
 
@@ -160,10 +172,7 @@ public class Master extends AbstractActor
                     System.out.println( "my parent "  + getContext().getParent() );
                     System.out.println( "message received from" + x.agentId );
                 })
-                .matchAny(o ->
-                        {
-                            System.out.println("Master received unknown message: " + o);
-                        })
+                .matchAny(o -> { System.out.println("Master received unknown message: " + o); })
                 .build();
     }
 
@@ -171,7 +180,9 @@ public class Master extends AbstractActor
     {
         ActorSystem system = ActorSystem.create("testSystem");
 
-
+//kagle
+//        word2vec -
+//        lstm
         ConverterUtils.DataSource source = null;
         try {
             // DATA loading to master
@@ -185,11 +196,8 @@ public class Master extends AbstractActor
             // eval after training
             m.tell( new EvaluateTest(), ActorRef.noSender());
 
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 }
