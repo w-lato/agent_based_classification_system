@@ -3,10 +3,9 @@ package agh.edu.agents;
 import akka.actor.ActorRef;
 import weka.classifiers.evaluation.Prediction;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ClassChooser
 {
@@ -37,9 +36,34 @@ public class ClassChooser
         });
     }
 
+    // TODO CHANGE WEIGHTS
     public void deleteActor(ActorRef id)
     {
         if( weights != null ) weights.remove( id );
+    }
+
+    public List<Integer> chooseClasses(Map<ActorRef, List<Prediction>> results, int method)
+    {
+        return IntStream.range( 0, results.entrySet().iterator().next().getValue().size() )
+            .parallel()
+            .mapToObj(i -> {
+                Map<ActorRef,Prediction> x = new HashMap<>();
+                results.forEach((key, value) -> x.put(key, value.get(i)));
+                return x;
+            })
+            .map(el -> chooseClass(el, method))
+            .collect(Collectors.toList());
+    }
+
+
+    private static List<Integer> combineMyLists(List<Integer>... args) {
+        List<Integer> combinedList = new ArrayList<>();
+        for(List<Integer> list : args){
+            for(Integer i: list){
+                combinedList.add(i);
+            }
+        }
+        return combinedList;
     }
 
     public int chooseClass(Map<ActorRef, Prediction> results, int method)
@@ -98,4 +122,59 @@ public class ClassChooser
         );
     }
 
+
+    public static void main(String[] args)
+    {
+        Map<String,List<Integer>> m1 = new HashMap<>();
+        m1.put("A",Arrays.asList(1,2,3,4));
+        m1.put("B",Arrays.asList(0,0,0,0));
+        m1.put("C",Arrays.asList(1,1,1,1));
+
+//
+//        m1.entrySet().parallelStream()
+//                .map((k,v)->{
+//
+//                    Map<String,Integer> x = new new HashMap<>();
+//                    return x.put( k,v );
+//
+//                })
+//                .collect(Collectors.toList())
+//                .forEach( x -> {
+//                    System.out.println( x );
+//                });
+
+        m1.keySet().parallelStream()
+                .map( x -> x + "_XD" )
+                .collect(Collectors.toList())
+                .forEach( x -> {
+                    System.out.println( x );
+                });
+
+//        m1.values().parallelStream()
+//                .map( v -> {
+//                    for (int i = 0; i < v.size(); i++) {
+//                        v.set(i, 10);
+//                    }
+//                    return v;
+////                    v.parallelStream().forEach( z -> z = z + 10 )
+//                } )
+//                .collect(Collectors.toList())
+//                .forEach( x -> {
+//                    System.out.println( x );
+//                });
+//
+//        m1.entrySet().parallelStream()
+//                .collect(Collectors.toList())
+//                .forEach( x -> {
+//                    System.out.println( x );
+//                });
+
+        IntStream.range(0,m1.entrySet().iterator().next().getValue().size() )
+        .parallel().mapToObj(i -> {
+            Map<String,Integer> x = new HashMap<>();
+            m1.forEach((key, value) -> x.put(key, value.get(i)));
+            return x;
+        }).collect(Collectors.toList()).forEach(System.out::println);
+
+    }
 }
