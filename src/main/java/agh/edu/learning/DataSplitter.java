@@ -1,5 +1,7 @@
 package agh.edu.learning;
 
+import agh.edu.agents.enums.S_Type;
+import agh.edu.agents.enums.Split;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.NominalPrediction;
@@ -16,17 +18,17 @@ import java.util.Random;
 
 public class DataSplitter
 {
-    public static final int SIMPLE_DIVIDE = 0;
-    public static final int OVERLAP_DIVIDE = 1;
-    public static final int MULTIFOLD = 2;
+//    public static final int SIMPLE_DIVIDE = 0;
+//    public static final int OVERLAP_DIVIDE = 1;
+//    public static final int MULTIFOLD = 2;
 
 
-    public static List<Instances> split(Instances rows, int N, int method, double OL)
+    public static List<Instances> split(Instances rows, int N, Split method, double OL)
     {
         switch (method)
         {
-            case SIMPLE_DIVIDE: return divideEqual(rows,N);
-            case OVERLAP_DIVIDE: return overlapDivide(rows, N, OL);
+            case SIMPLE: return divideEqual(rows,N);
+            case OVERLAP: return overlapDivide(rows, N, OL);
             default: return null;
         }
     }
@@ -52,11 +54,10 @@ public class DataSplitter
         return arr;
     }
 
-
+// TODO RANDOMIZE BEFORE DIVINDING - AGENTS ARE GETTING DATA WITH ONLY ONE CLASS !!!!
     private static List<Instances> overlapDivide(Instances rows, int n, double OL)
     {
-        //rows.randomize(new Random(System.currentTimeMillis()));
-
+        rows.randomize(new Random(System.currentTimeMillis()));
         List<Instances> arr = new ArrayList<Instances>();
         int part_siz = ((int) (rows.size() / (n * (1 - OL) + OL)));
         int interval = ((int) ((1 - OL) * part_siz)) + 1;
@@ -105,7 +106,10 @@ public class DataSplitter
 
         // set class idx
         l.get(0).setClassIndex( l.get(0).numAttributes() - 1 );
-        l.get(1).setClassIndex( l.get(0).numAttributes() - 1 );
+        l.get(1).setClassIndex( l.get(1).numAttributes() - 1 );
+
+//        l.get(0).setClassIndex( 0 );
+//        l.get(1).setClassIndex( 0 );
         return l;
     }
 
@@ -134,7 +138,7 @@ public class DataSplitter
         return evaluation;
     }
 
-    public static double calculateAccuracy(ArrayList<Prediction> predictions) {
+    public static double calculateAccuracy(List<Prediction> predictions) {
         double correct = 0;
 
         for (int i = 0; i < predictions.size(); i++)
@@ -164,12 +168,14 @@ public class DataSplitter
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
+//        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
+        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
 //        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\iris.arff");
 //        DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\pendigits.arff");
 
         Instances rows = source.getDataSet();
-        rows.setClassIndex( rows.numAttributes() - 1 );
+//        rows.setClassIndex( rows.numAttributes() - 1 );
+        rows.setClassIndex( 0 );
         System.out.println( rows );
 
 
@@ -214,7 +220,7 @@ public class DataSplitter
                         + String.format("%.2f%%", accuracy)
                         + "\n---------------------------------");
             }
-            WekaEval we = new WekaEval(0);
+            WekaEval we = new WekaEval(S_Type.SMO);
             we.setModel( new SMO() );
             we.train( train );
             we.train( l.get(0) );

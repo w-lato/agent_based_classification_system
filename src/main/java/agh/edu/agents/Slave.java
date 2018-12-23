@@ -1,5 +1,6 @@
 package agh.edu.agents;
 
+import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.WekaEval;
 import agh.edu.messages.M;
 import akka.actor.AbstractActor;
@@ -9,16 +10,16 @@ import weka.core.Instances;
 
 public class Slave extends AbstractActor
 {
-    int alg;
+    S_Type alg;
     WekaEval we;
 
-    static public Props props(int machine_algorithm)
+    static public Props props(S_Type machine_algorithm)
     {
         return Props.create(Slave.class, () -> new Slave(machine_algorithm));
     }
 
 
-    public Slave(int ML_alg)
+    public Slave(S_Type ML_alg)
     {
         this.alg = ML_alg;
         we = new WekaEval(ML_alg);
@@ -79,13 +80,15 @@ public class Slave extends AbstractActor
                     we = new WekaEval( alg );
                     we.train( M.trainData );
                     System.out.println( "Training ended, size =  " + M.trainData.size() + ", " + self() );
+                    getSender().tell( "SLAVE TRAINED" , self());
                 })
 
                 .match(WekaEvaluate.class, M ->
                 {
                     System.out.println( "EVAL stopped" );
-                    getSender().tell( new WekaGroupHandler.EvalResp(
-                            we.eval( M.testData )
+                    getSender().tell( new Master.EvalFinished(
+                            we.eval( M.testData ),
+                            self()
                     ), self());
                 })
 
@@ -97,7 +100,4 @@ public class Slave extends AbstractActor
                 .matchAny(o -> System.out.println("Slave received unknown message: " + o))
                 .build();
     }
-
-
-
 }

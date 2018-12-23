@@ -1,21 +1,19 @@
 package agh.edu.agents;
 
 import akka.actor.*;
-import scala.Array;
 import scala.concurrent.duration.FiniteDuration;
 import weka.classifiers.evaluation.Prediction;
-import weka.core.Instance;
 import weka.core.Instances;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class WekaGroupHandler extends AbstractActor
 {
+    boolean finished = false;
     ActorRef master;
     List<ActorRef> slaves;
     Map<ActorRef, List<Prediction>> results;
+    Set<ActorRef> trained;
     FiniteDuration timeout;
     Cancellable queryTimer;
 
@@ -83,6 +81,7 @@ public class WekaGroupHandler extends AbstractActor
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
@@ -114,6 +113,7 @@ public class WekaGroupHandler extends AbstractActor
         return receiveBuilder()
                 .match(EvalData.class, this::onEval)
                 .match(EvalResp.class, this::onEvalResp)
+
                 .match(Terminated.class, t -> { slaves.remove( getSender() ); })
                 .match(EndOfTime.class, t -> {
                     System.out.println("  END ----------------- OF TIME + " + results.size());

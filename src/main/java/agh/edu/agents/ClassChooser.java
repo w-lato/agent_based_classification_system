@@ -1,7 +1,15 @@
 package agh.edu.agents;
 
+import agh.edu.agents.enums.S_Type;
+import agh.edu.agents.enums.Split;
+import agh.edu.agents.enums.Vote;
+import agh.edu.learning.DataSplitter;
+import agh.edu.learning.WekaEval;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import weka.classifiers.evaluation.Prediction;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,14 +17,19 @@ import java.util.stream.IntStream;
 
 public class ClassChooser
 {
-    public static final int MAJORITY_VOTE = 0;
-    public static final int WEIGHTED_VOTE = 1;
-    public static final int AVERAGE = 2;
+//    public static final int MAJORITY_VOTE = 0;
+//    public static final int WEIGHTED_VOTE = 1;
+//    public static final int AVERAGE = 2;
 
     private Map<ActorRef, Double> weights;
     private int CURRENT_STRAT;
 
-    public void setWeights(Map<ActorRef, List<Prediction>> results)
+    public void setWeights(Map<ActorRef,Double> weights)
+    {
+        this.weights = weights;
+    }
+
+    public void computeWeights(Map<ActorRef, List<Prediction>> results)
     {
         weights = new HashMap<>();
         results.forEach((k,v) ->
@@ -42,7 +55,7 @@ public class ClassChooser
         if( weights != null ) weights.remove( id );
     }
 
-    public List<Integer> chooseClasses(Map<ActorRef, List<Prediction>> results, int method)
+    public List<Integer> chooseClasses(Map<ActorRef, List<Prediction>> results, Vote method)
     {
         return IntStream.range( 0, results.entrySet().iterator().next().getValue().size() )
             .parallel()
@@ -66,13 +79,12 @@ public class ClassChooser
         return combinedList;
     }
 
-    public int chooseClass(Map<ActorRef, Prediction> results, int method)
+    public int chooseClass(Map<ActorRef, Prediction> results, Vote method)
     {
-        //setWeights( results );
         switch (method)
         {
-            case MAJORITY_VOTE: return getMajorityVote( results );
-            case WEIGHTED_VOTE: return getWeightedVote( results );
+            case MAJORITY: return getMajorityVote( results );
+            case WEIGHTED: return getWeightedVote( results );
             case AVERAGE:       return getAverage( results );
             default: return -1;
         }
@@ -122,59 +134,66 @@ public class ClassChooser
         );
     }
 
+    public static void main(String[] args) throws Exception {
+//        ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\spambase.arff");
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
+        Instances rows = source.getDataSet();
 
-    public static void main(String[] args)
-    {
-        Map<String,List<Integer>> m1 = new HashMap<>();
-        m1.put("A",Arrays.asList(1,2,3,4));
-        m1.put("B",Arrays.asList(0,0,0,0));
-        m1.put("C",Arrays.asList(1,1,1,1));
+        List<Instances> s = DataSplitter.splitIntoTrainAndTest( rows, 0.9 );
+        List<Instances> d = DataSplitter.split( s.get(0),12 , Split.OVERLAP, 0.5 );
+        List<WekaEval> l = new ArrayList<>();
+        for (int i = 0; i < 6; i++)
+        {
+            l.add( new WekaEval(S_Type.SMO) );
+        }
+        for (int i = 6; i < 9; i++)
+        {
+            l.add( new WekaEval(S_Type.SMO) );
+        }
+        for (int i = 9; i < 12; i++)
+        {
+            l.add( new WekaEval(S_Type.SMO) );
+        }
+        IntStream.range(0,l.size()).parallel().forEach( x -> l.get(x).train(d.get(x)));
 
-//
-//        m1.entrySet().parallelStream()
-//                .map((k,v)->{
-//
-//                    Map<String,Integer> x = new new HashMap<>();
-//                    return x.put( k,v );
-//
-//                })
-//                .collect(Collectors.toList())
-//                .forEach( x -> {
-//                    System.out.println( x );
-//                });
 
-        m1.keySet().parallelStream()
-                .map( x -> x + "_XD" )
-                .collect(Collectors.toList())
-                .forEach( x -> {
-                    System.out.println( x );
-                });
+        // EVALUATE WITH TESTS DATA
+        List<List<Prediction>> res = new ArrayList<>();
+        for (int i = 0; i < l.size(); i++)
+        {
+            res.add( l.get(i).eval( s.get(1) ) );
+        }
 
-//        m1.values().parallelStream()
-//                .map( v -> {
-//                    for (int i = 0; i < v.size(); i++) {
-//                        v.set(i, 10);
-//                    }
-//                    return v;
-////                    v.parallelStream().forEach( z -> z = z + 10 )
-//                } )
-//                .collect(Collectors.toList())
-//                .forEach( x -> {
-//                    System.out.println( x );
-//                });
-//
-//        m1.entrySet().parallelStream()
-//                .collect(Collectors.toList())
-//                .forEach( x -> {
-//                    System.out.println( x );
-//                });
+        ClassChooser cc = new ClassChooser();
+//        cc.setWeights(  );
+        Map<ActorRef, List<Prediction>> M = new HashMap<>();
 
-        IntStream.range(0,m1.entrySet().iterator().next().getValue().size() )
-        .parallel().mapToObj(i -> {
-            Map<String,Integer> x = new HashMap<>();
-            m1.forEach((key, value) -> x.put(key, value.get(i)));
-            return x;
-        }).collect(Collectors.toList()).forEach(System.out::println);
+        ActorSystem system = ActorSystem.create("testSystem");
+        for (int i = 0; i < res.size(); i++) {
+            M.put( system.actorOf( Master.props() ,"master" + i ),  res.get(i) );
+        }
+        cc.computeWeights( M );
+        //
 
+        // REAL TEST
+        source = new ConverterUtils.DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_test.arff");
+        rows = source.getDataSet();
+        rows.setClassIndex( rows.numAttributes() - 1 );
+
+        List<Integer> L = cc.chooseClasses( M, Vote.AVERAGE );
+        int ctr = 0;
+        for (int i = 0; i < L.size(); i++)
+        {
+            if( L.get(i) == res.get(0).get(i).actual()) ctr++;
+            System.out.println( res.get(0).get(i).actual() + " "+ res.get(0).get(i).predicted() );
+        }
+        System.out.println( 100.0 * ((double) ctr) / L.size() );
     }
 }
+/**
+ majowity vote - 0.93
+ weighted - 0.9, 0.7 overlap - 95.21%
+ majority - 0.9, 0.5 over - 95.099
+ wighted - 0.9, 0.5 over - 95.13%
+ average - 0.9, 0,5 over  - 87.88
+ */

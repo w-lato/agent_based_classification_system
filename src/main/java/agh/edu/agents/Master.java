@@ -1,63 +1,78 @@
 package agh.edu.agents;
 
+import agh.edu.agents.enums.S_Type;
+import agh.edu.agents.enums.Vote;
 import agh.edu.learning.DataSplitter;
-import agh.edu.learning.WekaEval;
 import agh.edu.messages.M;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import akka.dispatch.OnComplete;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 import scala.concurrent.duration.FiniteDuration;
 import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
+import static agh.edu.agents.enums.S_Type.*;
+import static agh.edu.agents.enums.Split.SIMPLE;
+import static agh.edu.agents.enums.Vote.*;
+import static akka.pattern.Patterns.ask;
+
+
+/**
+
+ ArrayList<Future<Object>> resps = new ArrayList<>();
+ IntStream.range(0,N).forEach( i-> {
+ resps.add(Patterns.ask(slaves.get(i), new Slave.WekaTrain(train.get(i)), timeout));
+ //            Patterns.ask(slaves.get(i), new Slave.WekaTrain(train.get(i)), timeout);
+ });
+ System.out.println( resps.size() );
+ for (int i = 0; i < resps.size(); i++)
+ {
+ resps.get( i ).onComplete(new OnComplete<Object>()
+ {
+ public void onComplete(Throwable t, Object result){
+ System.out.println("OK ");
+ }
+ }, getContext().dispatcher());
+ }
+ */
 public class Master extends AbstractActor
 {
     private List<ActorRef> slaves;
-    private Instances train;
+    private List<Instances> train;
+    private Instances eval;
     private Instances test;
+
+    private Map<ActorRef, Boolean> isReady;
+    private Map<ActorRef, Double> weight;
+    private ClassChooser cc;
+
+    private Vote vote_method;
 
     static public Props props() {
         return Props.create(Master.class);
     }
-    static public Props props(Instances data, double ratio)
-    {
-        return Props.create(Master.class, () -> new Master(data, ratio));
-    }
-
     public Master()
     {
         System.out.println("default constructor");
     }
 
-    public Master(Instances data, double ratio)
-    {
-        List<Instances> x = DataSplitter.splitIntoTrainAndTest( data, ratio );
-        this.train = x.get(0);
-        this.test = x.get(1);
-        System.out.println("Master constr:  train = " + train.size() +  "  test: " + test.size());
-    }
-
-
-    private void onCreateAgents( Init m )
-    {
-        // init
-        slaves = new ArrayList<>();
-        for (int i = 0; i < m.numberOfAgents; i++)
-            slaves.add( getContext().actorOf( Slave.props( m.algName ) )  );
-
-        // divide and train
-        List<Instances> parts = DataSplitter.split( train, slaves.size(), m.splitMethod, m.OL );
-        for (int i = 0; i < slaves.size(); i++)
-            slaves.get(i).tell(new Slave.WekaTrain( parts.get(i) ), self());
-
-    }
 
     private void onKill(Kill m)
     {
@@ -68,30 +83,40 @@ public class Master extends AbstractActor
         slaves.removeIf(ActorRef::isTerminated);
     }
 
-    private void onEval(EvaluateTest m)
+    private void onTest(EvaluateTest m) throws Exception
     {
-        ActorRef gh = getContext().actorOf(
-                WekaGroupHandler.props(slaves, self(), new FiniteDuration(5, TimeUnit.SECONDS)));
-        gh.tell( new WekaGroupHandler.EvalData(test), self() );
+        System.out.println( "TEST START: " + System.currentTimeMillis() );
+
+        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+        ArrayList<Future<Object>> resps = new ArrayList<>();
+        for (int i = 0; i < slaves.size(); i++)
+            resps.add(Patterns.ask(slaves.get(i), new Slave.WekaEvaluate( test ), timeout));
+
+        Map<ActorRef, List<Prediction>> test_res = new HashMap<>();
+        for (Future<Object> resp : resps)
+        {
+            EvalFinished res = ((EvalFinished) Await.result(resp, timeout.duration()));
+            test_res.put( res.who, res.data );
+            System.out.println( res.data.size() + " : " + test.size() );
+        }
+        List<Integer> preds = cc.chooseClasses( test_res, vote_method );
+        System.out.println( "ALL TESTED" );
+        int ctr = 0;
+        for (int i = 0; i < preds.size(); i++)
+        {
+            if( test_res.get( slaves.get(0) ).get(i).actual() == preds.get(i) ) ctr++;
+        }
+        System.out.println( "TEST: " + (double)(100.0 * (double)ctr / preds.size()) + "%");
+//        ActorRef gh = getContext().actorOf(
+//                WekaGroupHandler.props(slaves, self(),
+//                        new FiniteDuration(15, TimeUnit.MINUTES)));
+//        gh.tell( new WekaGroupHandler.EvalData(test), self() );
     }
 
     private void onEvalFinished(WekaEvalFinished m)
     {
-        System.out.println(" EVAL FISNIHED ");
-
-        m.results.forEach( (k,v) -> {
-            int ctr = 0;
-            for (Prediction pred : v)
-            {
-                if (Double.compare( pred.predicted(), pred.actual()) == 0) ctr ++;
-//                System.out.println("\t" + pred.predicted() + " : " + pred.actual());
-            }
-            System.out.println( k + " :" + "  " + ctr + "  /" + v.size() +" : ");
-        });
-
-        ClassChooser cc = new ClassChooser();
-        cc.setWeights( m.results );
-        List<Integer> p = cc.chooseClasses( m.results, ClassChooser.WEIGHTED_VOTE );
+        System.out.println(" EVAL FINISHED " + System.currentTimeMillis());
+        List<Integer> p = cc.chooseClasses( m.results, Vote.WEIGHTED );
         List<Prediction> test = m.results.entrySet().iterator().next().getValue();
 
         int ctr = 0;
@@ -99,6 +124,58 @@ public class Master extends AbstractActor
             if (p.get(i) == test.get(i).actual()) ctr++;
         }
         System.out.println("============ " + (((double) ctr) / ((double) p.size()) + " %"));
+    }
+
+    private void onConfig( RunConf c ) throws Exception {
+        // init slaves
+        vote_method = c.class_method;
+        cc = new ClassChooser();
+        int N = c.agents.length;
+        slaves = new ArrayList<>();
+        isReady = new HashMap<>();
+        weight = new HashMap<>();
+
+        for (int i = 0; i < N; i++)
+        {
+            ActorRef it = getContext().actorOf( Slave.props( c.agents[i] ));
+            slaves.add( it );
+            isReady.put(it, false);
+            weight.put(it, 0.0);
+        }
+
+
+        // data setup
+        List<Instances> x = DataSplitter.splitIntoTrainAndTest( c.train, c.split_ratio );
+        train = DataSplitter.split( x.get(0), N, c.split_meth, c.ol_ratio );
+        this.eval = x.get(1);
+        test = c.test;
+
+        Timeout timeout = new Timeout(10, TimeUnit.MINUTES);
+        ArrayList<Future<Object>> resps = new ArrayList<>();
+        for (int i = 0; i < N; i++)
+            resps.add(Patterns.ask(slaves.get(i), new Slave.WekaTrain(train.get(i)), timeout));
+
+        for (Future<Object> resp : resps)
+        {
+            Await.result(resp, timeout.duration() );
+        }
+        System.out.println( "ALL TRAINED" );
+
+
+        resps.clear();
+        for (int i = 0; i < N; i++)
+            resps.add(Patterns.ask(slaves.get(i), new Slave.WekaEvaluate(eval), timeout));
+        for (Future<Object> resp : resps)
+        {
+            EvalFinished res = ((EvalFinished) Await.result(resp, timeout.duration()));
+            double acc = DataSplitter.calculateAccuracy( res.data );
+            weight.put( res.who, acc );
+        }
+        System.out.println("EVAL FINISHED");
+        for (int i = 0; i < slaves.size(); i++) {
+            System.out.println( weight.get( slaves.get(i) ) );
+        }
+        cc.setWeights(weight);
     }
 
 
@@ -146,6 +223,16 @@ public class Master extends AbstractActor
         }
     }
 
+    public static class EvalFinished
+    {
+        final List<Prediction> data;
+        final ActorRef who;
+
+        public EvalFinished(List<Prediction> data, ActorRef who) {
+            this.data = data;
+            this.who = who;
+        }
+    }
 
     @Override
     public Receive createReceive() {
@@ -168,14 +255,15 @@ public class Master extends AbstractActor
                         child.tell( new M.Classify("abc"), self() );
                     });
                 })
-                .match(      Init.class, this::onCreateAgents)
-                .match(      Kill.class, this::onKill)
-                .match(  EvaluateTest.class, this::onEval)
+//                .match(      Init.class, this::onCreateAgents)
+                .match(  Kill.class, this::onKill)
+                .match(  EvaluateTest.class, this::onTest)
                 .match(  WekaEvalFinished.class, this::onEvalFinished)
-                .match(M.Classify.class, x -> {
+                .match(  M.Classify.class, x -> {
                     System.out.println( "my parent "  + getContext().getParent() );
                     System.out.println( "message received from" + x.agentId );
                 })
+                .match(  RunConf.class, this::onConfig)
                 .matchAny(o -> { System.out.println("Master received unknown message: " + o); })
                 .build();
     }
@@ -190,18 +278,38 @@ public class Master extends AbstractActor
         ConverterUtils.DataSource source = null;
         try {
             // DATA loading to master
-            source = new ConverterUtils.DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
-            Instances data = source.getDataSet();
-            ActorRef m = system.actorOf( Master.props(data, 0.7 ) ,"master" );
+//            source = new ConverterUtils.DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
+            source = new ConverterUtils.DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
+            Instances train = source.getDataSet();
+            source = new ConverterUtils.DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_test.arff");
+            Instances test = source.getDataSet();
+            test.setClassIndex( test.numAttributes() - 1 );
+            ActorRef m = system.actorOf( Master.props() ,"master" );
 
-            // split data into portions and send them to X agents
-            m.tell( new Init(8, WekaEval.SMO, DataSplitter.SIMPLE_DIVIDE, 0.5), ActorRef.noSender() );
 
-            // eval after training
-            m.tell( new EvaluateTest(), ActorRef.noSender());
+            RunConf RC = new RunConf.Builder()
+                    .agents(new S_Type[]{SMO, SMO, SMO, SMO, J48, J48, PART, PART, PART, PART})
+                    .split_meth(SIMPLE)
+                    .class_method(WEIGHTED)
+                    .ol_ratio(0.5)
+                    .split_ratio(0.9)
+                    .train(train)
+                    .test(test)
+                    .build();
+
+            // SETUP MASTER
+            m.tell( RC, ActorRef.noSender() );
+            m.tell( new EvaluateTest(), ActorRef.noSender() );
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
+/**
+
+ 2.152s - eval with simple divide , 0.7 - 0.9355519751097283 %
+
+ 2.175 - eval overlap divide 0.5, and split train 0.7
+
+ */

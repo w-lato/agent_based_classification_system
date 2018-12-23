@@ -12,6 +12,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.BayesNet;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.evaluation.NominalPrediction;
+import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.evaluation.output.prediction.CSV;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.rules.*;
@@ -128,30 +129,40 @@ public class MAIN
         return 100 * correct / predictions.size();
     }
 
+
+    public static double calculateAccuracy(ArrayList<Prediction> predictions) {
+        double correct = 0;
+
+        for (int i = 0; i < predictions.size(); i++) {
+            NominalPrediction np = (NominalPrediction) predictions.get(i);
+            if (np.predicted() == np.actual()) {
+                correct++;
+            }
+        }
+
+        return 100 * correct / predictions.size();
+    }
+
     public static void main(String[] args)
     {
-        ActorSystem system = ActorSystem.create("testSystem");
-        ActorRef m = system.actorOf( Master.props() ,"master" );
-
-
-        ActorRef m2 = system.actorOf( Master.props() ,"master1" );
-        m2.tell( new M.Classify( "007" ), m );
-        System.out.println( system.child("master") );
-        System.out.println( system.child("master") );
-        System.out.println(m.path() );
-
-        m.tell( new Master.Init(10,1,1,0.2), m);
-        m.tell(new Master.GetList(), m);
-
-
-
-        for (int i = 0; i < 2000; i++) {};
-        System.out.println("KILL TEST");
-        m.tell( new Master.Kill(6), m);
-        for (int i = 0; i < 2000; i++) {
-
-        };
-        m.tell(new Master.GetList(), m);
+//        ActorSystem system = ActorSystem.create("testSystem");
+//        ActorRef m = system.actorOf( Master.props() ,"master" );
+//
+//
+//        ActorRef m2 = system.actorOf( Master.props() ,"master1" );
+//        m2.tell( new M.Classify( "007" ), m );
+//        System.out.println( system.child("master") );
+//        System.out.println( system.child("master") );
+//        System.out.println(m.path() );
+//
+//        m.tell( new Master.Init(10,1,1,0.2), m);
+//        m.tell(new Master.GetList(), m);
+//
+//
+//
+//        System.out.println("KILL TEST");
+//        m.tell( new Master.Kill(6), m);
+//        m.tell(new Master.GetList(), m);
 
 
 
@@ -160,19 +171,21 @@ public class MAIN
 //            DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\messidor_features.arff");
 //            DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\car.arff");
 //            DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\iris.arff");
-            DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
+//            DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\spambase.arff");
+            DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
+//            DataSource source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\pendigits.arff");
             Instances instances = source.getDataSet();
 
             // Make the last attribute be the class
             instances.setClassIndex(instances.numAttributes() - 1);
-
+//instances.setClassIndex(0);
             // Print header and instances.
-            System.out.println("\nDataset:\n");
-            System.out.println(instances);
-
-            // Print header and instances.
-            System.out.println("\nDataset:\n");
-            System.out.println(instances);
+//            System.out.println("\nDataset:\n");
+//            System.out.println(instances);
+//
+//            // Print header and instances.
+//            System.out.println("\nDataset:\n");
+//            System.out.println(instances);
 
 // Do 10-split cross validation
             Instances[][] split = crossValidationSplit(instances, 10);
@@ -193,8 +206,8 @@ public class MAIN
             Classifier[] models = {
 //                    new NaiveBayes(),
 //                    new BayesNet(),
-//                    new J48(), // a decision tree
-//                    new PART(),
+                    //new J48(), // a decision tree
+                    //new PART(),
 //                    new DecisionTable(),//decision table majority classifier
 //                    new DecisionStump(), //one-level decision tree
 //                    new HoeffdingTree(),
@@ -204,26 +217,64 @@ public class MAIN
                     new SMO()
             };
 // Run for each model
+            List<Instances> L = DataSplitter.splitIntoTrainAndTest( instances,0.9 );
+            Instances train  = L.get(0);
+            Instances test   = L.get(1);
+            source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_test.arff");
+            test = source.getDataSet();
+            test.setClassIndex( test.numAttributes() - 1 );
+
+            System.out.println( train.classIndex() );
+            System.out.println( test.classIndex() );
+            System.out.println( train.numAttributes() );
+            System.out.println( train.attribute( train.numAttributes() - 1 ) );
+            System.out.println( train.attribute( train.numAttributes() - 2 ) );
+//            for (int i = 0; i < train.size(); i++) {
+//                System.out.println( train.get(i).value(train.numAttributes() - 1) );
+//            }
+//train.setClassIndex(0);
+//test.setClassIndex(0);
             for (int j = 0; j < models.length; j++)
             {
-                // Collect every group of predictions for current model in a FastVector
-                FastVector predictions = new FastVector();
-                // For each training-testing split pair, train and test the classifier
-                for (int i = 0; i < trainingSplits.length; i++)
-                {
-                    Evaluation validation = classify(models[j], trainingSplits[i], testingSplits[i]);
-                    predictions.appendElements(validation.predictions());
+//                // Collect every group of predictions for current model in a FastVector
+//                FastVector predictions = new FastVector();
+//                // For each training-testing split pair, train and test the classifier
+//                for (int i = 0; i < trainingSplits.length; i++)
+//                {
+//                    Evaluation validation = classify(models[j], trainingSplits[i], testingSplits[i]);
+//                    predictions.appendElements(validation.predictions());
+//
+//                    // Uncomment to see the summary for each training-testing pair.
+////                    System.out.println(models[j].toString());
+//                }
+//                // Calculate overall accuracy of current classifier on all splits
+//                double accuracy = calculateAccuracy(predictions);
+//
+//                // Print current classifier's name and accuracy in a complicated,
+//                // but nice-looking way.
+//                System.out.println("Accuracy of " + models[j].getClass().getSimpleName() + ": "
+//                        + String.format("%.2f%%", accuracy)
+//                        + "\n---------------------------------");
 
-                    // Uncomment to see the summary for each training-testing pair.
-//                    System.out.println(models[j].toString());
-                }
-                // Calculate overall accuracy of current classifier on all splits
-                double accuracy = calculateAccuracy(predictions);
+                Evaluation validation = new Evaluation(train);
+                long s = System.currentTimeMillis();
+                models[j].buildClassifier( train );
+                s = System.currentTimeMillis()  - s;
 
-                // Print current classifier's name and accuracy in a complicated,
-                // but nice-looking way.
+                long s1 = System.currentTimeMillis();
+                validation.evaluateModel( models[j], test );
+                s1 = System.currentTimeMillis()  - s1;
+
+
+                double acc = calculateAccuracy( validation.predictions() );
+
+//                validation.predictions().forEach(x->{
+//                    System.out.println( x.predicted() + " " +  x.actual() );
+//                });
+
                 System.out.println("Accuracy of " + models[j].getClass().getSimpleName() + ": "
-                        + String.format("%.2f%%", accuracy)
+                        + String.format("%.2f%%", acc)
+                        +" build : " + s + "   eval: " + s1
                         + "\n---------------------------------");
             }
         } catch (Exception e) {
@@ -231,3 +282,17 @@ public class MAIN
         }
     }
 }
+/**
+
+ Accuracy of SMO: 93.34% build : 715552   eval: 1180 - 0.7 split
+ ---------------------------------
+
+ Accuracy of SMO: 91.98% build : 68915   eval: 2698 - 0.3
+ ---------------------------------
+
+
+ 0.9 split, and mnist_test
+ Accuracy of SMO: 93.87% build : 1543239   eval: 668
+ ---------------------------------
+
+ */
