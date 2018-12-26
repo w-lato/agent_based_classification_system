@@ -217,7 +217,7 @@ public class MAIN
                     new SMO()
             };
 // Run for each model
-            List<Instances> L = DataSplitter.splitIntoTrainAndTest( instances,0.9 );
+            List<Instances> L = DataSplitter.splitIntoTrainAndTest( instances,0.005);
             Instances train  = L.get(0);
             Instances test   = L.get(1);
             source = new DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_test.arff");
@@ -294,5 +294,52 @@ public class MAIN
  0.9 split, and mnist_test
  Accuracy of SMO: 93.87% build : 1543239   eval: 668
  ---------------------------------
+
+ mnist test + mnist_train 0-9
+ ive_ref-win-x86_64.dll
+ Accuracy of SMO: 93.87% build : 1530885   eval: 816
+
+0.8
+ Accuracy of SMO: 94.00% build : 1087280   eval: 743
+ ---------------------------------
+0.7
+ Accuracy of SMO: 93.73% build : 707064   eval: 664
+ ---------------------------------
+0.6
+ Accuracy of SMO: 93.56% build : 451800   eval: 704
+ ---------------------------------
+
+0.5
+ Accuracy of SMO: 93.44% build : 276947   eval: 683
+ ---------------------------------
+0.4
+ Accuracy of SMO: 92.75% build : 126806   eval: 905
+ ---------------------------------
+
+ 0.3
+ Accuracy of SMO: 92.65% build : 68365   eval: 986
+ ---------------------------------
+
+ 0.2
+ Accuracy of SMO: 91.66% build : 28064   eval: 693
+ ---------------------------------
+
+ 0.1
+ Accuracy of SMO: 91.25% build : 10228   eval: 670
+ ---------------------------------
+0.05
+ Accuracy of SMO: 90.17% build : 3533   eval: 624
+ ---------------------------------
+
+ 0.02
+ Accuracy of SMO: 87.77% build : 1880   eval: 682
+ ---------------------------------
+0.01
+ Accuracy of SMO: 86.41% build : 1385   eval: 656
+ ---------------------------------
+0.005
+ Accuracy of SMO: 81.79% build : 1213   eval: 622
+ ---------------------------------
+
 
  */

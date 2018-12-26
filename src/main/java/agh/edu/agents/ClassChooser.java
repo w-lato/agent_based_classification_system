@@ -170,7 +170,7 @@ public class ClassChooser
 
         ActorSystem system = ActorSystem.create("testSystem");
         for (int i = 0; i < res.size(); i++) {
-            M.put( system.actorOf( Master.props() ,"master" + i ),  res.get(i) );
+            M.put( system.actorOf( Master.props(false) ,"master" + i ),  res.get(i) );
         }
         cc.computeWeights( M );
         //

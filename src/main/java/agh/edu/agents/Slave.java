@@ -13,6 +13,7 @@ public class Slave extends AbstractActor
     S_Type alg;
     WekaEval we;
 
+
     static public Props props(S_Type machine_algorithm)
     {
         return Props.create(Slave.class, () -> new Slave(machine_algorithm));

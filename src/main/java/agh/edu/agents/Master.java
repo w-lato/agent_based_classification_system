@@ -1,5 +1,6 @@
 package agh.edu.agents;
 
+import agh.edu.GUI.AppUI;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.enums.Vote;
 import agh.edu.learning.DataSplitter;
@@ -11,6 +12,7 @@ import akka.actor.Props;
 import akka.dispatch.OnComplete;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import javafx.application.Application;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.FiniteDuration;
@@ -54,6 +56,8 @@ import static akka.pattern.Patterns.ask;
  */
 public class Master extends AbstractActor
 {
+    private AppUI GUI;
+
     private List<ActorRef> slaves;
     private List<Instances> train;
     private Instances eval;
@@ -65,12 +69,18 @@ public class Master extends AbstractActor
 
     private Vote vote_method;
 
-    static public Props props() {
-        return Props.create(Master.class);
-    }
-    public Master()
+    static public Props props(Boolean withGUI)
     {
-        System.out.println("default constructor");
+        return Props.create(Master.class, ()-> new Master(withGUI));
+    }
+
+    public Master(Boolean withGUI)
+    {
+        if(withGUI) {
+            GUI = AppUI.getInstance();
+            GUI.setMaster( self() );
+        }
+        else GUI = null;
     }
 
 
@@ -85,8 +95,8 @@ public class Master extends AbstractActor
 
     private void onTest(EvaluateTest m) throws Exception
     {
-        System.out.println( "TEST START: " + System.currentTimeMillis() );
-
+        System.out.println( "TEST START: " );
+        long s= System.currentTimeMillis();
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         ArrayList<Future<Object>> resps = new ArrayList<>();
         for (int i = 0; i < slaves.size(); i++)
@@ -97,8 +107,9 @@ public class Master extends AbstractActor
         {
             EvalFinished res = ((EvalFinished) Await.result(resp, timeout.duration()));
             test_res.put( res.who, res.data );
-            System.out.println( res.data.size() + " : " + test.size() );
+            //System.out.println( res.data.size() + " : " + test.size() );
         }
+        System.out.println("------ " +  (System.currentTimeMillis() - s) );
         List<Integer> preds = cc.chooseClasses( test_res, vote_method );
         System.out.println( "ALL TESTED" );
         int ctr = 0;
@@ -155,27 +166,36 @@ public class Master extends AbstractActor
         for (int i = 0; i < N; i++)
             resps.add(Patterns.ask(slaves.get(i), new Slave.WekaTrain(train.get(i)), timeout));
 
-        for (Future<Object> resp : resps)
+        for (int i = 0; i < resps.size(); i++)
         {
+            Future<Object> resp = resps.get(i);
             Await.result(resp, timeout.duration() );
+            GUI.updateProgressOnTrain( ((i) / ((double) resps.size())) * 0.5 );
         }
+        resps.clear();
         System.out.println( "ALL TRAINED" );
 
 
-        resps.clear();
+
         for (int i = 0; i < N; i++)
-            resps.add(Patterns.ask(slaves.get(i), new Slave.WekaEvaluate(eval), timeout));
-        for (Future<Object> resp : resps)
+            resps.add(Patterns.ask(slaves.get(i), new Slave.WekaEvaluate( eval ), timeout));
+        System.out.println(" START ");
+        long s = System.currentTimeMillis();
+        for (int i = 0; i < resps.size(); i++)
         {
+            Future<Object> resp = resps.get(i);
             EvalFinished res = ((EvalFinished) Await.result(resp, timeout.duration()));
             double acc = DataSplitter.calculateAccuracy( res.data );
             weight.put( res.who, acc );
+            GUI.updateProgressOnTrain( (((i) / ((double) resps.size())) * 0.5) + 0.5 );
         }
+        System.out.println( System.currentTimeMillis() - s );
         System.out.println("EVAL FINISHED");
         for (int i = 0; i < slaves.size(); i++) {
             System.out.println( weight.get( slaves.get(i) ) );
         }
         cc.setWeights(weight);
+        GUI.updateProgressOnTrain(1.0);
     }
 
 
@@ -284,11 +304,18 @@ public class Master extends AbstractActor
             source = new ConverterUtils.DataSource( "C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_test.arff");
             Instances test = source.getDataSet();
             test.setClassIndex( test.numAttributes() - 1 );
-            ActorRef m = system.actorOf( Master.props() ,"master" );
+            ActorRef m = system.actorOf( Master.props(true) ,"master" );
 
 
             RunConf RC = new RunConf.Builder()
-                    .agents(new S_Type[]{SMO, SMO, SMO, SMO, J48, J48, PART, PART, PART, PART})
+                    .agents(new S_Type[]{
+//                            SMO, SMO, SMO, SMO,
+//                            SMO, SMO, SMO, SMO,
+//                            SMO, SMO, SMO, SMO
+//                            J48, J48,
+                            PART, PART, PART, PART,
+                            PART, PART, PART, PART
+                    })
                     .split_meth(SIMPLE)
                     .class_method(WEIGHTED)
                     .ol_ratio(0.5)
@@ -312,4 +339,7 @@ public class Master extends AbstractActor
 
  2.175 - eval overlap divide 0.5, and split train 0.7
 
+
+ 8 PARTS, WITH WIGHTED VOTE SIMPLE CLIT
+ 92.83% - -10% IMPROVEMENTS
  */

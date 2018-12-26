@@ -2,7 +2,9 @@ package agh.edu.agents.enums;
 
 public enum Vote
 {
-   MAJORITY, // HARD
-   WEIGHTED, // SOFT
-   AVERAGE
+   MAJORITY("MAJORITY"), // HARD
+   WEIGHTED("WEIGHTED"), // SOFT
+   AVERAGE("AVERAGE");
+
+   Vote(String name) {}
 }
