@@ -224,7 +224,7 @@ public class DataSplitter
             we.setModel( new SMO() );
             we.train( train );
             we.train( l.get(0) );
-            ArrayList<Prediction> p = we.eval( test );
+            List<Prediction> p = we.eval( test );
 //            p.forEach(x -> {
 //                System.out.println( x.actual() + " " + x.predicted() + " " + x.weight() );
 //            });

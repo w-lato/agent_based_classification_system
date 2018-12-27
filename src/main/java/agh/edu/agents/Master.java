@@ -1,6 +1,7 @@
 package agh.edu.agents;
 
 import agh.edu.GUI.AppUI;
+import agh.edu.GUI.SlaveRow;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.enums.Vote;
 import agh.edu.learning.DataSplitter;
@@ -13,6 +14,7 @@ import akka.dispatch.OnComplete;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import javafx.application.Application;
+import javafx.application.Platform;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.FiniteDuration;
@@ -95,7 +97,7 @@ public class Master extends AbstractActor
 
     private void onTest(EvaluateTest m) throws Exception
     {
-        System.out.println( "TEST START: " );
+        System.out.println( "TEST START: " + vote_method);
         long s= System.currentTimeMillis();
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         ArrayList<Future<Object>> resps = new ArrayList<>();
@@ -103,12 +105,14 @@ public class Master extends AbstractActor
             resps.add(Patterns.ask(slaves.get(i), new Slave.WekaEvaluate( test ), timeout));
 
         Map<ActorRef, List<Prediction>> test_res = new HashMap<>();
-        for (Future<Object> resp : resps)
+        for (int i = 0; i < resps.size(); i++)
         {
+            Future<Object> resp = resps.get(i);
             EvalFinished res = ((EvalFinished) Await.result(resp, timeout.duration()));
             test_res.put( res.who, res.data );
-            //System.out.println( res.data.size() + " : " + test.size() );
+            if( GUI != null ) GUI.updateProgressOnTest(((double) i) / resps.size() );
         }
+
         System.out.println("------ " +  (System.currentTimeMillis() - s) );
         List<Integer> preds = cc.chooseClasses( test_res, vote_method );
         System.out.println( "ALL TESTED" );
@@ -117,11 +121,18 @@ public class Master extends AbstractActor
         {
             if( test_res.get( slaves.get(0) ).get(i).actual() == preds.get(i) ) ctr++;
         }
-        System.out.println( "TEST: " + (double)(100.0 * (double)ctr / preds.size()) + "%");
-//        ActorRef gh = getContext().actorOf(
-//                WekaGroupHandler.props(slaves, self(),
-//                        new FiniteDuration(15, TimeUnit.MINUTES)));
-//        gh.tell( new WekaGroupHandler.EvalData(test), self() );
+        double acc = (double)(100.0 * (double)ctr / preds.size());
+        System.out.println( "TEST: " + acc + "%");
+        if( GUI != null )
+        {
+            GUI.updateProgressOnTest(1);
+            Platform.runLater(new Runnable(){
+                @Override
+                public void run() {
+                    GUI.setAccText(acc);
+                }
+            });
+        }
     }
 
     private void onEvalFinished(WekaEvalFinished m)
@@ -145,21 +156,23 @@ public class Master extends AbstractActor
         slaves = new ArrayList<>();
         isReady = new HashMap<>();
         weight = new HashMap<>();
+        Map<ActorRef,S_Type> types = new HashMap<>();
 
         for (int i = 0; i < N; i++)
         {
             ActorRef it = getContext().actorOf( Slave.props( c.agents[i] ));
+            types.put( it, c.agents[i] );
             slaves.add( it );
             isReady.put(it, false);
             weight.put(it, 0.0);
         }
-
 
         // data setup
         List<Instances> x = DataSplitter.splitIntoTrainAndTest( c.train, c.split_ratio );
         train = DataSplitter.split( x.get(0), N, c.split_meth, c.ol_ratio );
         this.eval = x.get(1);
         test = c.test;
+        test.setClassIndex(test.numAttributes() - 1 );
 
         Timeout timeout = new Timeout(10, TimeUnit.MINUTES);
         ArrayList<Future<Object>> resps = new ArrayList<>();
@@ -170,7 +183,7 @@ public class Master extends AbstractActor
         {
             Future<Object> resp = resps.get(i);
             Await.result(resp, timeout.duration() );
-            GUI.updateProgressOnTrain( ((i) / ((double) resps.size())) * 0.5 );
+            if( GUI != null ) GUI.updateProgressOnTrain( ((i) / ((double) resps.size() * 2)) );
         }
         resps.clear();
         System.out.println( "ALL TRAINED" );
@@ -187,7 +200,7 @@ public class Master extends AbstractActor
             EvalFinished res = ((EvalFinished) Await.result(resp, timeout.duration()));
             double acc = DataSplitter.calculateAccuracy( res.data );
             weight.put( res.who, acc );
-            GUI.updateProgressOnTrain( (((i) / ((double) resps.size())) * 0.5) + 0.5 );
+            if( GUI != null ) GUI.updateProgressOnTrain( (((i +  resps.size()) / ((double) resps.size())) * 2) );
         }
         System.out.println( System.currentTimeMillis() - s );
         System.out.println("EVAL FINISHED");
@@ -195,28 +208,31 @@ public class Master extends AbstractActor
             System.out.println( weight.get( slaves.get(i) ) );
         }
         cc.setWeights(weight);
-        GUI.updateProgressOnTrain(1.0);
+        if( GUI != null ) {
+            GUI.updateProgressOnTrain(1.0);
+            List<SlaveRow> l = new ArrayList<>();
+
+            types.forEach( (k,v) -> {
+                l.add( new SlaveRow( k.toString() , v.name(), weight.get( k )  ) );
+            });
+            GUI.addAgentsToTable( l );
+        }
     }
 
-
+    private void onVotingChange( SetVoting sv )
+    {
+        System.out.println( "VOTING SET TO: "+ sv.method);
+        this.vote_method = sv.method;
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
     //                                    MESSAGES
 
-    static public class Init
-    {
-        public final int numberOfAgents;
-        public final int algName;
-        public final int splitMethod;
-        public final double OL;
-
-
-        public Init(int numberOfAgents, int algName, int splitMethod, double OL) {
-            this.numberOfAgents = numberOfAgents;
-            this.algName = algName;
-            this.splitMethod = splitMethod;
-            this.OL = OL;
+    static public class SetVoting {
+        public final Vote method;
+        public SetVoting(Vote method) {
+            this.method = method;
         }
     }
 
@@ -227,7 +243,6 @@ public class Master extends AbstractActor
     static public class Kill
     {
         public final int num;
-
         public Kill(int num)
         {
             this.num = num;
@@ -257,9 +272,7 @@ public class Master extends AbstractActor
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-
                 .match(GetList.class, x -> {
-
                     slaves.forEach( slave -> {
                         slave.tell( new M.Classify("abc"), self() );
                     } );
@@ -277,6 +290,7 @@ public class Master extends AbstractActor
                 })
 //                .match(      Init.class, this::onCreateAgents)
                 .match(  Kill.class, this::onKill)
+                .match(  SetVoting.class, this::onVotingChange)
                 .match(  EvaluateTest.class, this::onTest)
                 .match(  WekaEvalFinished.class, this::onEvalFinished)
                 .match(  M.Classify.class, x -> {

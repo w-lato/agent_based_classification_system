@@ -6,7 +6,10 @@ import agh.edu.messages.M;
 import akka.actor.AbstractActor;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
+import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
+
+import java.util.List;
 
 public class Slave extends AbstractActor
 {
@@ -87,8 +90,9 @@ public class Slave extends AbstractActor
                 .match(WekaEvaluate.class, M ->
                 {
                     System.out.println( "EVAL stopped" );
+                    List<Prediction> data = we.eval( M.testData );
                     getSender().tell( new Master.EvalFinished(
-                            we.eval( M.testData ),
+                            data,
                             self()
                     ), self());
                 })

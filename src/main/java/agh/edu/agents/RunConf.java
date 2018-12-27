@@ -16,6 +16,10 @@ public final class RunConf
     final double split_ratio;
     final double ol_ratio;
 
+    public Vote getClass_method() {
+        return class_method;
+    }
+
     private RunConf(Builder builder) {
         train = builder.train;
         test = builder.test;

@@ -10,6 +10,7 @@ import weka.classifiers.trees.J48;
 import weka.core.Instances;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class WekaEval
 {
@@ -63,14 +64,15 @@ public class WekaEval
         }
     }
 
-    public ArrayList<Prediction> eval(Instances test)
+    public List<Prediction> eval(Instances test)
     {
 //        System.out.println( evaluation );
 //        System.out.println( model );
 
         try {
             System.out.println("--------" + test.size() + " : ");
-            if(  evaluation.predictions() != null){
+            if(  evaluation.predictions() != null)
+            {
                 System.out.println(" -------- " +  evaluation.predictions().size());
                 evaluation.predictions().clear();
             }
