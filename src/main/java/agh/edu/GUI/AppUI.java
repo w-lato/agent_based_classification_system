@@ -24,8 +24,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import weka.core.Instances;
-import weka.core.converters.ConverterUtils;
 
 import java.io.File;
 import java.util.List;
@@ -100,7 +98,7 @@ public class AppUI extends Application
             init.setDisable( true );
             test.setDisable( true );
             RunConf rc = ConfParser.getConfFrom( path_label.getText() );
-            list.getSelectionModel().select(rc.getClass_method().toString());
+            list.getSelectionModel().select(rc.getClass_method().toString());// tODO future
             acc.setText("--");
             master.tell( rc, ActorRef.noSender() );
             agents_table.getItems().clear();

@@ -6,36 +6,25 @@ import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.enums.Vote;
 import agh.edu.learning.DataSplitter;
 import agh.edu.messages.M;
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.dispatch.OnComplete;
+import akka.actor.*;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
-import javafx.application.Application;
 import javafx.application.Platform;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
-import scala.concurrent.duration.FiniteDuration;
 import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 import static agh.edu.agents.enums.S_Type.*;
 import static agh.edu.agents.enums.Split.SIMPLE;
 import static agh.edu.agents.enums.Vote.*;
-import static akka.pattern.Patterns.ask;
 
 
 /**
@@ -55,6 +44,27 @@ import static akka.pattern.Patterns.ask;
  }
  }, getContext().dispatcher());
  }
+
+ 90	2500
+ 90.06	90.33	72.51
+ 91.25	5500
+ 91.51	91.69	79.32
+ 91.66	11000
+ 91.97	92.15	81.46
+ 92.65	16500
+ 92.95	93.02	 83.14
+ 92.66	22000
+ 93.15	93.37	83.9
+ 92.75	27500
+ 93.63	93.73	84.08
+ 93.44	32250
+ 93.71	93.8	84.38
+ 93.55	37750
+ 93.93	93.98	84.56
+ 93.73	43000
+ 93.67	93.84	84.73
+ 94	48000
+ 94.00	94.08	84.49
  */
 public class Master extends AbstractActor
 {
@@ -76,6 +86,8 @@ public class Master extends AbstractActor
         return Props.create(Master.class, ()-> new Master(withGUI));
     }
 
+
+
     public Master(Boolean withGUI)
     {
         if(withGUI) {
@@ -88,19 +100,20 @@ public class Master extends AbstractActor
 
     private void onKill(Kill m)
     {
-        for (int i = 0; i < m.num; i++)
-        {
-            getContext().stop( slaves.get( i ) );
-        }
+//        for (int i = 0; i < m.num; i++)
+//        {
+//            getContext().stop( slaves.get( i ) );
+//        }
         slaves.removeIf(ActorRef::isTerminated);
     }
 
     private void onTest(EvaluateTest m) throws Exception
     {
         System.out.println( "TEST START: " + vote_method);
-        long s= System.currentTimeMillis();
+
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         ArrayList<Future<Object>> resps = new ArrayList<>();
+        long s = System.currentTimeMillis();
         for (int i = 0; i < slaves.size(); i++)
             resps.add(Patterns.ask(slaves.get(i), new Slave.WekaEvaluate( test ), timeout));
 
@@ -150,6 +163,11 @@ public class Master extends AbstractActor
 
     private void onConfig( RunConf c ) throws Exception {
         // init slaves
+        if( slaves != null && slaves.size() != 0 )
+        {
+            for (ActorRef x : slaves) { x.tell(new Kill(), ActorRef.noSender()); }
+            slaves.clear();
+        }
         vote_method = c.class_method;
         cc = new ClassChooser();
         int N = c.agents.length;
@@ -158,6 +176,9 @@ public class Master extends AbstractActor
         weight = new HashMap<>();
         Map<ActorRef,S_Type> types = new HashMap<>();
 
+        for (int i = 0; i < c.agents.length; i++) {
+            System.out.println( "# " + c.agents[i] );
+        }
         for (int i = 0; i < N; i++)
         {
             ActorRef it = getContext().actorOf( Slave.props( c.agents[i] ));
@@ -176,6 +197,7 @@ public class Master extends AbstractActor
 
         Timeout timeout = new Timeout(10, TimeUnit.MINUTES);
         ArrayList<Future<Object>> resps = new ArrayList<>();
+        long s = System.currentTimeMillis();
         for (int i = 0; i < N; i++)
             resps.add(Patterns.ask(slaves.get(i), new Slave.WekaTrain(train.get(i)), timeout));
 
@@ -185,15 +207,16 @@ public class Master extends AbstractActor
             Await.result(resp, timeout.duration() );
             if( GUI != null ) GUI.updateProgressOnTrain( ((i) / ((double) resps.size() * 2)) );
         }
+        System.out.println( "ALL TRAINED $$ " +  (System.currentTimeMillis() - s));
         resps.clear();
-        System.out.println( "ALL TRAINED" );
+
 
 
 
         for (int i = 0; i < N; i++)
             resps.add(Patterns.ask(slaves.get(i), new Slave.WekaEvaluate( eval ), timeout));
         System.out.println(" START ");
-        long s = System.currentTimeMillis();
+        long st = System.currentTimeMillis();
         for (int i = 0; i < resps.size(); i++)
         {
             Future<Object> resp = resps.get(i);
@@ -202,7 +225,7 @@ public class Master extends AbstractActor
             weight.put( res.who, acc );
             if( GUI != null ) GUI.updateProgressOnTrain( (((i +  resps.size()) / ((double) resps.size())) * 2) );
         }
-        System.out.println( System.currentTimeMillis() - s );
+        System.out.println( System.currentTimeMillis() - st );
         System.out.println("EVAL FINISHED");
         for (int i = 0; i < slaves.size(); i++) {
             System.out.println( weight.get( slaves.get(i) ) );
@@ -229,6 +252,8 @@ public class Master extends AbstractActor
     //
     //                                    MESSAGES
 
+
+
     static public class SetVoting {
         public final Vote method;
         public SetVoting(Vote method) {
@@ -240,14 +265,7 @@ public class Master extends AbstractActor
 
     static public class EvaluateTest {}
 
-    static public class Kill
-    {
-        public final int num;
-        public Kill(int num)
-        {
-            this.num = num;
-        }
-    }
+    static public class Kill {}
 
     public static class WekaEvalFinished
     {
@@ -288,8 +306,6 @@ public class Master extends AbstractActor
                         child.tell( new M.Classify("abc"), self() );
                     });
                 })
-//                .match(      Init.class, this::onCreateAgents)
-                .match(  Kill.class, this::onKill)
                 .match(  SetVoting.class, this::onVotingChange)
                 .match(  EvaluateTest.class, this::onTest)
                 .match(  WekaEvalFinished.class, this::onEvalFinished)

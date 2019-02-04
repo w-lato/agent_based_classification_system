@@ -14,12 +14,6 @@ import java.util.List;
 
 public class WekaEval
 {
-//    public static final int WEKA = 0;
-//    public static final int SPARK = 1;
-//    public static final int OTHER = 2;
-//    public static final int J48  = 0;
-//    public static final int PART = 1;
-//    public static final int SMO  = 2;
 
     private S_Type class_type;
     private Evaluation evaluation;

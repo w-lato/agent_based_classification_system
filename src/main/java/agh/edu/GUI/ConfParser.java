@@ -37,6 +37,10 @@ public class ConfParser
             source = new ConverterUtils.DataSource( test_path );
             Instances test = source.getDataSet();
 
+            for (int i = 0; i < agents.length; i++) {
+                System.out.println( agents[i] );
+            }
+
             return new RunConf.Builder()
                     .agents( agents )
                     .split_meth( split )
@@ -65,9 +69,13 @@ public class ConfParser
         List<S_Type> l = new ArrayList<>();
 
         for (int i = 0; i < class_types.length; i++)
-                if( obj.has( class_types[i] ) )
-                    for (int j = 0; j < obj.getInt( class_types[i] ); j++)
-                        l.add(  S_Type.valueOf(class_types[i])  );
+        {
+            String curr = class_types[i];
+            if( obj.has( curr ) )
+                for (int j = 0; j < obj.getInt( curr ); j++)
+                    l.add(  S_Type.valueOf( curr )  );
+        }
+
 
         return l.toArray(new S_Type[0]);
     }

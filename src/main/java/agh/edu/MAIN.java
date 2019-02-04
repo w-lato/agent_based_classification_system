@@ -3,7 +3,6 @@ package agh.edu;
 import agh.edu.agents.Master;
 import agh.edu.learning.DataSplitter;
 import agh.edu.messages.M;
-import agh.edu.utils.CSVReader;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.sun.xml.internal.ws.api.policy.ModelGenerator;
@@ -341,5 +340,15 @@ public class MAIN
  Accuracy of SMO: 81.79% build : 1213   eval: 622
  ---------------------------------
 
+ 3533	2500
+ 10228	5500
+ 28064	11000
+ 68365	16500
+ 126806	22000
+ 276947	27500
+ 451800	32250
+ 707064	37750
+ 1087280	43000
+ 1530885	48000
 
  */

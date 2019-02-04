@@ -190,7 +190,7 @@ public class DataSplitter
         System.out.println("========================================================");
         System.out.println("========================================================");
 
-        l = splitIntoTrainAndTest( rows, 0.7 );
+        l = splitIntoTrainAndTest( rows, 0.3 );
         Instances train = l.get(0);
         Instances test = l.get(1);
 
@@ -212,7 +212,27 @@ public class DataSplitter
                 ArrayList<Prediction> results = new ArrayList<>();
                 for (int i = 0; i < 1; i++)
                 {
+                    long xd = System.currentTimeMillis();
                     Evaluation validation = classify(models[j], train, test);
+                    System.out.println( System.currentTimeMillis() - xd );
+                    System.out.println("^^^");
+
+                    List<Double> li1 = new ArrayList<>();
+                    List<double[]> li2 = new ArrayList<>();
+                    xd = System.currentTimeMillis();
+                    for (int i1 = 0; i1 < train.size(); i1++) {
+                        li1.add( models[i].classifyInstance( train.get(i1) ) );
+                        li2.add( models[i].distributionForInstance( train.get(i1) ) );
+                    }
+                    System.out.println( System.currentTimeMillis() - xd );
+                    for (int k = 0; k < li1.size(); k++) {
+                        System.out.print( li1.get(k) + "  :  "  );
+                        for (int m = 0; m < li2.get(k).length; m++) {
+                            System.out.print( " " + li2.get(k)[m] );
+                        }
+                        System.out.println();
+                    }
+
                     results.addAll( validation.predictions() );
                 }
                 double accuracy = calculateAccuracy( results );

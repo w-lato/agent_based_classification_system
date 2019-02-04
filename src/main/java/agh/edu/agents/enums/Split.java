@@ -4,8 +4,8 @@ public enum Split
 {
     SIMPLE("SIMPLE"),
     OVERLAP("OVERLAP"),
-    MULTIFOLD("MULTIFOLD") // TODO
-    ;
+    MULTIFOLD("MULTIFOLD"); // TODO
+
 
     Split(String name) {}
 }

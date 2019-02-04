@@ -38,7 +38,7 @@ public class Slave extends AbstractActor
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
-    //                                    MESSAGES
+    //                                          MESSAGES
 
 
     public static class WekaTrain
@@ -97,7 +97,7 @@ public class Slave extends AbstractActor
                     ), self());
                 })
 
-                .match(PoisonPill.class, M ->
+                .match(Master.Kill.class, M ->
                 {
                     getContext().stop( self() );
                 })
