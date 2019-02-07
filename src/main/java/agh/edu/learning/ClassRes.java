@@ -10,6 +10,7 @@ public final class ClassRes
 {
     private double acc;
     private double F1;
+
     private double FPR;
     private double TPR;
 
@@ -34,6 +35,7 @@ public final class ClassRes
 
         countClasses();
         calcConfMat();
+
         calcTPR();
         calcFPR();
         calcAcc();
@@ -43,7 +45,7 @@ public final class ClassRes
     private void calcAcc()
     {
         double ctr = 0;
-        for (int i = 0; i < data.size(); i++)
+        for (int i = 0; i < data.size() && i < preds.size(); i++)
         {
             double curr_class = data.get( i ).classValue();
             if( Double.compare(curr_class, preds.get(i)) ==  0) ctr++;
@@ -71,21 +73,23 @@ public final class ClassRes
         class_FP = new HashMap<>( );
         class_FN = new HashMap<>( );
 
-        for (int i = 0; i < data.size(); i++) {
+        for (double i = 0; i < data.numClasses(); i++)
+        {
+            class_TP.put( i, 0.0 );
+            class_TN.put( i, 0.0 );
+            class_FP.put( i, 0.0 );
+            class_FN.put( i, 0.0 );
+        }
+
+        for (int i = 0; i < data.size() && i < preds.size(); i++) {
             double curr_class = data.get(i).classValue();
 
             if( Double.compare(preds.get(i), curr_class) == 0)
             {
-                if( !class_TP.containsKey( curr_class ) ) class_TP.put( curr_class, 1.0 );
-                else class_TP.put( curr_class, class_TP.get(curr_class) + 1.0 );
-            }
-            else
-            {
-                if( !class_FP.containsKey( curr_class ) ) class_FP.put( preds.get(i), 1.0 );
-                else class_FP.put( curr_class, class_FP.get(preds.get(i)) + 1.0 );
-
-                if( !class_FN.containsKey( curr_class ) ) class_FN.put( curr_class, 1.0 );
-                else class_FN.put( curr_class, class_FN.get( curr_class ) + 1.0 );
+                class_TP.put( curr_class, class_TP.get(curr_class) + 1.0 );
+            } else {
+                class_FP.put( preds.get(i), class_FP.get(preds.get(i)) + 1.0 );
+                class_FN.put( curr_class, class_FN.get( curr_class ) + 1.0 );
             }
         }
         for( double it : class_TP.keySet())
@@ -96,6 +100,7 @@ public final class ClassRes
 
     private void calcFPR()
     {
+        class_FPR = new HashMap<>();
         for( double it : class_FP.keySet())
         {
             class_FPR.put( it, class_FP.get(it) / ( class_FP.get(it) + class_TN.get(it) ) );
@@ -109,9 +114,10 @@ public final class ClassRes
 
     private void calcTPR()
     {
+        class_TPR = new HashMap<>();
         for( double it : class_TP.keySet())
         {
-            class_FPR.put( it, class_TP.get(it) / ( class_TP.get(it) + class_FP.get(it) ) );
+            class_TPR.put( it, class_TP.get(it) / ( class_TP.get(it) + class_FP.get(it) ) );
         }
         TPR = 0.0;
         for( double it : class_TPR.keySet())

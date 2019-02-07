@@ -24,7 +24,7 @@ dependencies
     // https://mvnrepository.com/artifact/org.jfxtras/jmetro
     compile group: 'org.jfxtras', name: 'jmetro', version: '5.0.2'
 
-
+    
 
     // MACHINE LEARNING LIBRARIES
 
@@ -36,4 +36,7 @@ dependencies
 
     // https://mvnrepository.com/artifact/org.apache.spark/spark-mllib
     runtime group: 'org.apache.spark', name: 'spark-mllib_2.12', version: '2.4.0'
+
+    compile "org.deeplearning4j:deeplearning4j-core:1.0.0-beta3"
 }
+ 

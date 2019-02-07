@@ -1,8 +1,8 @@
 package agh.edu.learning.params;
 
 import agh.edu.learning.DataSplitter;
+import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
@@ -10,8 +10,38 @@ import weka.core.converters.ConverterUtils;
 import java.util.List;
 import java.util.Random;
 
-public class ParamsIBk
+public class ParamasRF implements Params
 {
+    String conf;
+
+    @Override
+    public Classifier clasFromStr(String params) {
+        return null;
+    }
+
+    @Override
+    public String getConf() {
+        return null;
+    }
+
+    @Override
+    public Classifier genRandomParams(Random gen)
+    {
+        RandomForest rf = new RandomForest();
+        boolean brkTies = gen.nextBoolean();
+        boolean attImport = gen.nextBoolean();
+        rf.setBreakTiesRandomly( brkTies );
+        rf.setComputeAttributeImportance( attImport );
+//                smo.setMaxDepth( 10 ); // default 0 - unlimited
+//                smo.setNumDecimalPlaces( 10 ); //
+        int numOfFeatures = gen.nextInt();
+        rf.setNumFeatures( numOfFeatures );
+        rf.setSeed( gen.nextInt() );
+
+        conf = "RF:brkTies:" + brkTies + ",attImport:" + attImport + ",numFeatures:" + numOfFeatures;
+        return rf;
+    }
+
     public static void main(String[] args) throws Exception
     {
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
@@ -31,6 +61,7 @@ public class ParamsIBk
         }
         System.out.println( rf.getNumFeatures() );
         rf.buildClassifier( train );
+
         System.out.println( rf.getNumFeatures() );
 
 
@@ -38,19 +69,22 @@ public class ParamsIBk
             for (int j = 0; j < 2; j++) {
                 for (int k = 0; k < 10; k++) {
                     long s = System.currentTimeMillis();
-                    IBk smo = new IBk();
-                    System.out.println( smo.getKNN() );
-                    boolean cross = i == 0;
-                    boolean meanSq = j == 0;
-                    smo.buildClassifier( train );
-                    smo.setCrossValidate( cross );
-                    smo.setMeanSquared( meanSq );
-                    smo.setD
+                    RandomForest smo = new RandomForest();
 
-//                    String id = "RandomForest:brkTies:"+ brkTies  + ",attImport:" + attImport + ",numFeat:" + k + " ";
-//                    System.out.println("BUILD: " + id + (System.currentTimeMillis() - s) );
+                    boolean brkTies = i==0;
+                    boolean attImport = j==0;
+                    smo.setBreakTiesRandomly( brkTies );
+                    smo.setComputeAttributeImportance( attImport );
+    //                smo.setMaxDepth( 10 ); // default 0 - unlimited
+    //                smo.setNumDecimalPlaces( 10 ); //
+                    smo.setNumFeatures( k );
+                    smo.setSeed( i );
+
+                    smo.buildClassifier( train );
+                    String id = "RandomForest:brkTies:"+ brkTies  + ",attImport:" + attImport + ",numFeat:" + k + " ";
+                    System.out.println("BUILD: " + id + (System.currentTimeMillis() - s) );
                     System.out.println( train.size() );
-                    System.out.println( smo.getKNN() );
+
 
                     s = System.currentTimeMillis();
                     Evaluation evaluation = new Evaluation( train );
