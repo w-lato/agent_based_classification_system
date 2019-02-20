@@ -1,6 +1,5 @@
 package agh.edu.learning.params;
 
-import agh.edu.learning.ClassRes;
 import agh.edu.learning.DataSplitter;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -8,10 +7,10 @@ import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.NormalizedPolyKernel;
 import weka.classifiers.functions.supportVector.PolyKernel;
 import weka.classifiers.functions.supportVector.RBFKernel;
+import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -64,7 +63,7 @@ public class ParamsSMO implements Params
         conf += ",exp:" + exp;
         return smo;
     }
-
+// batch size -- TODO - ilosc danych
     private Classifier setupNormPolyKernel(SMO smo, Random gen)
     {
         NormalizedPolyKernel kernel = new NormalizedPolyKernel();
@@ -86,7 +85,7 @@ public class ParamsSMO implements Params
         RBFKernel kernel = new RBFKernel();
         kernel.setGamma( gamma );
         smo.setKernel( kernel );
-
+//        smo.set
         conf += ",gamma:" + gamma;
         return smo;
     }
@@ -103,4 +102,29 @@ public class ParamsSMO implements Params
     }
 
     // TODO from conf string to classifier
+    public static void main(String[] args) throws Exception
+    {
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
+        Instances instances = source.getDataSet();
+        List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.05);
+        Instances train = L.get(0);
+        Instances test = L.get(1);
+
+        do {
+            test.remove(0);
+        } while (test.size() >= 1000);
+
+        ParamsSMO paramsSMO = new ParamsSMO();
+        Random r = new Random();
+
+        for (int i = 0; i < 10; i++)
+        {
+            SMO smo = ((SMO) paramsSMO.genRandomParams(r));
+            long s = System.currentTimeMillis();
+            Evaluation evaluation = new Evaluation( train );
+            evaluation.crossValidateModel( smo, test, 10, new Random( System.currentTimeMillis() ) );
+            System.out.println( "$$ " + (System.currentTimeMillis() - s) );
+            System.out.println(evaluation.toSummaryString());
+        }
+    }
 }

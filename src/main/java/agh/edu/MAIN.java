@@ -1,21 +1,11 @@
 package agh.edu;
 
-import agh.edu.agents.Master;
 import agh.edu.learning.DataSplitter;
-import agh.edu.messages.M;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import com.sun.xml.internal.ws.api.policy.ModelGenerator;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.bayes.BayesNet;
-import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.evaluation.NominalPrediction;
 import weka.classifiers.evaluation.Prediction;
-import weka.classifiers.evaluation.output.prediction.CSV;
 import weka.classifiers.functions.SMO;
-import weka.classifiers.rules.*;
-import weka.classifiers.trees.*;
 import weka.core.FastVector;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;

@@ -41,7 +41,7 @@ public class ParamsLog implements Params
 
     public static void main(String[] args) throws Exception
     {
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource("C:\\Users\\wlato\\Documents\\IdeaProjects\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
         Instances instances = source.getDataSet();
         List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.05);
         Instances train = L.get(0);

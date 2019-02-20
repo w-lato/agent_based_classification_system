@@ -13,8 +13,6 @@ public class ClassResTest
     public void setup() throws Exception {
         ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\spambase.arff");
         Instances rows = source.getDataSet();
-        Instances;
-        res = new ClassRes()
     }
 
 

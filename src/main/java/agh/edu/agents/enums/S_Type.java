@@ -13,7 +13,8 @@ public enum S_Type
     LOG("LOG"),
     IBK("IBK"),
     REPT("REPT"),
-    RF("RF");
+    RF("RF"),
+    ADA("ADA");
 
     S_Type(String name) {}
 }

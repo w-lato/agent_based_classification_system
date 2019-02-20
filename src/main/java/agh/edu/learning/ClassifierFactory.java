@@ -6,6 +6,7 @@ import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.Logistic;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.lazy.IBk;
+import weka.classifiers.meta.AdaBoostM1;
 import weka.classifiers.rules.PART;
 import weka.classifiers.rules.ZeroR;
 import weka.classifiers.trees.J48;
@@ -25,6 +26,7 @@ public class ClassifierFactory
             case IBK: return new IBk();
             case LOG: return new Logistic();
             case RF: return new RandomForest();
+            case ADA: return new AdaBoostM1();
             default: return null;
         }
     }

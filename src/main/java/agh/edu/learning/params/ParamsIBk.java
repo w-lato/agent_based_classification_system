@@ -6,15 +6,22 @@ import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
+import weka.core.neighboursearch.LinearNNSearch;
 
 import java.util.List;
 import java.util.Random;
 
+/**
+ * 1.Which parameters to randomly choose?
+ * 2.How to deal with big delays?
+ * 3. Time of single test of classifiers combinations? 10 mins.? 30 mins? More?
+ * 4. What are filters? (classfier.setFilter( new Remove() ) ??
+ */
 public class ParamsIBk
 {
     public static void main(String[] args) throws Exception
     {
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
         Instances instances = source.getDataSet();
         List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.05);
         Instances train = L.get(0);
@@ -33,7 +40,7 @@ public class ParamsIBk
         rf.buildClassifier( train );
         System.out.println( rf.getNumFeatures() );
 
-
+        LinearNNSearch as = new LinearNNSearch();
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
                 for (int k = 0; k < 10; k++) {
@@ -43,9 +50,22 @@ public class ParamsIBk
                     boolean cross = i == 0;
                     boolean meanSq = j == 0;
                     smo.buildClassifier( train );
-                    smo.setCrossValidate( cross );
-                    smo.setMeanSquared( meanSq );
-                    smo.setD
+
+                    smo.setWindowSize( 10 ); // set window size
+//                    smo.
+//                    smo.setMeanSquared( meanSq ); //
+
+                    System.out.println(" Squared:  " + smo.getMeanSquared());
+                    System.out.println(" Cross:  " + smo.getCrossValidate());
+                    System.out.println(" Cross:  ");
+
+                    for (String option : smo.getOptions()) {
+                        System.out.println( option );
+                    }
+
+//                    smo.setCrossValidate( cross );
+//                    smo.setMeanSquared( meanSq );
+//                    smo.set
 
 //                    String id = "RandomForest:brkTies:"+ brkTies  + ",attImport:" + attImport + ",numFeat:" + k + " ";
 //                    System.out.println("BUILD: " + id + (System.currentTimeMillis() - s) );
