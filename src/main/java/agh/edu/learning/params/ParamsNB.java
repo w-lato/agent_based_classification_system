@@ -32,7 +32,11 @@ public class ParamsNB implements Params
     @Override
     public Classifier clasFromStr(String params)
     {
-        return null;
+        NaiveBayes naiveBayes = new NaiveBayes();
+        String[] parms = params.split(",");
+        naiveBayes.setUseKernelEstimator( Boolean.valueOf( parms[0] ) );
+        naiveBayes.setUseSupervisedDiscretization( Boolean.valueOf( parms[1] ) );
+        return naiveBayes;
     }
 
     @Override
@@ -59,6 +63,19 @@ public class ParamsNB implements Params
             }
         }
         return null;
+    }
+
+    @Override
+    public List<String> getParamsCartProd() {
+        List<String> l = new ArrayList<>();
+        for (int i = 0; i < 2; i++)
+        {
+            for (int j = 0; j < 2; j++)
+            {
+                l.add( (i==1) + "," + (j==1) );
+            }
+        }
+        return l;
     }
 
     public static void main(String[] args) throws Exception

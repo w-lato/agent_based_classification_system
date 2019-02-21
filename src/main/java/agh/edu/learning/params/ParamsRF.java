@@ -43,6 +43,11 @@ public class ParamsRF implements Params
         return rf;
     }
 
+    @Override
+    public List<String> getParamsCartProd() {
+        return null;
+    }
+
     public static void main(String[] args) throws Exception
     {
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");

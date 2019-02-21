@@ -2,6 +2,7 @@ package agh.edu.learning.params;
 
 import agh.edu.learning.ClassRes;
 import agh.edu.learning.DataSplitter;
+import org.opencv.ml.LogisticRegression;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.Logistic;
@@ -17,7 +18,13 @@ public class ParamsLog implements Params
     @Override
     public Classifier clasFromStr(String params)
     {
-        return null;
+        Logistic lr = new Logistic();
+        String p[] = params.split(",");
+
+        lr.setUseConjugateGradientDescent( Boolean.valueOf(p[0]) );
+        lr.setRidge( Double.valueOf(p[1]) );
+        lr.setMaxIts( Integer.valueOf(p[2]) );
+        return lr;
     }
 
     @Override
@@ -37,6 +44,23 @@ public class ParamsLog implements Params
         log.setMaxIts( iter );
         conf = "Log:congGrad:"+congGrad+",ridge:"+ridge+",iter:"+iter;
         return log;
+    }
+
+    @Override
+    public List<String> getParamsCartProd()
+    {
+        List<String> l = new ArrayList<>();
+        for (int i = 0; i < 2; i++)
+        {
+            for (double j = 0; j < 15.0; j += 0.5)
+            {
+                for (int k = 0; k < 16; k++)
+                {
+                    l.add( (i==1) + "," + j  + "," + k);
+                }
+            }
+        }
+        return l;
     }
 
     public static void main(String[] args) throws Exception
