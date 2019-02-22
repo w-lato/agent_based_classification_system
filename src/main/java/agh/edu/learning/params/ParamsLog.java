@@ -27,12 +27,10 @@ public class ParamsLog implements Params
         return lr;
     }
 
-    @Override
     public String getConf() {
         return conf;
     }
 
-    @Override
     public Classifier genRandomParams(Random gen) {
         Logistic log = new Logistic();
         boolean congGrad = gen.nextBoolean();

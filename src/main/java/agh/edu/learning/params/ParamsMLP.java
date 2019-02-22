@@ -1,4 +1,18 @@
 package agh.edu.learning.params;
 
-public class ParamsMLP {
+import weka.classifiers.Classifier;
+
+import java.util.List;
+
+public class ParamsMLP implements Params
+{
+    @Override
+    public Classifier clasFromStr(String params) {
+        return null;
+    }
+
+    @Override
+    public List<String> getParamsCartProd() {
+        return null;
+    }
 }

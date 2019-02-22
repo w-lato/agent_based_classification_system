@@ -39,13 +39,11 @@ public class ParamsNB implements Params
         return naiveBayes;
     }
 
-    @Override
     public String getConf() {
         return conf;
     }
 
-    @Override
-    public Classifier genRandomParams(Random gen) {
+public Classifier genRandomParams(Random gen) {
         conf = "NaiveBayes:";
         NaiveBayes naiveBayes = new NaiveBayes();
         for (int i = 0; i < 4; i++)

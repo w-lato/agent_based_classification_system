@@ -41,7 +41,7 @@ public class ParamsSMO implements Params
                     // lower_order - BOOLEAN
                     for (int k = 0; k < 2; k++)
                     {
-                       l.add(i + "," + j + "," + k);
+                       l.add(i + "," + j + "," + (k==1));
                     }
                 }
             }
@@ -63,16 +63,11 @@ public class ParamsSMO implements Params
                 // gamma values
                 for (int j = 0; j <rbf_vals.length; j++)
                 {
-                    l.add(i + "," + j);
+                    l.add(i + "," + rbf_vals[j]);
                 }
             }
         }
         return l;
-    }
-
-    @Override
-    public String getConf() {
-        return conf;
     }
 
     @Override
@@ -107,7 +102,6 @@ public class ParamsSMO implements Params
         return null;
     }
 
-    @Override
     public Classifier genRandomParams(Random gen) {
         conf = "";
         SMO smo = new SMO();
@@ -178,8 +172,7 @@ public class ParamsSMO implements Params
     // TODO from conf string to classifier
     public static void main(String[] args) throws Exception
     {
-            System.load("C:\\Users\\wlato\\Documents\\IdeaProjects\\IdeaProjects\\masters_thesis\\DLL\\libopenblas.dll");
-
+        System.load("C:\\Users\\wlato\\Documents\\IdeaProjects\\IdeaProjects\\masters_thesis\\DLL\\libopenblas.dll");
 
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
         Instances instances = source.getDataSet();

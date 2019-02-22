@@ -8,49 +8,45 @@ import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+
+/**
+ *  brkTies - boole
+ *  attImport - bool
+ *  numOfFeatures - int (defualt 0) ??
+ *  batchSize - int (default 100) ??
+ */
 public class ParamsRF implements Params
 {
-    String conf;
-
     @Override
-    public Classifier clasFromStr(String params) {
-        return null;
-    }
-
-    @Override
-    public String getConf() {
-        return null;
-    }
-
-    @Override
-    public Classifier genRandomParams(Random gen)
+    public Classifier clasFromStr(String params)
     {
+        String[] p = params.split(",");
         RandomForest rf = new RandomForest();
-        boolean brkTies = gen.nextBoolean();
-        boolean attImport = gen.nextBoolean();
-        rf.setBreakTiesRandomly( brkTies );
-        rf.setComputeAttributeImportance( attImport );
-//                smo.setMaxDepth( 10 ); // default 0 - unlimited
-//                smo.setNumDecimalPlaces( 10 ); //
-        int numOfFeatures = gen.nextInt();
-        rf.setNumFeatures( numOfFeatures );
-        rf.setSeed( gen.nextInt() );
-
-        conf = "RF:brkTies:" + brkTies + ",attImport:" + attImport + ",numFeatures:" + numOfFeatures;
+        rf.setSeed((int) System.currentTimeMillis());
+        rf.setBreakTiesRandomly( Boolean.valueOf( p[0] ) );
+        rf.setComputeAttributeImportance( Boolean.valueOf( p[1] ) );
         return rf;
     }
 
     @Override
-    public List<String> getParamsCartProd() {
-        return null;
+    public List<String> getParamsCartProd()
+    {
+        List<String> l = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                l.add( (i==1) + "," + (j==1) );
+            }
+        }
+        return l;
     }
 
     public static void main(String[] args) throws Exception
     {
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
         Instances instances = source.getDataSet();
         List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.05);
         Instances train = L.get(0);
@@ -68,8 +64,6 @@ public class ParamsRF implements Params
         System.out.println( rf.getNumFeatures() );
         rf.buildClassifier( train );
 
-        System.out.println( rf.getNumFeatures() );
-
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
@@ -81,22 +75,23 @@ public class ParamsRF implements Params
                     boolean attImport = j==0;
                     smo.setBreakTiesRandomly( brkTies );
                     smo.setComputeAttributeImportance( attImport );
+                    smo.setBatchSize( String.valueOf( k * 100 ) );
+                    System.out.println(" batch: " + smo.getBatchSize());
     //                smo.setMaxDepth( 10 ); // default 0 - unlimited
     //                smo.setNumDecimalPlaces( 10 ); //
-                    smo.setNumFeatures( k );
-//                    smo.set
-                    smo.setSeed( i );
+//                    smo.setNumFeatures( k * 10 );
+                    System.out.println( smo.getNumFeatures() );
+                    smo.setSeed( i * 100 );
 
                     smo.buildClassifier( train );
                     String id = "RandomForest:brkTies:"+ brkTies  + ",attImport:" + attImport + ",numFeat:" + k + " ";
                     System.out.println("BUILD: " + id + (System.currentTimeMillis() - s) );
-                    System.out.println( train.size() );
+//                    System.out.println( train.size() );
 
-//AdaBoostM1 -- TODO dodać
                     s = System.currentTimeMillis();
                     Evaluation evaluation = new Evaluation( train );
                     evaluation.crossValidateModel( smo, test, 10, new Random( System.currentTimeMillis() ) );
-                    System.out.println( "$$ " + (System.currentTimeMillis() - s) );
+//                    System.out.println( "$$ " + (System.currentTimeMillis() - s) );
                     System.out.println(evaluation.toSummaryString());
                 }
             }
