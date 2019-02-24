@@ -30,6 +30,5 @@ public class NBParamsTest
         nb = ((NaiveBayes) p.clasFromStr(s1));
         Assert.assertEquals( "Wrong kernel type", nb.getUseKernelEstimator(), Boolean.TRUE);
         Assert.assertEquals( "Wrong kernel type", nb.getUseSupervisedDiscretization(), Boolean.FALSE);
-
     }
 }

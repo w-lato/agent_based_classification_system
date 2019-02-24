@@ -172,7 +172,7 @@ public class ParamsSMO implements Params
     // TODO from conf string to classifier
     public static void main(String[] args) throws Exception
     {
-        System.load("C:\\Users\\wlato\\Documents\\IdeaProjects\\IdeaProjects\\masters_thesis\\DLL\\libopenblas.dll");
+//        System.load("C:\\Users\\wlato\\Documents\\IdeaProjects\\IdeaProjects\\masters_thesis\\DLL\\libopenblas.dll");
 
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
         Instances instances = source.getDataSet();
@@ -189,10 +189,12 @@ public class ParamsSMO implements Params
 
         for (int i = 0; i < 10; i++)
         {
-            SMO smo = ((SMO) paramsSMO.genRandomParams(r));
+            SMO smo = new SMO();
+            smo.buildClassifier( train );
             long s = System.currentTimeMillis();
             Evaluation evaluation = new Evaluation( train );
-            evaluation.crossValidateModel( smo, test, 10, new Random( System.currentTimeMillis() ) );
+            evaluation.evaluateModel( smo, test );
+//            evaluation.crossValidateModel( smo, test, 10, new Random( System.currentTimeMillis() ) );
             System.out.println( "$$ " + (System.currentTimeMillis() - s) );
             System.out.println(evaluation.toSummaryString());
         }
