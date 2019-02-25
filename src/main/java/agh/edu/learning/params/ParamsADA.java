@@ -26,11 +26,10 @@ public class ParamsADA  implements Params
     public List<String> getParamsCartProd() {
         List<String> l = new ArrayList<>();
         int[] threshs= {1,10,100,1000,10000};
-        for (int i = 0; i < threshs.length; i++)
-        {
-            for (int j = 0; j < 2; j++)
-            {
-                l.add( threshs[i] + "," + (j==1) );
+
+        for (int thresh : threshs) {
+            for (int j = 0; j < 2; j++) {
+                l.add(thresh + "," + (j == 1));
             }
         }
         return l;

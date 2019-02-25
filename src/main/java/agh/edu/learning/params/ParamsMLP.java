@@ -1,6 +1,7 @@
 package agh.edu.learning.params;
 
 import agh.edu.learning.DataSplitter;
+import agh.edu.learning.custom.MLP;
 import org.datavec.api.records.reader.RecordReader;
 import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
 import org.datavec.api.split.FileSplit;
@@ -26,19 +27,178 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * TODO when to initialize classes_num and features_num
+ *
+ * opt_algo
+ * num_of_layers
+ * num_of_inputs
+ * num_of_iterations
+ * batch_size
+ */
 public class ParamsMLP implements Params
 {
+    private final int classes_num;
+    private final int features_num;
+
+    public ParamsMLP(int classes_num, int features_num)
+    {
+        this.classes_num = classes_num;
+        this.features_num = features_num;
+    }
+
     @Override
-    public Classifier clasFromStr(String params) {
-        return null;
+    public Classifier clasFromStr(String params)
+    {
+        String[] p = params.split(",");
+        MultiLayerConfiguration conf = getLayer( p );
+        int batch_siz = Integer.valueOf( p[0] );
+        int num_of_iter = Integer.valueOf( p[3] );
+        MLP mlp = new MLP( conf, batch_siz, num_of_iter );
+        return mlp;
     }
 
     @Override
     public List<String> getParamsCartProd()
     {
-        return null;
+        int[] batch_sizes = {50, 150, 500, 1000, 1500, 5000};
+        int[] num_of_layers = {2, 3, 4, 5};
+        int[] hid_lay_inputs = {100, 300, 500, 1000, 1500};
+        int[] num_of_iter = {100, 300, 500, 1000, 1500, 3000};
+
+        List<String> l = new ArrayList<>();
+        for (int batch_size : batch_sizes) {
+            for (int num_of_layer : num_of_layers) {
+                for (int hid_lay_input : hid_lay_inputs) {
+                    for (int i : num_of_iter) {
+                        l.add(
+                                  batch_size + ","
+                                + num_of_layer + ","
+                                + hid_lay_input + ","
+                                + i
+                        );
+                    }
+                }
+            }
+        }
+        return l;
+    }
+
+    private  MultiLayerConfiguration getLayer(String[] conf)
+    {
+        switch (conf[1])
+        {
+            case "2" : return twoLay(conf);
+            case "3" : return threeLay(conf);
+            case "4" : return fourLay(conf);
+            default: return null;
+        }
+    }
+
+    private MultiLayerConfiguration twoLay(String[] conf)
+    {
+        int hid_inp = Integer.valueOf(conf[2]);
+        return new NeuralNetConfiguration.Builder()
+                .seed(  System.currentTimeMillis() )
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+                .updater(new Adam())
+                .seed( System.currentTimeMillis() )
+                .l2(1e-4)
+                .list()
+                .layer(0,new DenseLayer.Builder()
+                        .hasBias(true)
+                        .nIn( features_num )
+                        .nOut( hid_inp )
+                        .activation(Activation.RELU)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .layer(1,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nIn( hid_inp )
+                        .nOut( classes_num )
+                        .activation(Activation.SOFTMAX)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .pretrain(false)
+                .backprop(true)
+                .build();
+    }
+
+    private MultiLayerConfiguration threeLay(String[] conf)
+    {
+        int hid_inp = Integer.valueOf(conf[2]);
+        return new NeuralNetConfiguration.Builder()
+                .seed(  System.currentTimeMillis() )
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+                .updater(new Adam())
+                .seed( System.currentTimeMillis() )
+                .l2(1e-4)
+                .list()
+                .layer(0,new DenseLayer.Builder()
+                        .hasBias(true)
+                        .nIn( features_num )
+                        .nOut( hid_inp )
+                        .activation(Activation.RELU)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .layer(1,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nIn( hid_inp )
+                        .nOut( hid_inp - ((int) (0.3 * hid_inp)))
+                        .activation(Activation.SOFTMAX)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .layer(2,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nIn( hid_inp - ((int) (0.3 * hid_inp)) )
+                        .nOut( classes_num )
+                        .activation(Activation.SOFTMAX)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .pretrain(false)
+                .backprop(true)
+                .build();
+    }
+
+
+    private MultiLayerConfiguration fourLay(String[] conf)
+    {
+        int hid_inp = Integer.valueOf(conf[2]);
+        return new NeuralNetConfiguration.Builder()
+                .seed(  System.currentTimeMillis() )
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+                .updater(new Adam())
+                .seed( System.currentTimeMillis() )
+                .l2(1e-4)
+                .list()
+                .layer(0,new DenseLayer.Builder()
+                        .hasBias(true)
+                        .nIn( features_num )
+                        .nOut( hid_inp )
+                        .activation(Activation.RELU)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .layer(1,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nIn( hid_inp )
+                        .nOut( hid_inp - ((int) (0.3 * hid_inp)))
+                        .activation(Activation.SOFTMAX)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .layer(2,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nIn( hid_inp - ((int) (0.3 * hid_inp)))
+                        .nOut( hid_inp - ((int) (0.6 * hid_inp)))
+                        .activation(Activation.SOFTMAX)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .layer(3,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nIn( hid_inp - ((int) (0.6 * hid_inp)) )
+                        .nOut( classes_num )
+                        .activation(Activation.SOFTMAX)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .pretrain(false)
+                .backprop(true)
+                .build();
     }
 
     public static void main(String[] args) throws Exception {
@@ -59,7 +219,7 @@ public class ParamsMLP implements Params
                         .nIn(28 * 28) // Number of input datapoints.
                         .nOut(150) // Number of output datapoints.
                         .activation(Activation.RELU) // Activation function.
-                        .weightInit(WeightInit.XAVIER) // Weight initialization.
+                        .weightInit(WeightInit.ONES) // Weight initialization.
                         .build())
 //                .layer(new DenseLayer.Builder()
 //                        .nIn(1000) // Number of input datapoints.
@@ -71,7 +231,7 @@ public class ParamsMLP implements Params
                         .nIn(150)
                         .nOut( 10 )
                         .activation(Activation.SOFTMAX)
-                        .weightInit(WeightInit.XAVIER)
+                        .weightInit(WeightInit.ONES)
                         .build())
                 .pretrain(false)
                 .backprop(true)
@@ -82,10 +242,10 @@ public class ParamsMLP implements Params
         network.init();
 
 
-//        RecordReader recordReader = new CSVRecordReader(789,",");
-        RecordReader recordReader = new CSVRecordReader();
-//        recordReader.initialize(new FileSplit(new File("DATA/mnist_train.arff")));
-        recordReader.initialize(new FileSplit(new File("TMP/88295047705900.csv")));
+        RecordReader recordReader = new CSVRecordReader(789,",");
+//        RecordReader recordReader = new CSVRecordReader();
+        recordReader.initialize(new FileSplit(new File("DATA/mnist_train.arff")));
+//        recordReader.initialize(new FileSplit(new File("TMP/88295047705900.csv")));
 
         //Second: the RecordReaderDataSetIterator handles conversion to DataSet objects, ready for use in neural network
         int labelIndex = 784;     //5 values in each row of the iris.txt CSV: 4 input features followed by an integer label (class) index. Labels are the 5th value (index 4) in each row
