@@ -14,7 +14,8 @@ public enum S_Type
     IBK("IBK"),
     REPT("REPT"),
     RF("RF"),
-    ADA("ADA");
+    ADA("ADA"),
+    MLP("MLP");
 
     S_Type(String name) {}
 }

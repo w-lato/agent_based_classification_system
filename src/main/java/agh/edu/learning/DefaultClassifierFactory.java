@@ -12,7 +12,7 @@ import weka.classifiers.rules.ZeroR;
 import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
 
-public class ClassifierFactory
+public class DefaultClassifierFactory
 {
     public static Classifier getClassifier(S_Type type)
     {

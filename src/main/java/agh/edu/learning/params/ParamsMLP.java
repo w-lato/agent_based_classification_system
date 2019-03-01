@@ -44,10 +44,17 @@ public class ParamsMLP implements Params
     private final int classes_num;
     private final int features_num;
 
+//    public ParamsMLP(int classes_num, int features_num)
     public ParamsMLP(int classes_num, int features_num)
     {
         this.classes_num = classes_num;
         this.features_num = features_num;
+    }
+
+    public ParamsMLP(Instances data)
+    {
+        classes_num = data.numClasses();
+        features_num = data.numAttributes() - 1;
     }
 
     @Override
@@ -57,8 +64,7 @@ public class ParamsMLP implements Params
         MultiLayerConfiguration conf = getLayer( p );
         int batch_siz = Integer.valueOf( p[0] );
         int num_of_iter = Integer.valueOf( p[3] );
-        MLP mlp = new MLP( conf, batch_siz, num_of_iter );
-        return mlp;
+        return new MLP( conf, batch_siz, num_of_iter );
     }
 
     @Override

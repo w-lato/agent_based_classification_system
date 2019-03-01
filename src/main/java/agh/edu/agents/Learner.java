@@ -1,52 +1,75 @@
 package agh.edu.agents;
 
 import agh.edu.agents.enums.S_Type;
-import agh.edu.learning.ClassifierFactory;
 import agh.edu.learning.DataSplitter;
+import agh.edu.learning.DefaultClassifierFactory;
+import agh.edu.learning.Evaluator;
+import agh.edu.learning.ParamsFactory;
+import agh.edu.learning.params.Params;
 import akka.actor.*;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.*;
 import weka.classifiers.functions.supportVector.PolyKernel;
 import weka.classifiers.functions.supportVector.RBFKernel;
-import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import static agh.edu.MAIN.crossValidationSplit;
 import static agh.edu.learning.DataSplitter.calculateAccuracy;
 
+// TODO - from one  change some things
 public class Learner extends AbstractActorWithTimers {
 
     // TODO some kind of evaluator to get acc and other measures
     double best_acc;
+    Evaluation eval;
 
 
+    private Random r;
+    private List<Instances> TEN_FOLDS;
     private S_Type type;
+    String best_conf = "";
+    private String curr_conf = "default";
+    private Params params;
+
+    private List<String> configs;
     private Classifier best;
     private Classifier current;
-    private Random r;
-    private Instances train;
-
+    private Instances data;
 
     private static Object OPT_KEY = "OPTIMIZE";
 
-    public Learner(S_Type type, Instances data) throws InterruptedException
+    /**
+     * Builds defualt classifier from obtained data and saves it
+     * as current and best classifier.
+     *
+     */
+    public Learner(S_Type type, Instances data) throws Exception
     {
-        best = ClassifierFactory.getClassifier( type );
-        try {
-            best.buildClassifier( data );
-        } catch (Exception e) {
-            e.printStackTrace();
+        eval = new Evaluation(data);
+        this.data = data;
+        if( type.equals( S_Type.MLP ) )
+        {
+            params = ParamsFactory.getMLP( data.numClasses(), data.numAttributes() - 1 );
+            configs = params.getParamsCartProd();
+            setupNewconf( configs.remove(0) );
+        } else {
+            params = ParamsFactory.getParams( type );
+            configs = params.getParamsCartProd();
+            current = DefaultClassifierFactory.getClassifier(type);
         }
-        current = ClassifierFactory.getClassifier( type );
-        r = new Random( System.currentTimeMillis() );
+        best = current;
         this.type = type;
-        train = data;
+
+        // eval
+        createNFolds( 10, data );
+        handleEval();
 
         System.out.println("Learner created");
         getTimers().startSingleTimer(OPT_KEY, "OPT_START", Duration.ofSeconds(1));
@@ -56,9 +79,37 @@ public class Learner extends AbstractActorWithTimers {
 //        return Props.create(AbstractLearner.class, () -> new AbstractLearner());
 //    }
 
+    private void setupNewconf(String conf) throws Exception {
+        current = params.clasFromStr( conf );
+        curr_conf = conf;
+        current.buildClassifier( data );
+    }
+
+    private void handleEval() throws Exception {
+        eval.toClassDetailsString();
+        try {
+            eval.crossValidateModel( current,  data,10 , new Random(System.currentTimeMillis()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+//        eval.
+//        if( best_acc == null ||  )
+    }
+
+    private void createNFolds(int N, Instances data)
+    {
+        TEN_FOLDS = new ArrayList<>();
+        for (int i = 0; i < N; i++)
+        {
+            TEN_FOLDS.add( data.trainCV( N, i ) );
+        }
+    }
 
     private void onOptimizationStart()
     {
+        if( configs.isEmpty() ) return;
+
+
 //        System.out.println("VOTING SET TO: " + sv.method);
 //        this.vote_method = sv.method;
     }
