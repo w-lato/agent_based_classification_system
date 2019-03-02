@@ -1,5 +1,6 @@
 package params;
 
+import agh.edu.learning.DataSplitter;
 import agh.edu.learning.custom.MLP;
 import agh.edu.learning.params.Params;
 import agh.edu.learning.params.ParamsMLP;
@@ -7,9 +8,16 @@ import org.deeplearning4j.nn.api.Layer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
 
-public class MLPParams
+import java.util.List;
+
+public class MLPParamsTest
 {
+    Instances train;
+    Instances test;
+
     String s1;
     Params p;
     MLP mlp;
@@ -17,6 +25,12 @@ public class MLPParams
     @Before
     public void setup() throws Exception {
         p = new ParamsMLP(10,28*28);
+
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
+        Instances instances = source.getDataSet();
+        List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.01);
+        train = L.get(0);
+        test = L.get(1);
     }
 
     @Test
@@ -42,4 +56,11 @@ public class MLPParams
 
     }
 
+
+    @Test
+    public void classifierBuildTest() throws Exception {
+        // 3 layers test
+        mlp = ((MLP) p.clasFromStr("50,4,100,100"));
+        mlp.buildClassifier( train );
+    }
 }

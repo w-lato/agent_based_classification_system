@@ -56,7 +56,6 @@ public class MLP extends MultiLayerNetwork implements Classifier
     @Override
     public void buildClassifier(Instances data) throws Exception
     {
-
         String s = Arrays.stream(data.toString().split("\n"))
                 .filter(x -> !(x.startsWith("@") || x.isEmpty()))
                 .collect( Collectors.joining( "\n" ) );
@@ -66,13 +65,12 @@ public class MLP extends MultiLayerNetwork implements Classifier
 
         int labelIndex = data.numAttributes();     //5 values in each row of the iris.txt CSV: 4 input features followed by an integer label (class) index. Labels are the 5th value (index 4) in each row
         int numClasses = data.numClasses();     //3 classes (types of iris flowers) in the iris data set. Classes have integer values 0, 1 or 2
-        System.out.println( " att: " + labelIndex + " numClasses: " + numClasses  + " trains_siz: " + data.size());
 
         rr.initialize( new FileSplit(tmp_path.toFile()));
-        dsi = new RecordReaderDataSetIterator(rr,1000,labelIndex-1,numClasses);
+        dsi = new RecordReaderDataSetIterator(rr,batch_siz,labelIndex-1,numClasses);
 //        dsi.getLabels().forEach( System.out::println );
-        DataSet allData = dsi.next();
 
+        DataSet allData = dsi.next();
         for (int i = 0; i < num_of_iter; i++)
         {
             this.fit( allData );
@@ -143,8 +141,14 @@ public class MLP extends MultiLayerNetwork implements Classifier
                         .activation(Activation.RELU) // Activation function.
                         .weightInit(WeightInit.NORMAL) // Weight initialization.
                         .build())
-                .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                .layer(new DenseLayer.Builder()
                         .nIn(300)
+                        .nOut( 200 )
+                        .activation(Activation.SOFTMAX)
+                        .weightInit(WeightInit.NORMAL)
+                        .build())
+                .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nIn(200)
                         .nOut( 10 )
                         .activation(Activation.SOFTMAX)
                         .weightInit(WeightInit.NORMAL)

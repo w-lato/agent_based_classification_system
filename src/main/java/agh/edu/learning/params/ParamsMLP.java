@@ -71,7 +71,7 @@ public class ParamsMLP implements Params
     public List<String> getParamsCartProd()
     {
         int[] batch_sizes = {50, 150, 500, 1000, 1500, 5000};
-        int[] num_of_layers = {2, 3, 4, 5};
+        int[] num_of_layers = {2, 3, 4};
         int[] hid_lay_inputs = {100, 300, 500, 1000, 1500};
         int[] num_of_iter = {100, 300, 500, 1000, 1500, 3000};
 
@@ -149,7 +149,7 @@ public class ParamsMLP implements Params
                         .activation(Activation.RELU)
                         .weightInit(WeightInit.NORMAL)
                         .build())
-                .layer(1,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                .layer(1,new DenseLayer.Builder()
                         .nIn( hid_inp )
                         .nOut( hid_inp - ((int) (0.3 * hid_inp)))
                         .activation(Activation.SOFTMAX)
@@ -165,7 +165,6 @@ public class ParamsMLP implements Params
                 .backprop(true)
                 .build();
     }
-
 
     private MultiLayerConfiguration fourLay(String[] conf)
     {
@@ -184,13 +183,13 @@ public class ParamsMLP implements Params
                         .activation(Activation.RELU)
                         .weightInit(WeightInit.NORMAL)
                         .build())
-                .layer(1,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                .layer(1,new DenseLayer.Builder()
                         .nIn( hid_inp )
                         .nOut( hid_inp - ((int) (0.3 * hid_inp)))
                         .activation(Activation.SOFTMAX)
                         .weightInit(WeightInit.NORMAL)
                         .build())
-                .layer(2,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                .layer(2,new DenseLayer.Builder()
                         .nIn( hid_inp - ((int) (0.3 * hid_inp)))
                         .nOut( hid_inp - ((int) (0.6 * hid_inp)))
                         .activation(Activation.SOFTMAX)

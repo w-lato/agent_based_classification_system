@@ -3,7 +3,6 @@ package agh.edu.agents;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.DataSplitter;
 import agh.edu.learning.DefaultClassifierFactory;
-import agh.edu.learning.Evaluator;
 import agh.edu.learning.ParamsFactory;
 import agh.edu.learning.params.Params;
 import akka.actor.*;
@@ -16,9 +15,9 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 import static agh.edu.MAIN.crossValidationSplit;
 import static agh.edu.learning.DataSplitter.calculateAccuracy;
@@ -28,11 +27,11 @@ public class Learner extends AbstractActorWithTimers {
 
     // TODO some kind of evaluator to get acc and other measures
     double best_acc;
-    Evaluation eval;
+    private Evaluation eval;
 
 
+    private final int N = 10;
     private Random r;
-    private List<Instances> TEN_FOLDS;
     private S_Type type;
     String best_conf = "";
     private String curr_conf = "default";
@@ -41,7 +40,10 @@ public class Learner extends AbstractActorWithTimers {
     private List<String> configs;
     private Classifier best;
     private Classifier current;
+
     private Instances data;
+    private Instances train;
+    private Instances test;
 
     private static Object OPT_KEY = "OPTIMIZE";
 
@@ -52,67 +54,96 @@ public class Learner extends AbstractActorWithTimers {
      */
     public Learner(S_Type type, Instances data) throws Exception
     {
-        eval = new Evaluation(data);
         this.data = data;
+        eval = new Evaluation(data);
+        r = new Random(System.currentTimeMillis());
+        this.type = type;
+
         if( type.equals( S_Type.MLP ) )
         {
             params = ParamsFactory.getMLP( data.numClasses(), data.numAttributes() - 1 );
             configs = params.getParamsCartProd();
-            setupNewconf( configs.remove(0) );
+            current = params.clasFromStr( configs.remove( 0 ) );
         } else {
             params = ParamsFactory.getParams( type );
             configs = params.getParamsCartProd();
             current = DefaultClassifierFactory.getClassifier(type);
         }
         best = current;
-        this.type = type;
 
         // eval
-        createNFolds( 10, data );
-        handleEval();
+        setupNewTrainAndTest( N );
+        System.out.println("  CURRENT : " + current);
+        current.buildClassifier( train );
+        handleEval(train);
 
         System.out.println("Learner created");
         getTimers().startSingleTimer(OPT_KEY, "OPT_START", Duration.ofSeconds(1));
     }
 
-//    static public Props props() {
-//        return Props.create(AbstractLearner.class, () -> new AbstractLearner());
-//    }
-
-    private void setupNewconf(String conf) throws Exception {
-        current = params.clasFromStr( conf );
-        curr_conf = conf;
-        current.buildClassifier( data );
+    static public Props props(S_Type type, Instances data) {
+        return Props.create(Learner.class, () -> new Learner(type, data));
     }
 
-    private void handleEval() throws Exception {
-        eval.toClassDetailsString();
-        try {
-            eval.crossValidateModel( current,  data,10 , new Random(System.currentTimeMillis()));
+    private void setupNewTrainAndTest( int N )
+    {
+        data.randomize( r );
+        int excluded = r.nextInt( N );
+        test = data.trainCV( N, excluded );
+        int[] ints = IntStream.range(0, N)
+                .filter(x -> x != excluded).toArray();
+
+        for (int i = 0; i < ints.length; i++)
+        {
+
+            if( i == 0 )
+            {
+                train = data.trainCV( N, ints[0] );
+            } else {
+                Instances curr = data.trainCV( N, ints[i] );
+                for (int i1 = 0; i1 < curr.size(); i1++) {
+                    train.add( curr.get( i1 ) );
+                }
+            }
+
+        }
+        System.out.println( "test: " + test.size() );
+        System.out.println( "train: " + train.size() );
+    }
+
+    private void setupNewConf(String conf) throws Exception
+    {
+        current = params.clasFromStr( conf );
+        curr_conf = conf;
+        current.buildClassifier( train );
+    }
+
+    public void handleEval(Instances data) throws Exception
+    {
+        eval = new Evaluation( data );
+        eval.evaluateModel( current, data );
+
+        // TODO decide what kind of values are going to be compared
+        System.out.println( eval.toSummaryString() );
+    }
+
+
+    private void onOptimizationStart(String s)
+    {
+        System.out.println(" ---------- OPT ");
+        try
+        {
+            if( configs.isEmpty() ) return;
+            String to_test = configs.remove( r.nextInt( configs.size() ) );
+            current = params.clasFromStr( to_test );
+            setupNewTrainAndTest( N );
+            handleEval( train);
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        eval.
-//        if( best_acc == null ||  )
     }
 
-    private void createNFolds(int N, Instances data)
-    {
-        TEN_FOLDS = new ArrayList<>();
-        for (int i = 0; i < N; i++)
-        {
-            TEN_FOLDS.add( data.trainCV( N, i ) );
-        }
-    }
 
-    private void onOptimizationStart()
-    {
-        if( configs.isEmpty() ) return;
-
-
-//        System.out.println("VOTING SET TO: " + sv.method);
-//        this.vote_method = sv.method;
-    }
 
     @Override
     public Receive createReceive() {
@@ -128,6 +159,7 @@ public class Learner extends AbstractActorWithTimers {
 //                    getTimers().cancelAll();
 //                })
                 .matchEquals("Start", this::onOptimizationStart)
+//                .matchEquals(Instances.class, data -> handleEval(data))
 //                .matchEquals("Start", this::onStop)
 
 //                {
@@ -145,11 +177,6 @@ public class Learner extends AbstractActorWithTimers {
                 })
                 .build();
     }
-
-    private <P> void onOptimizationStart(P p) {
-    }
-
-
 
     public static void main(String[] args) throws Exception {
 
