@@ -25,6 +25,8 @@ import static agh.edu.learning.DataSplitter.calculateAccuracy;
 // TODO - from one  change some things
 public class Learner extends AbstractActorWithTimers {
 
+    ActorRef parent;
+
     // TODO some kind of evaluator to get acc and other measures
     double best_acc;
     private Evaluation eval;
@@ -49,7 +51,7 @@ public class Learner extends AbstractActorWithTimers {
 
     /**
      * Builds defualt classifier from obtained data and saves it
-     * as current and best classifier.
+     * as current and as best classifier.
      *
      */
     public Learner(S_Type type, Instances data) throws Exception
@@ -75,14 +77,25 @@ public class Learner extends AbstractActorWithTimers {
         setupNewTrainAndTest( N );
         System.out.println("  CURRENT : " + current);
         current.buildClassifier( train );
-        handleEval(train);
+        parent.tell( "TODO class with reference to model",self());
+        handleEval( test );
 
         System.out.println("Learner created");
         getTimers().startSingleTimer(OPT_KEY, "OPT_START", Duration.ofSeconds(1));
     }
 
-    static public Props props(S_Type type, Instances data) {
-        return Props.create(Learner.class, () -> new Learner(type, data));
+    public Learner(S_Type type, Instances data, ActorRef parent) throws Exception
+    {
+       this( type, data );
+       this.parent = parent;
+    }
+
+//    static public Props props(S_Type type, Instances data) {
+//        return Props.create(Learner.class, () -> new Learner(type, data));
+//    }
+
+    static public Props props(S_Type type, Instances data, ActorRef parent) {
+        return Props.create(Learner.class, () -> new Learner(type, data, parent));
     }
 
     private void setupNewTrainAndTest( int N )
@@ -90,12 +103,10 @@ public class Learner extends AbstractActorWithTimers {
         data.randomize( r );
         int excluded = r.nextInt( N );
         test = data.trainCV( N, excluded );
-        int[] ints = IntStream.range(0, N)
-                .filter(x -> x != excluded).toArray();
+        int[] ints = IntStream.range(0, N).filter(x -> x != excluded).toArray();
 
         for (int i = 0; i < ints.length; i++)
         {
-
             if( i == 0 )
             {
                 train = data.trainCV( N, ints[0] );
@@ -105,7 +116,6 @@ public class Learner extends AbstractActorWithTimers {
                     train.add( curr.get( i1 ) );
                 }
             }
-
         }
         System.out.println( "test: " + test.size() );
         System.out.println( "train: " + train.size() );
@@ -118,15 +128,55 @@ public class Learner extends AbstractActorWithTimers {
         current.buildClassifier( train );
     }
 
-    public void handleEval(Instances data) throws Exception
+    public void handleEval(Instances d) throws Exception
     {
-        eval = new Evaluation( data );
-        eval.evaluateModel( current, data );
+        eval = new Evaluation( d );
+        eval.evaluateModel( current, d );
+
+//        for (int i = 0; i < data.numClasses(); i++)
+//        {
+//            System.out.println( eval.fMeasure( i ) + " : " + eval.areaUnderROC( i ) + "  " + eval.falsePositiveRate(i) + " " + eval.falseNegativeRate(i) );
+//        }
+
+//        double[][] xd = eval.confusionMatrix();
+//        for (int i = 0; i < xd.length; i++)
+//        {
+//            System.out.println();
+//            for (int j = 0; j < xd[i].length; j++)
+//            {
+//                System.out.print( xd[i][j] + " " );
+//            }
+//        }
 
         // TODO decide what kind of values are going to be compared
+//        System.out.println("-----------");
+//        for (int i = 0; i < 10; i++)
+//        {
+////            System.out.println( eval.predictions().get( i ).weight()  );
+//            System.out.println( eval.areaUnderROC( i )  );
+//        }
+//
+//        for (int i = 0; i < 10; i++)
+//        {
+//            for (int i1 = 0; i1 < current.distributionForInstance( data.get(i) ).length; i1++)
+//            {
+//                System.out.println( current.distributionForInstance( data.get(i)  )[i1] );
+//            }
+//        }
+
         System.out.println( eval.toSummaryString() );
     }
 
+    private void checkPerformance()
+    {
+        // TOOD compare
+        if( true )
+        {
+            best_conf = curr_conf;
+            best = current;
+            parent.tell( "TODO class with reference to model",self());
+        }
+    }
 
     private void onOptimizationStart(String s)
     {
@@ -134,10 +184,20 @@ public class Learner extends AbstractActorWithTimers {
         try
         {
             if( configs.isEmpty() ) return;
-            String to_test = configs.remove( r.nextInt( configs.size() ) );
-            current = params.clasFromStr( to_test );
-            setupNewTrainAndTest( N );
-            handleEval( train);
+            curr_conf = configs.remove( r.nextInt( configs.size() ) );
+            current = params.clasFromStr( curr_conf );
+            best_conf = best_conf.isEmpty() ? curr_conf : best_conf;
+
+            System.out.println(curr_conf + " :  " + best_conf );
+
+//            setupNewTrainAndTest( N );
+//            System.out.println( " train :" + train.size());
+            current.buildClassifier( train );
+            handleEval( test );
+            getTimers().startSingleTimer(null, "Start", Duration.ofSeconds(2));
+//            System.out.println(" END of training ");
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -145,7 +205,6 @@ public class Learner extends AbstractActorWithTimers {
 
 
 
-    @Override
     public Receive createReceive() {
         return receiveBuilder()
 //                .matchEquals("OPT_START", m ->

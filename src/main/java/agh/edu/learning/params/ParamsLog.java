@@ -1,8 +1,6 @@
 package agh.edu.learning.params;
 
-import agh.edu.learning.ClassRes;
 import agh.edu.learning.DataSplitter;
-import org.opencv.ml.LogisticRegression;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.Logistic;
@@ -101,8 +99,8 @@ public class ParamsLog implements Params
                     classes.add(  smo.classifyInstance( test.get(i1) )  );
                     probs.add( smo.distributionForInstance( test.get(i1) ) );
                 }
-                ClassRes cr = new ClassRes(test, classes, probs);
-                System.out.println("TEST 1: " + id + (System.currentTimeMillis() - s) + " ACC: " + cr.getAcc());
+//                ClassRes cr = new ClassRes(test, classes, probs);
+//                System.out.println("TEST 1: " + id + (System.currentTimeMillis() - s) + " ACC: " + cr.getAcc());
                 classes.clear();
                 probs.clear();
 
