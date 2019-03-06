@@ -7,6 +7,9 @@ import akka.actor.Props;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
 
+
+// TODO after some number of classified instances send eval grade to
+// TODO aggregator
 public class ClassSlave extends AbstractActor
 {
     private ActorRef learner;

@@ -1,10 +1,6 @@
 package agh.edu.learning.custom;
 
 import agh.edu.learning.DataSplitter;
-import org.datavec.api.records.reader.RecordReader;
-import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
-import org.datavec.api.split.FileSplit;
-import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -15,7 +11,6 @@ import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
-import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
@@ -25,57 +20,47 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class MLP extends MultiLayerNetwork implements Classifier
+public class MLP extends MultiLayerNetwork implements Classifier, Serializable
 {
-    private int batch_siz;
-    private int num_of_iter;
+    private int num_of_iter = 100;
 
-    private Path tmp_path;
-    private RecordReader rr;
-    private DataSetIterator dsi;
-
-
-    public MLP(MultiLayerConfiguration conf, int batch_siz, int num_of_iter)
+    public MLP(MultiLayerConfiguration conf, int num_of_iter)
     {
         super(conf);
         this.init();
-        tmp_path = Paths.get("TMP/" + String.valueOf(System.nanoTime()) + ".csv");
-        rr = new CSVRecordReader();
-        this.batch_siz = batch_siz;
         this.num_of_iter = num_of_iter;
     }
-
 
     @Override
     public void buildClassifier(Instances data) throws Exception
     {
-        String s = Arrays.stream(data.toString().split("\n"))
-                .filter(x -> !(x.startsWith("@") || x.isEmpty()))
-                .collect( Collectors.joining( "\n" ) );
+        double[] arr = new double[data.numClasses()];
+        Arrays.fill( arr,0 );
+        arr[((int) data.get(0).classValue())] = 1;
+        INDArray qwe = Nd4j.create( arr );
+        for (int i = 1; i < data.size(); i++)
+        {
+            Arrays.fill(arr,0);
+            arr[((int) data.get(i).classValue())] = 1;
+            qwe = Nd4j.concat( 0, qwe, Nd4j.create( arr ) );
+        }
+        INDArray xd = data.stream()
+                .map( Instance::toDoubleArray )
+                .map(x -> Arrays.copyOf(x, x.length - 1))
+                .map(Nd4j::create)
+                .reduce( (a,b) -> Nd4j.concat(0,a,b))
+                .orElse(null);
+        DataSet allData = new DataSet( xd, qwe );
 
-//        System.out.println( s );
-        Files.write(tmp_path, s.getBytes());
-
-        int labelIndex = data.numAttributes();     //5 values in each row of the iris.txt CSV: 4 input features followed by an integer label (class) index. Labels are the 5th value (index 4) in each row
-        int numClasses = data.numClasses();     //3 classes (types of iris flowers) in the iris data set. Classes have integer values 0, 1 or 2
-
-        rr.initialize( new FileSplit(tmp_path.toFile()));
-        dsi = new RecordReaderDataSetIterator(rr,batch_siz,labelIndex-1,numClasses);
-//        dsi.getLabels().forEach( System.out::println );
-
-        DataSet allData = dsi.next();
+//        System.out.println("DIM0: " +  xd.size(0) );
         for (int i = 0; i < num_of_iter; i++)
         {
             this.fit( allData );
         }
-//        Files.write(tmp_path , "".getBytes());
     }
 
     @Override
@@ -87,7 +72,6 @@ public class MLP extends MultiLayerNetwork implements Classifier
 
         System.arraycopy(src,0,arg,0,N);
         INDArray row = Nd4j.create( arg );
-
 
         row = output( row );
         int max_indx =-1;
@@ -156,7 +140,7 @@ public class MLP extends MultiLayerNetwork implements Classifier
                 .pretrain(false)
                 .backprop(true)
                 .build();
-        MLP mlp = new MLP( conf, 1500, 500);
+        MLP mlp = new MLP( conf, 1500);
         mlp.buildClassifier( train );
 
         double acc = 0.0;
@@ -169,9 +153,5 @@ public class MLP extends MultiLayerNetwork implements Classifier
             }
         }
         System.out.println("Acc: " + (acc/1000));
-
-
-
-//        mlp.setConf( conf );
     }
 }

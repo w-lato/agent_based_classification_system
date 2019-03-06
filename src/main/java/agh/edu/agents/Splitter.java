@@ -5,6 +5,7 @@ import akka.actor.AbstractActor;
 import weka.core.Instances;
 import java.util.List;
 
+// TODO stratify the data when splitting
 public class Splitter extends AbstractActor
 {
     private List<Instances> train;

@@ -26,6 +26,7 @@ public class ParamsRF implements Params
     {
         String[] p = params.split(",");
         RandomForest rf = new RandomForest();
+
         rf.setSeed((int) System.currentTimeMillis());
         rf.setBreakTiesRandomly( Boolean.valueOf( p[0] ) );
         rf.setComputeAttributeImportance( Boolean.valueOf( p[1] ) );

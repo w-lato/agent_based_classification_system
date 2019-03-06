@@ -77,11 +77,11 @@ public class Learner extends AbstractActorWithTimers {
         setupNewTrainAndTest( N );
         System.out.println("  CURRENT : " + current);
         current.buildClassifier( train );
-        parent.tell( "TODO class with reference to model",self());
+//        parent.tell( "TODO class with reference to model",self());
         handleEval( test );
 
         System.out.println("Learner created");
-        getTimers().startSingleTimer(OPT_KEY, "OPT_START", Duration.ofSeconds(1));
+//        getTimers().startSingleTimer(OPT_KEY, "OPT_START", Duration.ofSeconds(1));
     }
 
     public Learner(S_Type type, Instances data, ActorRef parent) throws Exception
@@ -131,7 +131,8 @@ public class Learner extends AbstractActorWithTimers {
     public void handleEval(Instances d) throws Exception
     {
         eval = new Evaluation( d );
-        eval.evaluateModel( current, d );
+//        eval.evaluateModel( current, d );
+        eval.crossValidateModel(current, data, 10, new Random(1));
 
 //        for (int i = 0; i < data.numClasses(); i++)
 //        {
@@ -169,7 +170,7 @@ public class Learner extends AbstractActorWithTimers {
 
     private void checkPerformance()
     {
-        // TOOD compare
+        // TODO compare
         if( true )
         {
             best_conf = curr_conf;

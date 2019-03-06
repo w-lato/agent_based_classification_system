@@ -62,9 +62,8 @@ public class ParamsMLP implements Params
     {
         String[] p = params.split(",");
         MultiLayerConfiguration conf = getLayer( p );
-        int batch_siz = Integer.valueOf( p[0] );
         int num_of_iter = Integer.valueOf( p[3] );
-        return new MLP( conf, batch_siz, num_of_iter );
+        return new MLP( conf, num_of_iter );
     }
 
     @Override
@@ -107,6 +106,7 @@ public class ParamsMLP implements Params
     private MultiLayerConfiguration twoLay(String[] conf)
     {
         int hid_inp = Integer.valueOf(conf[2]);
+
         return new NeuralNetConfiguration.Builder()
                 .seed(  System.currentTimeMillis() )
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
