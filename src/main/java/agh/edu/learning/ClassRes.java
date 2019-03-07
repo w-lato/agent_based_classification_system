@@ -3,12 +3,11 @@ package agh.edu.learning;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.custom.MLP;
 import org.jetbrains.annotations.NotNull;
-import org.nd4j.evaluation.meta.Prediction;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
+import weka.classifiers.evaluation.Prediction;
+import weka.core.Instance;
 import weka.core.Instances;
-import weka.filters.supervised.instance.StratifiedRemoveFolds;
-import weka.knowledgeflow.steps.TrainTestSplitMaker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,17 +15,34 @@ import java.util.Random;
 
 public final class ClassRes implements Comparable<ClassRes>
 {
-    double[] fscore;
-    double[] AUROC;
-    double  acc;
+    private double[] fscore;
+    private double[] AUROC;
+    private double  acc;
 
-    private final int N = 10;
-    private final double acc_wgt = 0.5;
-    private final double fmeas_wgt = 0.5;
+    private final int N = 5;
+    // tODO how weights will change over time
+    private  double acc_wgt = 0.5;
+    private  double fmeas_wgt = 0.5;
+
+    private List<Prediction> preds;
+    private List<double[]> probs;
+
+    public double getSumOfFscore() {
+        double acc = 0.0;
+        for (double v : fscore) {
+            acc += v;
+        }
+        return acc;
+    }
 
 
-//    private final List<Prediction> preds;
-//    private final List<double[]> probs;
+    public double[] getFscore() {
+        return fscore;
+    }
+
+    public double getAcc() {
+        return acc;
+    }
 
     public ClassRes(List<Prediction> preds, List<double[]> probs)
     {
@@ -39,73 +55,102 @@ public final class ClassRes implements Comparable<ClassRes>
         Evaluation eval = new Evaluation(data);
         if( type.equals(S_Type.MLP) ) handleMLP(((MLP) model), data);
         else {
+            // TODO what about seed?
             eval.crossValidateModel(model,data, N, new Random(1));
+            int siz = data.numClasses();
+            fscore = new double[ siz ];
+            AUROC = new double[ siz ];
+            for (int i = 0; i < siz; i++)
+            {
+                fscore[i] = eval.fMeasure( i );
+                AUROC[i] = eval.areaUnderROC( i );
+            }
+            acc = eval.correct() / data.size();
+            acc = Math.round( acc * 100.0 );
 
+            setupProbsAndPreds( eval, data, model );
+            checkValues();
         }
     }
 
-//    public List<Prediction> getPreds()
-//    {
-//        return preds;
-//    }
-//
-//    public List<double[]> getProbs()
-//    {
-//        return probs;
-//    }
-
-
     private void handleMLP(MLP mlp, Instances data) throws Exception {
-        List<Instances> list = new ArrayList<>();
-        for (int i = 0; i < N; i++) list.add(data.testCV( N,i));
-
-        TrainTestSplitMaker tsm = new TrainTestSplitMaker();
-
-        // stratification weka methods
-        data.stratify(N);
-
-//srf.
+        data.stratify( N );
         AUROC = new double[ data.numClasses() ];
         fscore = new double[ data.numClasses() ];
+        acc = 0.0;
 
-        //
         for (int i = 0; i < N; i++)
         {
-            Instances in = null;
-            for (int j = 0; j < N; j++)
-            {
-                if( j != i )
-                {
-                    if( in == null ) in = list.get(j);
-                    else in.addAll( list.get(j) );
-                }
-            }
-            Evaluation tmp = new Evaluation(in);
-            tmp.evaluateModel( mlp, in );
+            Instances in = data.trainCV(N,i);
+            MLP n_mlp  = new MLP(mlp.getLayerWiseConfigurations(), mlp.getNum_of_iter()) ;
+
+            n_mlp.buildClassifier( in );
+            Instances to_test = data.testCV(N, i);
+            Evaluation tmp = new Evaluation( to_test );
+            tmp.evaluateModel( n_mlp, to_test );
 
             for (int j = 0; j < data.numClasses(); j++)
             {
                 fscore[j] += tmp.fMeasure( j );
                 AUROC[j] += tmp.areaUnderROC( j );// ?
-                acc = tmp.correct();
             }
+            acc += tmp.correct() / to_test.size();
+//            System.out.println(  "\t" + tmp.correct() + "\t" +  tmp.incorrect());
         }
 
-        // zalezy od rozkladu danych - accuracy moze nie byc dobry
-        // zmienny
         // calc simple mean
         for (int i = 0; i < data.numClasses(); i++)
         {
-            fscore[i] += fscore[i] / N;
-            AUROC[i] += AUROC[i] / N;
+            fscore[i] /=  N;
+            AUROC[i] /=  N;
         }
         acc /= N;
+        acc = Math.round( acc * 100.0 );
+
+        Evaluation eval = new Evaluation( data );
+        setupProbsAndPreds( eval, data, mlp );
+        checkValues();
+//        System.out.println("ACC: " + acc);
+    }
+
+    // eval.getPrecision() and others can result in NaN
+    private void checkValues()
+    {
+        if( Double.isNaN( acc )) acc = 0.0;
+        for (int i = 0; i < fscore.length; i++) {
+            if( Double.isNaN( fscore[i] )) fscore[i] = 0.0;
+            if( Double.isNaN( AUROC[i] )) AUROC[i] = 0.0;
+        }
+    }
+
+    private void setupProbsAndPreds(Evaluation eval, Instances data, Classifier model)
+    {
+        this.preds = eval.predictions();
+        probs = new ArrayList<>();
+        for (Instance datum : data) {
+            try {
+                this.probs.add(model.distributionForInstance(datum));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     public int compareTo(@NotNull ClassRes o)
     {
-// tODO
-        return 0;
+        if( this == o ) return 0;
+
+        double A = 0.0;
+        double B = 0.0;
+        for (int i = 0; i < this.fscore.length; i++)
+        {
+            A += this.fscore[i];
+            B += o.fscore[i];
+        }
+        A = A * fmeas_wgt  + acc * acc_wgt;
+        B = B * fmeas_wgt  + o.acc * acc_wgt;
+
+        return Double.compare( A,B );
     }
 }

@@ -16,7 +16,7 @@ public class StratificationTest
         Map<Integer,Integer> vals = new HashMap<>();
         Map<Integer,Integer> vals_parts = new HashMap<>();
 
-        instances.stream().forEach( x -> {
+        instances.forEach(x -> {
             int cl = ((int) x.classValue());
             if( !vals.containsKey( cl ) ) vals.put( cl, 1 );
             else  vals.put( cl, vals.get( cl ) + 1 );
@@ -28,16 +28,15 @@ public class StratificationTest
         {
             vals_parts.clear();
             Instances part = instances.testCV( N, i );
-            part.stream().forEach( x -> {
+            part.forEach(x -> {
                 int cl = ((int) x.classValue());
                 if( !vals_parts.containsKey( cl ) ) vals_parts.put( cl, 1 );
                 else  vals_parts.put( cl, vals_parts.get( cl ) + 1 );
             });
 
-
             System.out.println( i +  " : "  );
             vals_parts.forEach( (k,v)-> {
-                Integer orig = vals.get( k ) / 10;
+                int orig = vals.get( k ) / 10;
                 assertTrue("Error, random is too high", orig+1 >= v);
                 assertTrue("Error, random is too low",  orig-1  <= v);
                 System.out.print( k + " : " + v + ", " );

@@ -26,6 +26,5 @@ public class ADAParamsTest
         ada = ((AdaBoostM1) p.clasFromStr(s1));
         Assert.assertEquals( "Wrong kernel type", 1,  ada.getWeightThreshold());
         Assert.assertEquals( "Wrong kernel type", ada.getUseResampling(), Boolean.TRUE);
-
     }
 }

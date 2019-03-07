@@ -1,6 +1,7 @@
 package agh.edu.agents;
 
 import agh.edu.agents.enums.S_Type;
+import agh.edu.learning.ClassRes;
 import agh.edu.learning.DataSplitter;
 import agh.edu.learning.DefaultClassifierFactory;
 import agh.edu.learning.ParamsFactory;
@@ -22,14 +23,12 @@ import java.util.stream.IntStream;
 import static agh.edu.MAIN.crossValidationSplit;
 import static agh.edu.learning.DataSplitter.calculateAccuracy;
 
-// TODO - from one  change some things
 public class Learner extends AbstractActorWithTimers {
 
     ActorRef parent;
 
     // TODO some kind of evaluator to get acc and other measures
-    double best_acc;
-    private Evaluation eval;
+   private ClassRes CR;
 
 
     private final int N = 10;
@@ -57,7 +56,6 @@ public class Learner extends AbstractActorWithTimers {
     public Learner(S_Type type, Instances data) throws Exception
     {
         this.data = data;
-        eval = new Evaluation(data);
         r = new Random(System.currentTimeMillis());
         this.type = type;
 
@@ -78,7 +76,6 @@ public class Learner extends AbstractActorWithTimers {
         System.out.println("  CURRENT : " + current);
         current.buildClassifier( train );
 //        parent.tell( "TODO class with reference to model",self());
-        handleEval( test );
 
         System.out.println("Learner created");
 //        getTimers().startSingleTimer(OPT_KEY, "OPT_START", Duration.ofSeconds(1));
@@ -128,11 +125,16 @@ public class Learner extends AbstractActorWithTimers {
         current.buildClassifier( train );
     }
 
-    public void handleEval(Instances d) throws Exception
+    public void handleEval(S_Type type, Classifier model , Instances data, String conf) throws Exception
     {
-        eval = new Evaluation( d );
-//        eval.evaluateModel( current, d );
-        eval.crossValidateModel(current, data, 10, new Random(1));
+        ClassRes new_cr = new ClassRes( type, model, data );
+        if( new_cr.compareTo( CR ) > 0 )
+        {
+            CR = new_cr;
+            best = current;
+            best_conf = conf;
+        }
+
 
 //        for (int i = 0; i < data.numClasses(); i++)
 //        {
@@ -165,7 +167,6 @@ public class Learner extends AbstractActorWithTimers {
 //            }
 //        }
 
-        System.out.println( eval.toSummaryString() );
     }
 
     private void checkPerformance()
@@ -194,7 +195,6 @@ public class Learner extends AbstractActorWithTimers {
 //            setupNewTrainAndTest( N );
 //            System.out.println( " train :" + train.size());
             current.buildClassifier( train );
-            handleEval( test );
             getTimers().startSingleTimer(null, "Start", Duration.ofSeconds(2));
 //            System.out.println(" END of training ");
 

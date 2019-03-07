@@ -28,6 +28,11 @@ public class MLP extends MultiLayerNetwork implements Classifier, Serializable
 {
     private int num_of_iter = 100;
 
+
+    public int getNum_of_iter() {
+        return num_of_iter;
+    }
+
     public MLP(MultiLayerConfiguration conf, int num_of_iter)
     {
         super(conf);
