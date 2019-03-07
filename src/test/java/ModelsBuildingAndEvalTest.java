@@ -3,7 +3,6 @@ import agh.edu.learning.ClassRes;
 import agh.edu.learning.ParamsFactory;
 import agh.edu.learning.params.Params;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import weka.classifiers.Classifier;
 import weka.core.Instances;

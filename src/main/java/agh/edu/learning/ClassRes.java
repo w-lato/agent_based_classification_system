@@ -21,8 +21,8 @@ public final class ClassRes implements Comparable<ClassRes>
 
     private final int N = 5;
     // tODO how weights will change over time
-    private  double acc_wgt = 0.5;
-    private  double fmeas_wgt = 0.5;
+    private double acc_wgt = 0.5;
+    private double fmeas_wgt = 0.5;
 
     private List<Prediction> preds;
     private List<double[]> probs;
@@ -35,19 +35,12 @@ public final class ClassRes implements Comparable<ClassRes>
         return acc;
     }
 
-
     public double[] getFscore() {
         return fscore;
     }
 
     public double getAcc() {
         return acc;
-    }
-
-    public ClassRes(List<Prediction> preds, List<double[]> probs)
-    {
-//        this.preds = preds;
-//        this.probs = probs;
     }
 
     public ClassRes(S_Type type, Classifier model, Instances data) throws Exception

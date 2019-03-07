@@ -14,37 +14,31 @@ import weka.classifiers.functions.supportVector.PolyKernel;
 import weka.classifiers.functions.supportVector.RBFKernel;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.IntStream;
-
 import static agh.edu.MAIN.crossValidationSplit;
 import static agh.edu.learning.DataSplitter.calculateAccuracy;
 
+// tODO inform Slave about the number of processed data instances
 public class Learner extends AbstractActorWithTimers {
 
-    ActorRef parent;
+    private ActorRef parent;
 
-    // TODO some kind of evaluator to get acc and other measures
-   private ClassRes CR;
+    private ClassRes best_cr;
+    private String best_conf = "default";
+    private Classifier best;
 
-
-    private final int N = 10;
     private Random r;
     private S_Type type;
-    String best_conf = "";
-    private String curr_conf = "default";
+
+    private String curr_conf;
     private Params params;
 
     private List<String> configs;
-    private Classifier best;
     private Classifier current;
 
     private Instances data;
-    private Instances train;
-    private Instances test;
 
     private static Object OPT_KEY = "OPTIMIZE";
 
@@ -53,11 +47,15 @@ public class Learner extends AbstractActorWithTimers {
      * as current and as best classifier.
      *
      */
+    // TODO start self-optimizaiton and send current model to ClassSlave
     public Learner(S_Type type, Instances data) throws Exception
     {
         this.data = data;
         r = new Random(System.currentTimeMillis());
         this.type = type;
+
+        params = ParamsFactory.getParams( type, data );
+        configs = params.getParamsCartProd();
 
         if( type.equals( S_Type.MLP ) )
         {
@@ -72,13 +70,13 @@ public class Learner extends AbstractActorWithTimers {
         best = current;
 
         // eval
-        setupNewTrainAndTest( N );
         System.out.println("  CURRENT : " + current);
-        current.buildClassifier( train );
-//        parent.tell( "TODO class with reference to model",self());
+        best_cr = new ClassRes( type,best,data );
+        current.buildClassifier( data );
+        parent.tell( new ClassSlave.BestClass( best, best_conf, best_cr),self());
 
         System.out.println("Learner created");
-//        getTimers().startSingleTimer(OPT_KEY, "OPT_START", Duration.ofSeconds(1));
+        getTimers().startSingleTimer(null, "NEW_CONF", Duration.ofSeconds(2));
     }
 
     public Learner(S_Type type, Instances data, ActorRef parent) throws Exception
@@ -87,170 +85,59 @@ public class Learner extends AbstractActorWithTimers {
        this.parent = parent;
     }
 
-//    static public Props props(S_Type type, Instances data) {
-//        return Props.create(Learner.class, () -> new Learner(type, data));
-//    }
 
     static public Props props(S_Type type, Instances data, ActorRef parent) {
         return Props.create(Learner.class, () -> new Learner(type, data, parent));
     }
 
-    private void setupNewTrainAndTest( int N )
-    {
-        data.randomize( r );
-        int excluded = r.nextInt( N );
-        test = data.trainCV( N, excluded );
-        int[] ints = IntStream.range(0, N).filter(x -> x != excluded).toArray();
 
-        for (int i = 0; i < ints.length; i++)
-        {
-            if( i == 0 )
-            {
-                train = data.trainCV( N, ints[0] );
-            } else {
-                Instances curr = data.trainCV( N, ints[i] );
-                for (int i1 = 0; i1 < curr.size(); i1++) {
-                    train.add( curr.get( i1 ) );
-                }
-            }
-        }
-        System.out.println( "test: " + test.size() );
-        System.out.println( "train: " + train.size() );
-    }
-
-    private void setupNewConf(String conf) throws Exception
-    {
-        current = params.clasFromStr( conf );
-        curr_conf = conf;
-        current.buildClassifier( train );
-    }
-
-    public void handleEval(S_Type type, Classifier model , Instances data, String conf) throws Exception
+    public void handleEval(S_Type type, Classifier model, String conf) throws Exception
     {
         ClassRes new_cr = new ClassRes( type, model, data );
-        if( new_cr.compareTo( CR ) > 0 )
+        if( new_cr.compareTo( best_cr ) > 0 )
         {
-            CR = new_cr;
+            model.buildClassifier( data );
+            best_cr = new_cr;
             best = current;
             best_conf = conf;
-        }
-
-
-//        for (int i = 0; i < data.numClasses(); i++)
-//        {
-//            System.out.println( eval.fMeasure( i ) + " : " + eval.areaUnderROC( i ) + "  " + eval.falsePositiveRate(i) + " " + eval.falseNegativeRate(i) );
-//        }
-
-//        double[][] xd = eval.confusionMatrix();
-//        for (int i = 0; i < xd.length; i++)
-//        {
-//            System.out.println();
-//            for (int j = 0; j < xd[i].length; j++)
-//            {
-//                System.out.print( xd[i][j] + " " );
-//            }
-//        }
-
-        // TODO decide what kind of values are going to be compared
-//        System.out.println("-----------");
-//        for (int i = 0; i < 10; i++)
-//        {
-////            System.out.println( eval.predictions().get( i ).weight()  );
-//            System.out.println( eval.areaUnderROC( i )  );
-//        }
-//
-//        for (int i = 0; i < 10; i++)
-//        {
-//            for (int i1 = 0; i1 < current.distributionForInstance( data.get(i) ).length; i1++)
-//            {
-//                System.out.println( current.distributionForInstance( data.get(i)  )[i1] );
-//            }
-//        }
-
-    }
-
-    private void checkPerformance()
-    {
-        // TODO compare
-        if( true )
-        {
-            best_conf = curr_conf;
-            best = current;
-            parent.tell( "TODO class with reference to model",self());
+            parent.tell( new ClassSlave.BestClass( best, best_conf, best_cr), self());
         }
     }
+
 
     private void onOptimizationStart(String s)
     {
-        System.out.println(" ---------- OPT ");
+
+        if( configs.isEmpty() ) {
+            self().tell( PoisonPill.getInstance(), ActorRef.noSender() );
+            return;
+        }
         try
         {
-            if( configs.isEmpty() ) return;
+            System.out.println(" ---------- OPT ");
             curr_conf = configs.remove( r.nextInt( configs.size() ) );
             current = params.clasFromStr( curr_conf );
-            best_conf = best_conf.isEmpty() ? curr_conf : best_conf;
+            handleEval( type, current, curr_conf);
 
             System.out.println(curr_conf + " :  " + best_conf );
-
-//            setupNewTrainAndTest( N );
-//            System.out.println( " train :" + train.size());
-            current.buildClassifier( train );
-            getTimers().startSingleTimer(null, "Start", Duration.ofSeconds(2));
-//            System.out.println(" END of training ");
-
-
+            getTimers().startSingleTimer(null, "NEW_CONF", Duration.ofSeconds(2));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
-
+    
     public Receive createReceive() {
         return receiveBuilder()
-//                .matchEquals("OPT_START", m ->
-//                {
-//                    System.out.println("Tick received");
-//                    getTimers().startSingleTimer(TEST_KEY, "start", Duration.ofSeconds(2));
-//                    // Do someting
-//                })
-//                .matchEquals("Stop", m -> {
-//                    System.out.println("cyclic event stopped");
-//                    getTimers().cancelAll();
-//                })
-                .matchEquals("Start", this::onOptimizationStart)
-//                .matchEquals(Instances.class, data -> handleEval(data))
-//                .matchEquals("Start", this::onStop)
-
-//                {
-//                    System.out.println("job started");
-//                    for (long i = 0; i < Long.MAX_VALUE; i += 20) {
-//                        if (i % 2000000000.0 == 0) System.out.println("progress... ");
-//                        if (i == 10000000000.0) break;
-//                    }
-////                    System.out.println("cyclic event stopped");
-//                    getTimers().startSingleTimer(TEST_KEY, "Start", Duration.ofSeconds(2));
-//                })
+                .matchEquals("NEW_CONF", this::onOptimizationStart)
+                .match(PoisonPill.class, x -> getContext().stop(self()))
                 .matchAny(m -> {
                     System.out.println("?? : " + m.getClass());
-//                    getTimers().startSingleTimer(TEST_KEY, "Stop", Duration.ofSeconds(2));
                 })
                 .build();
     }
 
     public static void main(String[] args) throws Exception {
-
-
-//        ActorSystem system = ActorSystem.create("testSystem");
-//        ActorRef learner = system.actorOf(Learner.props());
-//
-//        Thread.sleep(2000);
-//        learner.tell("Stop", ActorRef.noSender());
-//
-//        Classifier c = new SMO();
-//        Kernel k = new Kernel()
-
-
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
         Instances instances = source.getDataSet();
         instances.setClassIndex(instances.numAttributes() - 1);
@@ -267,16 +154,6 @@ public class Learner extends AbstractActorWithTimers {
 
         // Use a set of classifiers
         Classifier[] models = {
-//                    new NaiveBayes(),
-//                    new BayesNet(),
-                //new J48(), // a decision tree
-                //new PART(),
-//                    new DecisionTable(),//decision table majority classifier
-//                    new DecisionStump(), //one-level decision tree
-//                    new HoeffdingTree(),
-//                    new LMT(),
-//                    new JRip(),
-//                    new ZeroR(),
                 new SMO(),
                 new SMO(),
                 new SMO(),
@@ -289,7 +166,7 @@ public class Learner extends AbstractActorWithTimers {
                 new SMO(),
                 new SMO()
         };
-// Run for each model
+        // Run for each model
         List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.005);
         Instances train = L.get(0);
         Instances test = L.get(1);
