@@ -35,6 +35,12 @@ public final class ClassRes implements Comparable<ClassRes>
         return acc;
     }
 
+    public List<Prediction> getPreds() { return preds; }
+
+    public List<double[]> getProbs() { return probs; }
+
+    public double[] getAUROC() { return AUROC; }
+
     public double[] getFscore() {
         return fscore;
     }

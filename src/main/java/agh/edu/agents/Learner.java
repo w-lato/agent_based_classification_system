@@ -6,7 +6,10 @@ import agh.edu.learning.DataSplitter;
 import agh.edu.learning.DefaultClassifierFactory;
 import agh.edu.learning.ParamsFactory;
 import agh.edu.learning.params.Params;
-import akka.actor.*;
+import akka.actor.AbstractActorWithTimers;
+import akka.actor.ActorRef;
+import akka.actor.PoisonPill;
+import akka.actor.Props;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.*;
@@ -126,7 +129,7 @@ public class Learner extends AbstractActorWithTimers {
         }
     }
 
-    
+
     public Receive createReceive() {
         return receiveBuilder()
                 .matchEquals("NEW_CONF", this::onOptimizationStart)

@@ -24,6 +24,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
+// TODO check batch size - where to put it
+// TODO check if it is possible to add a layer to existing config
 public class MLP extends MultiLayerNetwork implements Classifier, Serializable
 {
     private int num_of_iter = 100;
