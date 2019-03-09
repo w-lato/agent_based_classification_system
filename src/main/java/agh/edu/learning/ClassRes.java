@@ -49,6 +49,10 @@ public final class ClassRes implements Comparable<ClassRes>
         return acc;
     }
 
+    public double getAcc_wgt() { return acc_wgt; }
+
+    public double getFmeas_wgt() { return fmeas_wgt; }
+
     public ClassRes(S_Type type, Classifier model, Instances data) throws Exception
     {
         Evaluation eval = new Evaluation(data);
@@ -152,4 +156,21 @@ public final class ClassRes implements Comparable<ClassRes>
 
         return Double.compare( A,B );
     }
+
+    public static double computeWeight(double[] fscore, double acc, double fmeas_wgt, double acc_wgt)
+    {
+        double tmp = 0.0;
+        for (double v : fscore) {
+            tmp += v;
+        }
+        return tmp * fmeas_wgt + acc * acc_wgt;
+    }
+
+    public static int compare(@NotNull ClassRes a, ClassRes b)
+    {
+        double A = computeWeight( a.getFscore(), a.getAcc(), a.getFmeas_wgt(), a.getAcc() );
+        double B = computeWeight( b.getFscore(), b.getAcc(), b.getFmeas_wgt(), b.getAcc() );
+        return Double.compare(A,B);
+    }
+
 }

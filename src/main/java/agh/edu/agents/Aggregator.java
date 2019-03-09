@@ -1,10 +1,10 @@
 package agh.edu.agents;
 
+import agh.edu.agents.enums.ClassStrat;
+import agh.edu.aggregation.ResultsHolder;
 import agh.edu.learning.ClassRes;
 import akka.actor.AbstractActorWithStash;
 import akka.actor.ActorRef;
-import weka.classifiers.evaluation.Prediction;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +13,9 @@ import java.util.Map;
 public class Aggregator extends AbstractActorWithStash {
 
     // TODO some kind of classification strategy
+    ClassStrat strat;
     Map<ActorRef,ClassGrade> perf;
-    Map<Integer,ResultsHolder> results;
+    Map<Integer, ResultsHolder> results;
 
 
 
@@ -31,66 +32,13 @@ public class Aggregator extends AbstractActorWithStash {
         ActorRef slave = sender();
         if( results.containsKey( id ) )
         {
-            results.get( id ).appendResults( pr, slave );
+            results.get( id ).appendPredsAndProbs( pr, slave, perf );
         } else {
-            ResultsHolder rh = new ResultsHolder( id );
-            rh.appendResults( pr, slave );
+            ResultsHolder rh = new ResultsHolder( id, strat );
+            rh.appendPredsAndProbs( pr, slave, perf );
             results.put( id, rh );
         }
         // TODO classify each row of data and send the results
-    }
-
-    private void handleClassification(QueryResults qr)
-    {
-        // TODO
-    }
-
-
-    public static class ResultsHolder
-    {
-        private final Integer ID;
-        private final StringBuilder class_order;
-        private final List<StringBuilder> preds;
-        private final List<StringBuilder> probs;
-
-        public ResultsHolder(Integer ID)
-        {
-            this.ID = ID;
-            class_order = new StringBuilder();
-            preds = new ArrayList<>();
-            probs = new ArrayList<>();
-        }
-
-        public void appendResults(PartialRes pr, ActorRef ref)
-        {
-            class_order.append(ref).append(",");
-            List<Prediction> preds_to_add = pr.cr.getPreds();
-            List<double[]> probs_to_add = pr.cr.getProbs();
-
-            if( preds.isEmpty() )
-            {
-                for (int i = 0; i < preds_to_add.size(); i++)
-                {
-                    preds.add( new StringBuilder( preds_to_add.get(i).toString() ) );
-                    probs.add( new StringBuilder( arrToStr( probs_to_add.get(i) ) ) );
-                }
-            } else {
-                for (int i = 0; i < preds_to_add.size(); i++)
-                {
-                    preds.get(i).append( preds_to_add.get(i).toString());
-                    probs.get(i).append( arrToStr( probs_to_add.get(i) ) );
-                }
-            }
-        }
-
-        private String arrToStr(double[] arr)
-        {
-            StringBuilder s = new StringBuilder();
-            for (double v : arr) {
-                s.append(v).append(",");
-            }
-            return s.append(";").toString();
-        }
     }
 
 
@@ -103,6 +51,10 @@ public class Aggregator extends AbstractActorWithStash {
             this.ID = ID;
             this.cr = cr;
         }
+
+        public ClassRes getCr() {
+            return cr;
+        }
     }
 
     public static final class ClassGrade
@@ -110,11 +62,22 @@ public class Aggregator extends AbstractActorWithStash {
         private final double[] fscore;
         private final double[] AUROC;
         private final double acc;
+        private final double acc_wgt;
+        private final double fmeas_wgt;
 
-        public ClassGrade(double[] fscore, double[] AUROC, double acc) {
+        public double[] getFscore() { return fscore; }
+        public double[] getAUROC() { return AUROC; }
+        public double getAcc() { return acc; }
+        public double getAcc_wgt() { return acc_wgt; }
+        public double getFmeas_wgt() { return fmeas_wgt; }
+
+        public ClassGrade(double[] fscore, double[] AUROC, double acc, double acc_wgt, double fmeas_wgt)
+        {
             int N = fscore.length;
             this.fscore = new double[ N ];
             this.AUROC = new double[ N ];
+            this.acc_wgt = acc_wgt;
+            this.fmeas_wgt = fmeas_wgt;
 
             this.acc = acc;
             for (int i = 0; i < N; i++) {
@@ -125,7 +88,7 @@ public class Aggregator extends AbstractActorWithStash {
 
         public ClassGrade(ClassRes cr)
         {
-            this( cr.getFscore(), cr.getAUROC(), cr.getAcc() );
+            this( cr.getFscore(), cr.getAUROC(), cr.getAcc(), cr.getAcc_wgt(),cr.getFmeas_wgt() );
         }
     }
 
