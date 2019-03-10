@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 
 public class ClassPred
 {
-    private static Map<Short,Integer> aux_ctr= new HashMap<>();
+    private static Map<Integer,Integer> aux_ctr= new HashMap<>();
 
-    public static List<Short> getPreds(ClassStrat s,
+    public static List<Integer> getPreds(ClassStrat s,
                                        Map<ActorRef, ClassGrade> perf,
                                        Map<ActorRef,List<double[]>> probs)
     {
@@ -26,48 +26,46 @@ public class ClassPred
     }
 
 
-    static List<Short> softVoting(  Map<ActorRef, ClassGrade> perf,
+    // TODO normalize weights??
+    static List<Integer> softVoting(  Map<ActorRef, ClassGrade> perf,
                                     Map<ActorRef,List<double[]>> probs )
     {
-        int M = probs.keySet().size();
-        int N = ((List<double[]>) probs.values().toArray()[0]).size();
-        double[][] tmp = new double[N][ probs.keySet().size() ];
-        Matrix wghts = new Matrix( M, N );
-        Matrix[] arr = new Matrix[M];
-        int i = 0;
-        for (ActorRef it : perf.keySet())
-        {
-            ClassGrade cg = perf.get(it);
-            wghts.set( i, i, ClassRes.computeWeight( cg.getFscore(),cg.getAcc(), cg.getFmeas_wgt(), cg.getAcc_wgt() ));
-            int j = 0;
-            for (double[] doubles : probs.get(it)) {
-                System.arraycopy( doubles,0, tmp[j],M-1, M);
-                j++;
-            }
-            arr[i] = new Matrix( tmp );
-            i++;
-        }
-        for (i = 0; i < arr.length; i++) arr[i].arrayTimesEquals(wghts);
+        Object[] ACTs =  perf.keySet().toArray();
+        int M = probs.get(ACTs[0]).size(); // rows
+        int N = ACTs.length; // cols
+        double[][] tmp;
 
-        Matrix aux = arr[0];
-        for (i = 1; i < arr.length; i++) {aux.plus( arr[i] );}
+        List<Matrix> arr = new ArrayList<>();
+        for (int i = 0; i < N; i++)
+        {
+            tmp = new double[ M ][ N ];
+            List<double[]> l = probs.get( ACTs[i] );
+            for (int i1 = 0; i1 < l.size(); i1++)
+            {
+                System.arraycopy( l.get(i1),0, tmp[i1],0, N);
+            }
+            arr.add( new Matrix( tmp, M, N ));
+        }
+
+        Object[] wghts = perf.values().stream().map(ClassRes::computeWeight).toArray();
+        for (int i = 0; i < N; i++) { arr.get(i).timesEquals((Double) wghts[i]); }
+        Matrix aux = arr.stream().reduce( Matrix::plus ).orElse(null);
         return Arrays.stream(aux.getArray())
-                .map(ClassPred::maxFrom)
+                .map(ClassPred::maxIdxFrom)
                 .collect(Collectors.toList());
     }
 
-    static List<Short> majorityVoting( Map<ActorRef,List<double[]>> probs )
+    static List<Integer> majorityVoting( Map<ActorRef,List<double[]>> probs )
     {
         int N = ((List<double[]>) probs.values().toArray()[0]).size();
-        List<Short> l = new ArrayList<>();
-        Short[] tmp = new Short[ probs.keySet().size() ];
-        int ctr = 0;
+        List<Integer> l = new ArrayList<>();
+        int[] tmp = new int[ probs.keySet().size() ];
 
-        for (int i = 0; i < N; i++, ctr = 0)
+        for (int i = 0, ctr = 0; i < N; i++, ctr = 0)
         {
             for (List<double[]> it : probs.values())
             {
-                tmp[ ctr ] = maxFrom( it.get( ctr ) );
+                tmp[ ctr ] = maxIdxFrom( it.get( i ) );
                 ctr++;
             }
             l.add( getMode( tmp ) );
@@ -75,15 +73,21 @@ public class ClassPred
         return l;
     }
 
-    public static Short maxFrom(double[] arr)
+    public static int maxIdxFrom(double[] arr)
     {
-        return (short) Arrays.stream(arr).max().orElse(0);
+        double max_val = Arrays.stream(arr).max().orElse(0.0);
+
+        for (int i = 0; i < arr.length; i++)
+        {
+            if( Double.compare(arr[i],max_val) == 0 ) return i;
+        }
+        return -1;
     }
 
-    public static Short getMode(Short[] arr)
+    public static int getMode(int[] arr)
     {
         aux_ctr.clear();
-        for (Short el : arr) {
+        for (int el : arr) {
             if (!aux_ctr.containsKey(el)) {
                 aux_ctr.put(el, 1);
             } else {
@@ -93,18 +97,17 @@ public class ClassPred
         return findMode();
     }
 
-    private static Short findMode()
+    private static Integer findMode()
     {
-        Short max_idx = -1;
-        Integer max = -1;
-        for( Map.Entry<Short,Integer> it : aux_ctr.entrySet())
+        int max = aux_ctr.values()
+                .stream()
+                .max(Integer::compareTo)
+                .orElse(-1);
+
+        for (Map.Entry<Integer, Integer> it : aux_ctr.entrySet())
         {
-            if( max < it.getValue() )
-            {
-                max_idx = it.getKey();
-                max = it.getValue();
-            }
+            if( it.getValue() == max ) return it.getKey();
         }
-        return max_idx;
+        return -1;
     }
 }

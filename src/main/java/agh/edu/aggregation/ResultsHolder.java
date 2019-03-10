@@ -16,6 +16,7 @@ public class ResultsHolder
 {
     private final Integer ID;
     private final ClassStrat strat;
+    // TODO replace this with List<ActorRef> because it will be hart to convert it from string to ref
     private final StringBuilder class_order;
     private final Map<ActorRef,List<double[]>> probs;
     private final List<StringBuilder> results;

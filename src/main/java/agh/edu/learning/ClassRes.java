@@ -1,5 +1,6 @@
 package agh.edu.learning;
 
+import agh.edu.agents.Aggregator;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.custom.MLP;
 import org.jetbrains.annotations.NotNull;
@@ -164,6 +165,26 @@ public final class ClassRes implements Comparable<ClassRes>
             tmp += v;
         }
         return tmp * fmeas_wgt + acc * acc_wgt;
+    }
+
+    public static double computeWeight(ClassRes cr)
+    {
+        return computeWeight(
+                cr.getFscore(),
+                cr.getAcc(),
+                cr.getFmeas_wgt(),
+                cr.getAcc_wgt()
+            );
+    }
+
+    public static double computeWeight(Aggregator.ClassGrade cr)
+    {
+        return computeWeight(
+                cr.getFscore(),
+                cr.getAcc(),
+                cr.getFmeas_wgt(),
+                cr.getAcc_wgt()
+        );
     }
 
     public static int compare(@NotNull ClassRes a, ClassRes b)
