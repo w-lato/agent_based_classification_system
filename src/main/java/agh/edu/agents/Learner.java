@@ -24,6 +24,7 @@ import static agh.edu.MAIN.crossValidationSplit;
 import static agh.edu.learning.DataSplitter.calculateAccuracy;
 
 // tODO inform Slave about the number of processed data instances
+// TODO remove souts
 public class Learner extends AbstractActorWithTimers {
 
     private ActorRef parent;
@@ -51,8 +52,9 @@ public class Learner extends AbstractActorWithTimers {
      *
      */
     // TODO start self-optimizaiton and send current model to ClassSlave
-    public Learner(S_Type type, Instances data) throws Exception
+    public Learner(S_Type type, Instances data, ActorRef parent) throws Exception
     {
+        this.parent = parent;
         this.data = data;
         r = new Random(System.currentTimeMillis());
         this.type = type;
@@ -74,20 +76,13 @@ public class Learner extends AbstractActorWithTimers {
 
         // eval
         System.out.println("  CURRENT : " + current);
-        best_cr = new ClassRes( type,best,data );
         current.buildClassifier( data );
+        best_cr = new ClassRes( type,best,data );
         parent.tell( new ClassSlave.BestClass( best, best_conf, best_cr),self());
 
         System.out.println("Learner created");
         getTimers().startSingleTimer(null, "NEW_CONF", Duration.ofSeconds(2));
     }
-
-    public Learner(S_Type type, Instances data, ActorRef parent) throws Exception
-    {
-       this( type, data );
-       this.parent = parent;
-    }
-
 
     static public Props props(S_Type type, Instances data, ActorRef parent) {
         return Props.create(Learner.class, () -> new Learner(type, data, parent));
@@ -99,7 +94,6 @@ public class Learner extends AbstractActorWithTimers {
         ClassRes new_cr = new ClassRes( type, model, data );
         if( new_cr.compareTo( best_cr ) > 0 )
         {
-            model.buildClassifier( data );
             best_cr = new_cr;
             best = current;
             best_conf = conf;
@@ -120,6 +114,7 @@ public class Learner extends AbstractActorWithTimers {
             System.out.println(" ---------- OPT ");
             curr_conf = configs.remove( r.nextInt( configs.size() ) );
             current = params.clasFromStr( curr_conf );
+            current.buildClassifier( data );
             handleEval( type, current, curr_conf);
 
             System.out.println(curr_conf + " :  " + best_conf );

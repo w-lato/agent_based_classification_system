@@ -131,12 +131,12 @@ public final class ClassRes implements Comparable<ClassRes>
     {
         this.preds = eval.predictions();
         probs = new ArrayList<>();
-        for (Instance datum : data) {
-            try {
+        try {
+            for (Instance datum : data) {
                 this.probs.add(model.distributionForInstance(datum));
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

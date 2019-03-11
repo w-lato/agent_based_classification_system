@@ -28,7 +28,7 @@ public class ClassSlave  extends AbstractActorWithStash
 
 
 
-    public static Props props(ClassSetup sp )
+    public static Props props(ClassSetup sp)
     {
         return Props.create(ClassSlave.class, ()-> new ClassSlave(sp) );
     }
@@ -102,6 +102,8 @@ public class ClassSlave  extends AbstractActorWithStash
             this.conf = conf;
             this.results = results;
         }
+
+        public String getConf() { return conf; }
     }
 
     @Override

@@ -37,7 +37,7 @@ public class ClassSlaveTests
     static ActorSystem system;
     static SMO smo;
     static ClassRes cr;
-    
+
     @BeforeClass
     public static void setup() throws Exception {
         system = ActorSystem.create();
@@ -96,5 +96,4 @@ public class ClassSlaveTests
         Assert.assertTrue( Double.compare(x.getAcc(),0.0) >= 0 );
         Assert.assertTrue( Double.compare(x.getAcc(),1.0) <= 0 );
     }
-
 }
