@@ -17,15 +17,19 @@ public class ResultsHolder
     private final Integer ID;
     private final ClassStrat strat;
     // TODO replace this with List<ActorRef> because it will be hart to convert it from string to ref
-    private final StringBuilder class_order;
+    private final List<ActorRef> class_order;
     private final Map<ActorRef,List<double[]>> probs;
     private final List<StringBuilder> results;
+
+    public Map<ActorRef, List<double[]>> getProbs() {
+        return probs;
+    }
 
     public ResultsHolder(Integer ID, ClassStrat strat)
     {
         this.ID = ID;
         this.strat = strat;
-        class_order = new StringBuilder();
+        class_order = new ArrayList<>();
         probs = new HashMap<>();
         results = new ArrayList<>(); // the final outcome
     }
@@ -34,8 +38,7 @@ public class ResultsHolder
     {
         if( !results.contains( ref ) )
         {
-            class_order.append(ref).append(',');
-            class_order.append( ref ).append(',');
+            class_order.add( ref );
             probs.put( ref, pr.getCr().getProbs() );
             calculatePreds( strat, perf );
         }

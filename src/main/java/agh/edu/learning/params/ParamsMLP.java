@@ -30,15 +30,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * TODO when to initialize classes_num and features_num
- *
- * opt_algo
- * num_of_layers
- * num_of_inputs
- * num_of_iterations
- * batch_size
- */
+// TODO ask wheter it is  correct way of using batch size?
 public class ParamsMLP implements Params
 {
     private final int classes_num;
@@ -63,7 +55,8 @@ public class ParamsMLP implements Params
         String[] p = params.split(",");
         MultiLayerConfiguration conf = getLayer( p );
         int num_of_iter = Integer.valueOf( p[3] );
-        return new MLP( conf, num_of_iter );
+        int batch_num = Integer.valueOf( p[0] );
+        return new MLP( conf, num_of_iter, batch_num );
     }
 
     @Override
@@ -80,10 +73,10 @@ public class ParamsMLP implements Params
                 for (int hid_lay_input : hid_lay_inputs) {
                     for (int i : num_of_iter) {
                         l.add(
-                                  batch_size + ","
-                                + num_of_layer + ","
-                                + hid_lay_input + ","
-                                + i
+                                batch_size + ","
+                                        + num_of_layer + ","
+                                        + hid_lay_input + ","
+                                        + i
                         );
                     }
                 }

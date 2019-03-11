@@ -1,16 +1,19 @@
 package agh.edu.agents;
 
 import agh.edu.agents.enums.ClassStrat;
+import agh.edu.aggregation.ClassPred;
 import agh.edu.aggregation.ResultsHolder;
 import agh.edu.learning.ClassRes;
 import akka.actor.AbstractActorWithStash;
 import akka.actor.ActorRef;
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Map;
 
-// TODO BETTER Way to identify the actor in refference
+// TODO BETTER Way to identify the actor in reference
 public class Aggregator extends AbstractActorWithStash {
+
+    ActorRef coordinator;
 
     // TODO some kind of classification strategy
     ClassStrat strat;
@@ -38,7 +41,9 @@ public class Aggregator extends AbstractActorWithStash {
             rh.appendPredsAndProbs( pr, slave, perf );
             results.put( id, rh );
         }
+        List<Integer> l = ClassPred.getPreds ( strat, perf, results.get(id).getProbs() );
         // TODO classify each row of data and send the results
+
     }
 
 

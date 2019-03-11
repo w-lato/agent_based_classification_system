@@ -25,6 +25,7 @@ import static agh.edu.learning.DataSplitter.calculateAccuracy;
 
 // tODO inform Slave about the number of processed data instances
 // TODO remove souts
+// TODO does config has to be chosen randomly?
 public class Learner extends AbstractActorWithTimers {
 
     private ActorRef parent;
@@ -112,7 +113,8 @@ public class Learner extends AbstractActorWithTimers {
         try
         {
             System.out.println(" ---------- OPT ");
-            curr_conf = configs.remove( r.nextInt( configs.size() ) );
+//            curr_conf = configs.remove( r.nextInt( configs.size() ) );
+            curr_conf = configs.remove( 0 );
             current = params.clasFromStr( curr_conf );
             current.buildClassifier( data );
             handleEval( type, current, curr_conf);

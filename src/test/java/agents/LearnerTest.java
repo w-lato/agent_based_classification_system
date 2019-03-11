@@ -1,8 +1,6 @@
 package agents;
 
-import agh.edu.agents.Aggregator;
 import agh.edu.agents.ClassSlave;
-import agh.edu.agents.ClassSlave.ClassSetup;
 import agh.edu.agents.Learner;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.ClassRes;
@@ -10,7 +8,6 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.testkit.TestKit;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.Duration;
@@ -23,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 public class LearnerTest
 {
-    static int N = 25;
+    static int N = 50;
     static Instances data;
     static Instances train;
     static ActorRef S;
@@ -78,7 +75,7 @@ public class LearnerTest
         ClassSlave.BestClass results = testProbe.within(Duration.create(300, TimeUnit.SECONDS), () -> {
             return testProbe.expectMsgClass( ClassSlave.BestClass.class );
         });
-        results = testProbe.within(Duration.create(1000, TimeUnit.SECONDS), () -> {
+        results = testProbe.within(Duration.create(300, TimeUnit.SECONDS), () -> {
             return testProbe.expectMsgClass( ClassSlave.BestClass.class );
         });
         System.out.println( results.getConf() );

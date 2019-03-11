@@ -22,11 +22,11 @@ import static agh.edu.agents.enums.Split.SIMPLE;
 import static agh.edu.agents.enums.Vote.WEIGHTED;
 
 public class Coordinator extends AbstractActor {
-    private AppUI GUI;
 
     private List<ActorRef> slaves;
-    private ActorRef splitter;
+    private List<ActorRef> learners;
     private ActorRef aggregator;
+    private ActorRef splitter;
 
     private Vote vote_method;
 
@@ -34,13 +34,6 @@ public class Coordinator extends AbstractActor {
         return Props.create(Master.class, () -> new Master(withGUI));
     }
 
-    public Coordinator(Boolean withGUI) {
-        if (withGUI) {
-            GUI = AppUI.getInstance();
-            GUI.setMaster(self());
-        } else GUI = null;
-        //TODO create splitter and aggregator
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

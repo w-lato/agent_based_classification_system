@@ -29,17 +29,24 @@ import java.util.List;
 public class MLP extends MultiLayerNetwork implements Classifier, Serializable
 {
     private int num_of_iter = 100;
+    private int batch_num = 5;
 
-
+    public int getBatch_num() { return batch_num; }
     public int getNum_of_iter() {
         return num_of_iter;
     }
 
-    public MLP(MultiLayerConfiguration conf, int num_of_iter)
+    MLP(MultiLayerConfiguration conf, int num_of_iter)
     {
         super(conf);
         this.init();
         this.num_of_iter = num_of_iter;
+    }
+
+    public MLP(MultiLayerConfiguration conf, int num_of_iter, int batch_num)
+    {
+        this(conf, num_of_iter);
+        this.batch_num = batch_num;
     }
 
     @Override
@@ -61,12 +68,11 @@ public class MLP extends MultiLayerNetwork implements Classifier, Serializable
                 .map(Nd4j::create)
                 .reduce( (a,b) -> Nd4j.concat(0,a,b))
                 .orElse(null);
-        DataSet allData = new DataSet( xd, qwe );
 
-//        System.out.println("DIM0: " +  xd.size(0) );
+        List<DataSet> l = new DataSet( xd, qwe ).dataSetBatches( batch_num );
         for (int i = 0; i < num_of_iter; i++)
         {
-            this.fit( allData );
+            for (DataSet dataSet : l) { this.fit(dataSet); }
         }
     }
 
