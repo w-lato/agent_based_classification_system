@@ -15,6 +15,7 @@ import agh.edu.agents.Aggregator.ClassGrade;
 public class ClassSlave  extends AbstractActorWithStash
 {
 //    private ActorRef learner;
+    // TODO setup aggre using constructor
     private ActorRef aggr;
 
     private S_Type type;

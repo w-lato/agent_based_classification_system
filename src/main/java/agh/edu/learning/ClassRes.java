@@ -70,7 +70,7 @@ public final class ClassRes implements Comparable<ClassRes>
                 AUROC[i] = eval.areaUnderROC( i );
             }
             acc = eval.correct() / data.size();
-            acc = Math.round( acc * 100.0 );
+            acc = Math.round( acc * 100.0 ) / 100.0;
 
             setupProbsAndPreds( eval, data, model );
             checkValues();
@@ -109,7 +109,7 @@ public final class ClassRes implements Comparable<ClassRes>
             AUROC[i] /=  N;
         }
         acc /= N;
-        acc = Math.round( acc * 100.0 );
+        acc = Math.round( acc * 100.0 ) / 100.0;
 
         Evaluation eval = new Evaluation( data );
         setupProbsAndPreds( eval, data, mlp );

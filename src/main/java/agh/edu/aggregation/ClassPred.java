@@ -27,8 +27,7 @@ public class ClassPred
 
 
     // TODO normalize weights??
-    static List<Integer> softVoting(  Map<ActorRef, ClassGrade> perf,
-                                    Map<ActorRef,List<double[]>> probs )
+    static List<Integer> softVoting(Map<ActorRef, ClassGrade> perf, Map<ActorRef,List<double[]>> probs )
     {
         Object[] ACTs =  perf.keySet().toArray();
         int M = probs.get(ACTs[0]).size(); // rows
@@ -73,7 +72,7 @@ public class ClassPred
         return l;
     }
 
-    public static int maxIdxFrom(double[] arr)
+    static int maxIdxFrom(double[] arr)
     {
         double max_val = Arrays.stream(arr).max().orElse(0.0);
 
@@ -84,7 +83,7 @@ public class ClassPred
         return -1;
     }
 
-    public static int getMode(int[] arr)
+    static int getMode(int[] arr)
     {
         aux_ctr.clear();
         for (int el : arr) {

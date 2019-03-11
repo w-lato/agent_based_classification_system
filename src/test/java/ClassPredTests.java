@@ -2,7 +2,6 @@ import agh.edu.agents.Aggregator;
 import agh.edu.agents.Aggregator.ClassGrade;
 import agh.edu.agents.ClassSlave;
 import agh.edu.agents.ClassSlave.ClassSetup;
-import agh.edu.agents.Master;
 import agh.edu.agents.enums.ClassStrat;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.aggregation.ClassPred;

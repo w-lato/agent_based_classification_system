@@ -91,22 +91,7 @@ public class Aggregator extends AbstractActorWithStash {
             this( cr.getFscore(), cr.getAUROC(), cr.getAcc(), cr.getAcc_wgt(),cr.getFmeas_wgt() );
         }
     }
-
-    public static final class QueryResults
-    {
-        private final Integer ID;
-        private final List<ActorRef> class_order;
-        private final List<Short> results;
-
-
-        public QueryResults(Integer ID, List<ActorRef> class_order, List<Short> results)
-        {
-            this.ID = ID;
-            this.class_order = new ArrayList<>(class_order);
-            this.results = new ArrayList<>(results);
-        }
-    }
-
+    
     @Override
     public Receive createReceive() {
         return receiveBuilder()
