@@ -1,6 +1,5 @@
 package agh.edu.learning.params;
 
-import agh.edu.learning.DataSplitter;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
@@ -80,9 +79,9 @@ public Classifier genRandomParams(Random gen) {
 
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
         Instances instances = source.getDataSet();
-        List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.05);
-        Instances train = L.get(0);
-        Instances test = L.get(1);
+
+        Instances train = instances.trainCV(20,0);
+        Instances test = instances.testCV(20,0);
 
         while (true)
         {

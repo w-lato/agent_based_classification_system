@@ -1,6 +1,6 @@
 package agents;
 
-import agh.edu.agents.Splitter;
+import agh.edu.agents.experiment.Splitter;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -54,10 +54,32 @@ public class SplitterTest
                 int orig_siz = s2.size();
                 s2.retainAll(s1);
 //            System.out.println( orig_siz + " : " + s2.size() );
-                Assert.assertTrue(orig_siz >= (v * s1.size()));
+                Assert.assertTrue(orig_siz > 0);
+                Assert.assertTrue(orig_siz >= (v * s2.size()));
             }
         }
+    }
+  
+    @Test
+    //todo fractions like 0.15 does not work like it should
+    public void testFillSplit() throws IOException {
+        int n = 10;
+        double[] OL = {0.1,0.15,0.2,0.4,0.5};
 
+        for (double v : OL) {
+            List<Instances> l = Splitter.fillSplit( data, n, v );
+            for (int i = 1; i < n; i++) {
+                List<String> s1 = Arrays.stream(l.get(i - 1).toString().split("\n")).filter(x -> !(x.startsWith("@") || x.isEmpty())).collect(Collectors.toList());
+                List<String> s2 = Arrays.stream(l.get(i).toString().split("\n")).filter(x -> !(x.startsWith("@") || x.isEmpty())).collect(Collectors.toList());
+                int orig_siz = s2.size();
+                s2.retainAll(s1);
+            System.out.println( orig_siz + " : " + s2.size() + " " + l.get(i).size());
+                Assert.assertTrue(orig_siz > 0);
+                Assert.assertTrue(orig_siz > (s2.size()));
+                int siz = l.get(i).size();
+//                Assert.assertTrue( siz > (data.size() * v - 100) &&  siz < (data.size() * v + 100) );
+            }
+        }
     }
 
 }

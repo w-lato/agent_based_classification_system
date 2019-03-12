@@ -1,4 +1,4 @@
-package agh.edu.learning;
+package agh.edu.learning.params;
 
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.params.*;

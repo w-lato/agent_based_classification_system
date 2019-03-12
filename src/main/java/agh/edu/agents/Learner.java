@@ -2,9 +2,8 @@ package agh.edu.agents;
 
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.ClassRes;
-import agh.edu.learning.DataSplitter;
 import agh.edu.learning.DefaultClassifierFactory;
-import agh.edu.learning.ParamsFactory;
+import agh.edu.learning.params.ParamsFactory;
 import agh.edu.learning.params.Params;
 import akka.actor.AbstractActorWithTimers;
 import akka.actor.ActorRef;
@@ -21,7 +20,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Random;
 import static agh.edu.MAIN.crossValidationSplit;
-import static agh.edu.learning.DataSplitter.calculateAccuracy;
 
 // tODO inform Slave about the number of processed data instances
 // TODO remove souts
@@ -167,9 +165,9 @@ public class Learner extends AbstractActorWithTimers {
                 new SMO()
         };
         // Run for each model
-        List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.005);
-        Instances train = L.get(0);
-        Instances test = L.get(1);
+        Instances train = instances.trainCV(20,0);
+        Instances test = instances.testCV(20,0);
+
         source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_test.arff");
         test = source.getDataSet();
         test.setClassIndex(test.numAttributes() - 1);
@@ -226,11 +224,11 @@ public class Learner extends AbstractActorWithTimers {
             s1 = System.currentTimeMillis() - s1;
 
 
-            double acc = calculateAccuracy(validation.predictions());
-            System.out.println("Accuracy of " + models[j].getClass().getSimpleName() + ": "
-                    + String.format("%.2f%%", acc)
-                    + " build : " + s + "   eval: " + s1
-                    + "\n---------------------------------");
+//            double acc = calculateAccuracy(validation.predictions());
+//            System.out.println("Accuracy of " + models[j].getClass().getSimpleName() + ": "
+//                    + String.format("%.2f%%", acc)
+//                    + " build : " + s + "   eval: " + s1
+//                    + "\n---------------------------------");
 
         }
     }

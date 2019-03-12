@@ -1,9 +1,7 @@
 package agh.edu.learning.params;
 
-import agh.edu.learning.DataSplitter;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.meta.AdaBoostM1;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
@@ -49,9 +47,9 @@ public class ParamsRF implements Params
     {
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
         Instances instances = source.getDataSet();
-        List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.05);
-        Instances train = L.get(0);
-        Instances test = L.get(1);
+        Instances train = instances.trainCV(20,0);
+        Instances test = instances.testCV(20,0);
+
 
         do {
             test.remove(0);

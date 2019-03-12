@@ -1,6 +1,6 @@
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.ClassRes;
-import agh.edu.learning.ParamsFactory;
+import agh.edu.learning.params.ParamsFactory;
 import agh.edu.learning.params.Params;
 import org.junit.Assert;
 import org.junit.Test;

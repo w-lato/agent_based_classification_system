@@ -1,6 +1,5 @@
 package agh.edu.learning.custom;
 
-import agh.edu.learning.DataSplitter;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -121,9 +120,9 @@ public class MLP extends MultiLayerNetwork implements Classifier, Serializable
     {
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
         Instances instances = source.getDataSet();
-        List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.1);
-        Instances train = L.get(0);
-        Instances test = L.get(1);
+        Instances train = instances.trainCV(20,0);
+        Instances test = instances.testCV(20,0);
+
 
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .seed(  System.currentTimeMillis() )

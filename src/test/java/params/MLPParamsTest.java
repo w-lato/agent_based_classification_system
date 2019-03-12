@@ -1,6 +1,5 @@
 package params;
 
-import agh.edu.learning.DataSplitter;
 import agh.edu.learning.custom.MLP;
 import agh.edu.learning.params.Params;
 import agh.edu.learning.params.ParamsMLP;
@@ -28,9 +27,8 @@ public class MLPParamsTest
 
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
         Instances instances = source.getDataSet();
-        List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.01);
-        train = L.get(0);
-        test = L.get(1);
+        train =  instances.testCV(20,0);
+        test = instances.testCV(20,1);
     }
 
     @Test

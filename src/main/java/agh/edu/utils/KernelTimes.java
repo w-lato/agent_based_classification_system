@@ -1,7 +1,5 @@
 package agh.edu.utils;
 
-import agh.edu.learning.ClassRes;
-import agh.edu.learning.DataSplitter;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
@@ -40,8 +38,7 @@ public class KernelTimes
 
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_train.arff");
         Instances instances = source.getDataSet();
-        List<Instances> L = DataSplitter.splitIntoTrainAndTest(instances, 0.07);
-        Instances train = L.get(0);
+        Instances train = instances.trainCV(20,0);
 
         source = new ConverterUtils.DataSource("C:\\Users\\P50\\Documents\\IdeaProjects\\masters_thesis\\DATA\\mnist_test.arff");
         Instances test = source.getDataSet();
