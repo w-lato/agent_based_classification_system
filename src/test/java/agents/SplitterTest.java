@@ -44,17 +44,20 @@ public class SplitterTest
     @Test
     public void testOLSplit() throws IOException {
         int n = 10;
-        double OL = 0.05;
-        List<Instances> l = Splitter.OLsplit( data, OL, n );
-        for (int i = 1; i < n; i++)
-        {
-            List<String> s1 = Arrays.stream(l.get(i - 1).toString().split("\n")).filter(x -> !(x.startsWith("@") || x.isEmpty())).collect(Collectors.toList());
-            List<String> s2 = Arrays.stream(l.get(i).toString().split("\n")).filter(x -> !(x.startsWith("@") || x.isEmpty())).collect(Collectors.toList());
-            int orig_siz = s2.size();
-            s2.retainAll( s1 );
+        double[] OL = {0.05,0.1,0.15,0.2,0.4,0.5};
+
+        for (double v : OL) {
+            List<Instances> l = Splitter.OLsplit( data, v, n );
+            for (int i = 1; i < n; i++) {
+                List<String> s1 = Arrays.stream(l.get(i - 1).toString().split("\n")).filter(x -> !(x.startsWith("@") || x.isEmpty())).collect(Collectors.toList());
+                List<String> s2 = Arrays.stream(l.get(i).toString().split("\n")).filter(x -> !(x.startsWith("@") || x.isEmpty())).collect(Collectors.toList());
+                int orig_siz = s2.size();
+                s2.retainAll(s1);
 //            System.out.println( orig_siz + " : " + s2.size() );
-            Assert.assertTrue( orig_siz >= (OL * s1.size())  );
+                Assert.assertTrue(orig_siz >= (v * s1.size()));
+            }
         }
+
     }
 
 }
