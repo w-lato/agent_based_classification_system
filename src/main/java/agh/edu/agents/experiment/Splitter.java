@@ -16,6 +16,7 @@ public class Splitter
     {
         int folds = 100 / percent_of_test; // usually 10,20,30
         data.randomize( r );
+        data.setClassIndex( data.numAttributes() - 1 );
         data.stratify( folds );
         List<Instances> l = new ArrayList<>();
         l.add( data.trainCV( folds, 0 ) );

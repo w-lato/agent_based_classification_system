@@ -10,72 +10,90 @@ import java.util.Optional;
 public final class RunConf
 {
     Instances train;
-    Optional<Instances> test;
+    Instances test;
 
     S_Type[] agents;
     ClassStrat class_method;
 
     Split split_meth;
-    Optional<Double> OL;
+    Optional<Double> fill;
+
+    private RunConf(Builder builder) {
+        train = builder.train;
+        test = builder.test;
+        agents = builder.agents;
+        class_method = builder.class_method;
+        split_meth = builder.split_meth;
+        fill = builder.fill;
+    }
 
     public ClassStrat getClass_method() {
         return class_method;
     }
 
+    public Instances getTrain() {
+        return train;
+    }
 
-    public static final class RunConfBuilder {
-        Instances train;
-        Optional<Instances> test;
-        S_Type[] agents;
-        ClassStrat class_method;
-        Split split_meth;
-        Optional<Double> OL;
+    public Instances getTest() {
+        return test;
+    }
 
-        public RunConfBuilder() {}
+    public S_Type[] getAgents() {
+        return agents;
+    }
 
-        public static RunConfBuilder aRunConf() {
-            return new RunConfBuilder();
+    public Split getSplit_meth() {
+        return split_meth;
+    }
+
+    public Optional<Double> getFill() {
+        return fill;
+    }
+
+    public static final class Builder {
+        private Instances train;
+        private Instances test;
+        private S_Type[] agents;
+        private ClassStrat class_method;
+        private Split split_meth;
+        private Optional<Double> fill;
+
+        public Builder() {
         }
 
-        public RunConfBuilder withTrain(Instances train) {
-            this.train = train;
+        public Builder train(Instances val) {
+            train = val;
             return this;
         }
 
-        public RunConfBuilder withTest(Optional<Instances> test) {
-            this.test = test;
+        public Builder test(Instances val) {
+            test = val;
             return this;
         }
 
-        public RunConfBuilder withAgents(S_Type[] agents) {
-            this.agents = agents;
+        public Builder agents(S_Type[] val) {
+            agents = val;
             return this;
         }
 
-        public RunConfBuilder withClass_method(ClassStrat class_method) {
-            this.class_method = class_method;
+        public Builder class_method(ClassStrat val) {
+            class_method = val;
             return this;
         }
 
-        public RunConfBuilder withSplit_meth(Split split_meth) {
-            this.split_meth = split_meth;
+        public Builder split_meth(Split val) {
+            split_meth = val;
             return this;
         }
 
-        public RunConfBuilder withOL(Optional<Double> OL) {
-            this.OL = OL;
+        public Builder fill(Optional<Double> val) {
+            fill = val;
             return this;
         }
 
         public RunConf build() {
-            RunConf runConf = new RunConf();
-            runConf.class_method = this.class_method;
-            runConf.split_meth = this.split_meth;
-            runConf.OL = this.OL;
-            runConf.test = this.test;
-            runConf.train = this.train;
-            runConf.agents = this.agents;
-            return runConf;
+            return new RunConf(this);
         }
     }
 }

@@ -19,10 +19,7 @@ public class DefaultClassifierFactory
         switch (type)
         {
             case SMO: return new SMO();
-            case PART: return new PART();
-            case J48: return  new J48();
             case NA: return new NaiveBayes();
-            case ZR: return new ZeroR();
             case IBK: return new IBk();
             case LOG: return new Logistic();
             case RF: return new RandomForest();

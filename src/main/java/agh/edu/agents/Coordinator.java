@@ -1,5 +1,6 @@
 //package agh.edu.agents;
 //
+//import agh.edu.agents.enums.ClassStrat;
 //import agh.edu.agents.enums.S_Type;
 //import agh.edu.agents.experiment.RunConf;
 //import akka.actor.AbstractActor;
@@ -17,16 +18,14 @@
 //
 //import static agh.edu.agents.enums.S_Type.PART;
 //import static agh.edu.agents.enums.Split.SIMPLE;
-//import static agh.edu.agents.enums.Vote.WEIGHTED;
 //
 //public class Coordinator extends AbstractActor {
 //
 //    private List<ActorRef> slaves;
 //    private List<ActorRef> learners;
 //    private ActorRef aggregator;
-//    private ActorRef splitter;
 //
-//    private Vote vote_method;
+//    private ClassStrat strat;
 //
 //    static public Props props(Boolean withGUI) {
 //        return Props.create(Master.class, () -> new Master(withGUI));
@@ -38,15 +37,7 @@
 //    //
 //    //                                    HANDLERS
 //
-//    private void onTest(Master.EvaluateTest m) throws Exception
-//    {
-////        for (ActorRef actor : slaves
-////        ) {
-////            // todo tell to test batch file
-////            actor.tell( new  , ActorRef.noSender());
-////        }
 //
-//    }
 //
 //    private void onConfig(RunConf c) throws Exception
 //    {

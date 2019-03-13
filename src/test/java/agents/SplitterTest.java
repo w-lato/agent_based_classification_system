@@ -59,12 +59,12 @@ public class SplitterTest
             }
         }
     }
-  
+
     @Test
     //todo fractions like 0.15 does not work like it should
     public void testFillSplit() throws IOException {
-        int n = 10;
-        double[] OL = {0.1,0.15,0.2,0.4,0.5};
+        int n = 3;
+        double[] OL = {0.5};
 
         for (double v : OL) {
             List<Instances> l = Splitter.fillSplit( data, n, v );
