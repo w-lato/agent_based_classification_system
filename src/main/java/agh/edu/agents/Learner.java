@@ -110,14 +110,14 @@ public class Learner extends AbstractActorWithTimers {
         }
         try
         {
-            System.out.println(" ---------- OPT ");
+            System.out.println(" ---------- OPT " + type);
 //            curr_conf = configs.remove( r.nextInt( configs.size() ) );
             curr_conf = configs.remove( 0 );
             current = params.clasFromStr( curr_conf );
             current.buildClassifier( data );
             handleEval( type, current, curr_conf);
 
-            System.out.println(curr_conf + " :  " + best_conf );
+            System.out.println(curr_conf + " :  " + best_conf + " ");
             getTimers().startSingleTimer(null, "NEW_CONF", Duration.ofSeconds(2));
         } catch (Exception e) {
             e.printStackTrace();

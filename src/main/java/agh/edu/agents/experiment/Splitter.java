@@ -15,9 +15,7 @@ public class Splitter
     public static List<Instances> splitOnTestAndTrain(Instances data, int percent_of_test)
     {
         int folds = 100 / percent_of_test; // usually 10,20,30
-        data.randomize( r );
-        data.setClassIndex( data.numAttributes() - 1 );
-        data.stratify( folds );
+        prepareInst( data, folds );
         List<Instances> l = new ArrayList<>();
         l.add( data.trainCV( folds, 0 ) );
         l.add( data.testCV( folds, 0 ) );
@@ -25,8 +23,7 @@ public class Splitter
     }
 
     public static List<Instances> OLsplit(Instances data, double OL, int n) throws IOException {
-        data.randomize( r );
-        data.stratify( n );
+        prepareInst( data,n );
         List<Instances> l = new ArrayList<>();
         for (int i = 0; i < n; i++) { l.add( data.testCV( n, i) ); }
         int x_split = (int) (1.0 / OL);
@@ -39,8 +36,7 @@ public class Splitter
     }
 
     public static List<Instances> equalSplit(Instances data, int n) throws IOException {
-        data.randomize( r );
-        data.stratify( n );
+        prepareInst( data,n );
         List<Instances> l = new ArrayList<>();
         for (int i = 0; i < n; i++){ l.add( data.testCV( n, i) ); }
         return l;
@@ -50,6 +46,7 @@ public class Splitter
     {
         if( (1.0 / F) > n ) return null;
         data.randomize( r );
+        data.setClassIndex( data.numAttributes() - 1 );
         List<Instances> l = new ArrayList<>();
         int x_in_part = (int) ( (F * (n - 1)) / (1.0 - F));
         int folds = (n-1) + x_in_part;
@@ -78,6 +75,12 @@ public class Splitter
     }
 
 
+    private static void prepareInst( Instances data, int n )
+    {
+        data.randomize( r );
+        data.setClassIndex( data.numAttributes() - 1 );
+        data.stratify( n );
+    }
 
     public static void main(String[] args) throws Exception {
         ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\mnist_train.arff");

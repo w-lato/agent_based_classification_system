@@ -6,20 +6,31 @@ import agh.edu.aggregation.ResultsHolder;
 import agh.edu.learning.ClassRes;
 import akka.actor.AbstractActorWithStash;
 import akka.actor.ActorRef;
+import akka.actor.Props;
 
 import java.util.List;
 import java.util.Map;
 
 // TODO BETTER Way to identify the actor in reference
+// TODO method which sets class strat & a method which will use all possible strategies
 public class Aggregator extends AbstractActorWithStash {
 
-    ActorRef coordinator;
 
-    // TODO some kind of classification strategy
+    ActorRef master;
     ClassStrat strat;
+
     Map<ActorRef,ClassGrade> perf;
     Map<Integer, ResultsHolder> results;
 
+
+    public Aggregator(ActorRef coordinator, ClassStrat strat) {
+        this.master = coordinator;
+        this.strat = strat;
+    }
+
+    static public Props props(ActorRef coord, ClassStrat strat) {
+        return Props.create(Aggregator.class, () -> new Aggregator(coord,strat));
+    }
 
 
     private void handleClassUpdate(ClassGrade cg) { perf.put( getSender(), cg ); }
