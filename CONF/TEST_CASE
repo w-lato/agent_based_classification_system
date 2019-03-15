@@ -1,0 +1,14 @@
+{
+   "paths" : {
+        "train" : "DATA/iris.arff",
+   },
+   "agents" : {
+        "SMO"  : 1,
+        "MLP"  : 2,
+        "ADA"  : 3,
+   },
+   "split" : {
+        "method" : "SIMPLE",
+   },
+   "class_strat" : "WEIGHTED"
+}

@@ -22,6 +22,7 @@ public class ConfParser
     {
         try {
             String data = new String(Files.readAllBytes(Paths.get(path)));
+            String conf_name = path.substring(path.lastIndexOf("/") + 1);
             JSONObject obj = new JSONObject(data);
             String train_path = obj.getJSONObject("paths").getString("train");
             S_Type[] agents = toENumArr(obj.getJSONObject("agents"));
@@ -48,6 +49,7 @@ public class ConfParser
 
 //            for (S_Type agent : agents) { System.out.println(agent); }
             return new RunConf.Builder()
+                    .conf_name(conf_name)
                     .agents( agents )
                     .split_meth( split )
                     .class_method( vote )

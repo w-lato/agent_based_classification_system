@@ -2,6 +2,7 @@ package agh.edu.agents;
 
 import agh.edu.agents.enums.ClassStrat;
 import agh.edu.agents.enums.S_Type;
+import agh.edu.agents.experiment.ConfParser;
 import agh.edu.agents.experiment.RunConf;
 import agh.edu.agents.experiment.Saver;
 import agh.edu.agents.experiment.Splitter;
@@ -9,7 +10,6 @@ import akka.actor.*;
 import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +17,7 @@ import static agh.edu.agents.enums.Split.SIMPLE;
 
 // TODO handle the class strategy - only one thing has to be changes in order to check different results
 // tODO handle slaves save and load - persistent
+// TODO kill scenario
 public class Master extends AbstractActorWithStash {
     private boolean exp_processing  = false;
 
@@ -49,6 +50,7 @@ public class Master extends AbstractActorWithStash {
     // TODO when to unstash?
     private void onConfig(RunConf c) throws Exception
     {
+        System.out.println(" ----------------------- "+ c.getConf_name());
         if( !exp_processing )
         {
             this.curr = c;
@@ -125,6 +127,7 @@ public class Master extends AbstractActorWithStash {
     @Override
     public AbstractActor.Receive createReceive() {
         return receiveBuilder()
+//                .matchEquals("STOP", getContext().stop(self()))
                 .match(  RunConf.class, this::onConfig)
                 .matchAny(o -> { System.out.println("Master received unknown message: " + o); })
                 .build();
@@ -160,9 +163,9 @@ public class Master extends AbstractActorWithStash {
 //                    .test( test )
                     .build();
 
+            RC = ConfParser.getConfFrom( "CONF/TEST_CASE" );
             m.tell( RC, ActorRef.noSender() );
             m.tell( new Master.EvaluateTest(), ActorRef.noSender() );
-
         } catch (Exception e) {
             e.printStackTrace();
         }

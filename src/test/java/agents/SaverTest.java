@@ -1,13 +1,16 @@
 package agents;
 
+import agh.edu.agents.Master;
 import agh.edu.agents.enums.S_Type;
+import agh.edu.agents.experiment.ConfParser;
+import agh.edu.agents.experiment.RunConf;
 import agh.edu.agents.experiment.Saver;
 import agh.edu.learning.ClassRes;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
+import org.junit.*;
 import weka.classifiers.functions.SMO;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
@@ -23,17 +26,17 @@ import java.util.stream.Collectors;
 
 public class SaverTest
 {
-    static int N = 20;
-    static Instances data;
-
+    private static Instances data;
 
     @BeforeClass
-    public static void setup() throws Exception {
+    public static void setup() throws Exception
+    {
         ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\mnist_train.arff");
         data = source.getDataSet();
         data.setClassIndex( data.numAttributes() - 1);
-        data.stratify( N );
-        data = source.getDataSet().testCV(N,0);
+        int n = 20;
+        data.stratify(n);
+        data = source.getDataSet().testCV(n,0);
         data.setClassIndex( data.numAttributes() - 1);
     }
 
@@ -50,7 +53,7 @@ public class SaverTest
         m.put("C","5670");
         m.put("D","2000");
 
-        String exp_dir = Saver.setupNewExp("TEST_CASE") + "/some_id";
+        String exp_dir = Saver.setupNewExp("TEST_DIR") + "/some_id";
         Saver.saveModel( exp_dir, smo, cr, type, data, m );
 
         // check if files were created
@@ -76,27 +79,59 @@ public class SaverTest
         }
         Assert.assertEquals( the_rest, read_rest.toString());
 
-
         // check if model from file is working
         SMO read_smo = (SMO) SerializationHelper.read(exp_dir+".model");
         ConverterUtils.DataSource source = new ConverterUtils.DataSource( exp_dir+".arff");
         Instances read_instances = source.getDataSet();
         read_instances.setClassIndex( read_instances.numAttributes() - 1 );
         ClassRes read_cr = new ClassRes( read_type, read_smo, read_instances );
-        Assert.assertTrue( cr.compareTo(read_cr) == 0);
+        Assert.assertEquals(0, cr.compareTo(read_cr));
     }
 
-    @After
-    public void cleanWorkspace() throws IOException
+    @Test
+    public void testAgentSetup() throws IOException, InterruptedException {
+        ActorSystem system = ActorSystem.create("testSystem");
+        RunConf rc = ConfParser.getConfFrom( "CONF/TEST_CASE" );
+        ActorRef m = system.actorOf( Master.props() ,"master" );
+        m.tell( rc, ActorRef.noSender() );
+
+        Thread.sleep( 5000 );
+        List<String> l = Files.list(Paths.get("EXP/TEST_CASE_0"))
+                .map(Path::getFileName)
+                .map(Path::toString)
+                .collect(Collectors.toList());
+
+        int count_ADAs = (int) l.stream().filter(x -> x.contains("ADA")).count();
+        int count_MLPs = (int) l.stream().filter(x -> x.contains("MLP")).count();
+        int count_SMOs = (int) l.stream().filter(x -> x.contains("SMO")).count();
+        Assert.assertEquals(9, count_ADAs);
+        Assert.assertEquals(6, count_MLPs);
+        Assert.assertEquals(3, count_SMOs);
+
+//        System.out.println( Files.exists( Paths.get("EXP/TEST_CASE/") ) );
+//        List<Path> l = Files.list(Paths.get("EXP/TEST_CASE/"))
+//                .peek(System.out::println)
+//                .collect(Collectors.toList());
+    }
+
+    @AfterClass
+    public static void cleanWorkspace() throws IOException
     {
         List<Path> l = Files.list(Paths.get("EXP"))
-                .filter(x-> x.getFileName().toString().contains("TEST_CASE") )
+                .filter(x-> {
+                    String s = x.getFileName().toString();
+                    return  s.contains("TEST_CASE") || s.contains("TEST_DIR");
+                })
+                .peek(System.out::println)
                 .collect(Collectors.toList());
 
         for (Path path : l)
         {
-            FileUtils.cleanDirectory( path.toFile() );
-            Files.delete(path);
+            if(Files.exists( path ) )
+            {
+                FileUtils.cleanDirectory( path.toFile() );
+                Files.delete(path);
+            }
         }
     }
 }

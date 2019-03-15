@@ -25,6 +25,7 @@ public class Saver
 
     public static String setupNewExp(String conf_name) throws IOException
     {
+        System.out.println(" CONFFF " + conf_name);
         List<String> l = Files.list(Paths.get(save_dir))
                 .filter(Files::isDirectory)
                 .map(x->x.getFileName().toString())
