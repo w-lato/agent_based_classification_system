@@ -9,6 +9,8 @@ import java.util.Optional;
 
 public final class RunConf
 {
+    String conf_name;
+
     Instances train;
     Instances test;
 
@@ -19,6 +21,7 @@ public final class RunConf
     Optional<Double> fill;
 
     private RunConf(Builder builder) {
+        conf_name = builder.conf_name;
         train = builder.train;
         test = builder.test;
         agents = builder.agents;
@@ -26,6 +29,8 @@ public final class RunConf
         split_meth = builder.split_meth;
         fill = builder.fill;
     }
+
+    public String getConf_name() { return conf_name; }
 
     public ClassStrat getClass_method() {
         return class_method;
@@ -52,6 +57,7 @@ public final class RunConf
     }
 
     public static final class Builder {
+        private String conf_name;
         private Instances train;
         private Instances test;
         private S_Type[] agents;
@@ -59,8 +65,13 @@ public final class RunConf
         private Split split_meth;
         private Optional<Double> fill;
 
-        public Builder() {
+        public Builder() {}
+
+        public Builder conf_name(String val) {
+            conf_name = val;
+            return this;
         }
+
 
         public Builder train(Instances val) {
             train = val;

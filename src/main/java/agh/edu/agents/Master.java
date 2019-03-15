@@ -3,6 +3,7 @@ package agh.edu.agents;
 import agh.edu.agents.enums.ClassStrat;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.experiment.RunConf;
+import agh.edu.agents.experiment.Saver;
 import agh.edu.agents.experiment.Splitter;
 import akka.actor.*;
 import weka.classifiers.evaluation.Prediction;
@@ -59,6 +60,7 @@ public class Master extends AbstractActorWithStash {
             aggregator = getContext().actorOf(Aggregator.props( self(), c.getClass_method() ));
 
             // setup slaves and learners
+            String exp_id = Saver.setupNewExp( c.getConf_name() );
             S_Type[] agents = c.getAgents();
             for (int i = 0; i < N; i++)
             {
@@ -68,8 +70,7 @@ public class Master extends AbstractActorWithStash {
                 ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSlave.ClassSetup( aggregator, cur_data, cur_type ) ) );
                 slaves.put( new_slave, cur_type );
                 data_split.put( new_slave, l.get(i) );
-
-                ActorRef new_learner = getContext().actorOf( Learner.props( cur_type, cur_data, new_slave));
+                ActorRef new_learner = getContext().actorOf( Learner.props(exp_id, cur_type, cur_data, new_slave));
                 learners.put( new_learner, cur_type );
             }
             System.out.println(" ALL SETUP ");
@@ -147,6 +148,7 @@ public class Master extends AbstractActorWithStash {
 
 
             RunConf RC = new RunConf.Builder()
+                    .conf_name("TEST_CONF")
                     .agents(new S_Type[]{
 //                            S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,
 //                            S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,

@@ -18,7 +18,6 @@ public class SplitterTest
     static int N = 50;
     static Instances data;
 
-
     @BeforeClass
     public static void setup() throws Exception {
         ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\mnist_train.arff");

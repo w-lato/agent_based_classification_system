@@ -53,7 +53,7 @@ public class LearnerTest
     public void testBestClassAndQueryForwardMessage() throws Exception {
         final TestKit testProbe = new TestKit(system);
         ActorRef test = testProbe.testActor();
-        S = system.actorOf(Learner.props(S_Type.SMO, train, test));
+        S = system.actorOf(Learner.props("TO_DELETE",S_Type.SMO, train, test));
 
         ClassSlave.BestClass results = testProbe.within(Duration.create(15, TimeUnit.SECONDS), () -> {
             return testProbe.expectMsgClass( ClassSlave.BestClass.class );
@@ -70,7 +70,7 @@ public class LearnerTest
     public void testMLPOptimization() throws Exception {
         final TestKit testProbe = new TestKit(system);
         ActorRef test = testProbe.testActor();
-        S = system.actorOf(Learner.props(S_Type.MLP, train, test));
+        S = system.actorOf(Learner.props("TO_DELETE", S_Type.MLP, train, test));
 
         ClassSlave.BestClass results = testProbe.within(Duration.create(300, TimeUnit.SECONDS), () -> {
             return testProbe.expectMsgClass( ClassSlave.BestClass.class );

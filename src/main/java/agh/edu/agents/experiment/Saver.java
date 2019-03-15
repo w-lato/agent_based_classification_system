@@ -1,43 +1,58 @@
 package agh.edu.agents.experiment;
 
-import agh.edu.agents.Aggregator;
-import agh.edu.agents.Aggregator.ClassGrade;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.ClassRes;
-import org.bytedeco.javacpp.presets.opencv_core;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
+
+import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class Saver
 {
 
+    public static AtomicInteger id_gen = new AtomicInteger();
     public static final String save_dir = "EXP/";
+
+    public static synchronized int getIntID() { return id_gen.incrementAndGet(); }
+
+    public static String setupNewExp(String conf_name) throws IOException
+    {
+        List<String> l = Files.list(Paths.get(save_dir))
+                .filter(Files::isDirectory)
+                .map(x->x.getFileName().toString())
+                .collect(Collectors.toList());
+
+        l = l.stream().map(x->x.substring(x.lastIndexOf("_")+1)).collect(Collectors.toList());
+        int max = l.stream().map(Integer::valueOf).max(Integer::compareTo).orElse(-1);
+        String s = save_dir + conf_name.toUpperCase() + "_" + (max+1);
+        Files.createDirectories( Paths.get(s) );
+
+        return s;
+    }
 
     /**
      * Saves file in given directory:
-     *  EXP/MNIST_1/TYPE_GRADE.model - a model
-     *  EXP/MNIST_1/TYPE_GRADE.meta  - data related to used config, grading, and already tested configs
-     *  EXP/MNIST_1/TYPE_GRADE.arff  - .arff data used to train the model
-     *
+     *  EXP/MNIST_1/TYPE_MODEL_ID.model - a model
+     *  EXP/MNIST_1/TYPE_MODEL_ID.meta  - data related to used config, grading, and already tested configs
+     *  EXP/MNIST_1/TYPE_MODEL_ID.arff  - .arff data used to train the model
      *
      * */
-    public static void saveModel(String exp_id, Classifier model, ClassRes grade, S_Type type, Instances data, Map<String,String> used_configs) throws Exception
+    public static void saveModel(String save_path, Classifier model, ClassRes grade, S_Type type, Instances data, Map<String,String> used_configs) throws Exception
     {
-        String cur_exp_path = save_dir + exp_id + "/" + type + "_" + String.valueOf( ClassRes.computeWeight( grade ) );
-        String s = modelMetadata( type,grade, used_configs );
-
+        String s = modelMetadata( type, grade, used_configs );
         // save to files
-        SerializationHelper.write(  cur_exp_path + ".model", model  );
-        Files.write(Paths.get(          cur_exp_path + ".arff"), data.toString().getBytes());
-        Files.write(Paths.get(          cur_exp_path + ".conf"), s.getBytes());
+        SerializationHelper.write(  save_path + ".model", model  );
+        Files.write(Paths.get(          save_path + ".conf"), s.getBytes());
+        if( Files.notExists(Paths.get(  save_path + ".arff")))
+            Files.write(Paths.get(      save_path + ".arff"), data.toString().getBytes());
     }
 
     private static String modelMetadata(S_Type type, ClassRes grade, Map<String,String> used_configs )
@@ -46,7 +61,6 @@ public class Saver
 
         // TYPE:GRADE
         s.append( type ).append( ":").append( ClassRes.computeWeight( grade ) ).append("\n");
-        s.append( gradeToString( grade ) ).append("\n");
 
         // TRIED_CONFIGS:WITH_THEIR_GRADES
         used_configs.entrySet().stream()
@@ -59,6 +73,7 @@ public class Saver
     public static String gradeToString(ClassRes cr)
     {
         StringBuilder s = new StringBuilder();
+
         // acc
         s.append(cr.getAcc() ).append(":");
 
