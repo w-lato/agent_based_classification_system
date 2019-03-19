@@ -100,6 +100,7 @@ public class Learner extends AbstractActorWithTimers {
 
     public void handleEval(S_Type type, Classifier model, String conf) throws Exception
     {
+        System.out.println(" %%%% ");
         ClassRes new_cr = new ClassRes( type, model, data );
         used_configs.put(curr_conf,Saver.gradeToString( new_cr ));
         if( new_cr.compareTo( best_cr ) > 0 )
@@ -112,10 +113,12 @@ public class Learner extends AbstractActorWithTimers {
     }
 
 
-    private void onOptimizationStart(String s)
+    private void onOptimizationStart(String s) throws Exception
     {
-
-        if( configs.isEmpty() ) {
+        if( configs.isEmpty() )
+        {
+            System.out.println( "ALL CONFIGS USED" );
+            Saver.saveModel( save_id, best, best_cr, type, data, used_configs );
             self().tell( PoisonPill.getInstance(), ActorRef.noSender() );
             return;
         }
@@ -143,7 +146,8 @@ public class Learner extends AbstractActorWithTimers {
     }
 
 
-    public Receive createReceive() {
+    public Receive createReceive()
+    {
         return receiveBuilder()
                 .matchEquals("NEW_CONF", this::onSaveModel)
                 .matchEquals("SAVE_MODEL", this::onOptimizationStart)
@@ -153,5 +157,4 @@ public class Learner extends AbstractActorWithTimers {
                 })
                 .build();
     }
-
 }

@@ -81,9 +81,11 @@ public class Saver
         // fscore
         double[] aux = cr.getFscore();
         for (double aux1 : aux) { s.append(aux1).append(","); }
+        s.deleteCharAt( s.lastIndexOf(",") );
         s.append(":");
         aux = cr.getAUROC();
         for (double aux1 : aux) { s.append(aux1).append(","); }
+        s.deleteCharAt( s.lastIndexOf(",") );
         return s.toString();
     }
 }

@@ -1,0 +1,12 @@
+{
+   "paths" : {
+        "train" : "DATA/iris.arff",
+   },
+   "agents" : {
+        "NA"  : 2
+   },
+   "split" : {
+        "method" : "SIMPLE",
+   },
+   "class_strat" : "WEIGHTED"
+}

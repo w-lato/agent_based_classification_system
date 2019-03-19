@@ -4,9 +4,9 @@ import agh.edu.agents.enums.ClassStrat;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.enums.Split;
 import weka.core.Instances;
-
 import java.util.Optional;
 
+// TODO is class_method necessary?
 public final class RunConf
 {
     String conf_name;
@@ -20,7 +20,8 @@ public final class RunConf
     Split split_meth;
     Optional<Double> fill;
 
-    private RunConf(Builder builder) {
+    private RunConf(Builder builder)
+    {
         conf_name = builder.conf_name;
         train = builder.train;
         test = builder.test;
@@ -56,7 +57,8 @@ public final class RunConf
         return fill;
     }
 
-    public static final class Builder {
+    public static final class Builder
+    {
         private String conf_name;
         private Instances train;
         private Instances test;
@@ -71,7 +73,6 @@ public final class RunConf
             conf_name = val;
             return this;
         }
-
 
         public Builder train(Instances val) {
             train = val;
