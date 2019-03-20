@@ -53,8 +53,8 @@ public class ParamsMLP implements Params
     {
         String[] p = params.split(",");
         MultiLayerConfiguration conf = getLayer( p );
-        int num_of_iter = Integer.valueOf( p[3] );
         int batch_num = Integer.valueOf( p[0] );
+        int num_of_iter = Integer.valueOf( p[3] );
         return new MLP( conf, num_of_iter, batch_num );
     }
 

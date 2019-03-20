@@ -150,7 +150,7 @@ public class Learner extends AbstractActorWithTimers {
         {
             System.out.println( "ALL CONFIGS USED" );
             Saver.saveModel( save_id, best, best_cr, type, data, used_configs );
-            self().tell( PoisonPill.getInstance(), ActorRef.noSender() );
+            getContext().stop(self());
             return;
         }
         try

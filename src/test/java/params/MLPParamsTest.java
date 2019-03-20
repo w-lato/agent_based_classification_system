@@ -7,6 +7,8 @@ import org.deeplearning4j.nn.api.Layer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import sun.rmi.server.InactiveGroupException;
+import weka.classifiers.functions.Logistic;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
@@ -28,7 +30,9 @@ public class MLPParamsTest
         ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
         Instances instances = source.getDataSet();
         train =  instances.testCV(20,0);
+        train.setClassIndex( train.numAttributes() - 1 );
         test = instances.testCV(20,1);
+        test.setClassIndex( test.numAttributes() - 1 );
     }
 
     @Test
@@ -60,5 +64,22 @@ public class MLPParamsTest
         // 3 layers test
         mlp = ((MLP) p.clasFromStr("50,4,100,100"));
         mlp.buildClassifier( train );
+    }
+
+    @Test
+    public void testGetFromStr()
+    {
+        List<String> l = p.getParamsCartProd();
+        for (int i = 0; i < l.size(); i++)
+        {
+            String cur = l.get(i);
+            String[] aux = cur.split(",");
+            Integer batch_siz = Integer.valueOf( aux[0] );
+            Integer num_of_iter = Integer.valueOf( aux[3] );
+            mlp = (MLP) p.clasFromStr( cur );
+
+            Assert.assertEquals((int)batch_siz, mlp.getBatch_num());
+            Assert.assertEquals((int)num_of_iter, mlp.getNum_of_iter());
+        }
     }
 }

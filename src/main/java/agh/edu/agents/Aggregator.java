@@ -6,6 +6,7 @@ import agh.edu.aggregation.ResultsHolder;
 import agh.edu.learning.ClassRes;
 import akka.actor.AbstractActorWithStash;
 import akka.actor.ActorRef;
+import akka.actor.PoisonPill;
 import akka.actor.Props;
 
 import java.util.List;
@@ -114,6 +115,7 @@ public class Aggregator extends AbstractActorWithStash {
         return receiveBuilder()
 
 
+                .match(PoisonPill.class, x -> getContext().stop(self()))
                 .matchAny( x -> System.out.println("?? " + x ) )
                 .build();
     }

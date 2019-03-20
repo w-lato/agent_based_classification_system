@@ -51,9 +51,9 @@ public class ClassSlaveTests
 
 
         ActorRef m = ActorRef.noSender();
-        A = system.actorOf(ClassSlave.props(new ClassSetup(m, train, S_Type.RF)));
-        S = system.actorOf(ClassSlave.props(new ClassSetup(A, train, S_Type.RF)));
-        L = system.actorOf(ClassSlave.props(new ClassSetup(m, train, S_Type.RF)));
+        A = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF)));
+        S = system.actorOf(ClassSlave.props(new ClassSetup(A, S_Type.RF)));
+        L = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF)));
 
         smo = new SMO();
         smo.buildClassifier( train );
@@ -72,7 +72,7 @@ public class ClassSlaveTests
         ActorRef test = testProbe.testActor();
 
         ClassRes cr = new ClassRes(S_Type.SMO,smo,train);
-        S = system.actorOf(ClassSlave.props(new ClassSetup(test, train, S_Type.RF)));
+        S = system.actorOf(ClassSlave.props(new ClassSetup(test, S_Type.RF)));
         S.tell( new Query(1,train.testCV(10,1)), ActorRef.noSender());
         testProbe.expectNoMessage( Duration.apply(3,TimeUnit.SECONDS) );
 

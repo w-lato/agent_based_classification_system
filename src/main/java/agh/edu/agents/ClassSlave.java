@@ -2,10 +2,7 @@ package agh.edu.agents;
 
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.ClassRes;
-import akka.actor.AbstractActorWithStash;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
+import akka.actor.*;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
 import agh.edu.agents.Aggregator.PartialRes;
@@ -15,7 +12,7 @@ import agh.edu.agents.Aggregator.ClassGrade;
 public class ClassSlave  extends AbstractActorWithStash
 {
 //    private ActorRef learner;
-    // TODO setup aggre using constructor
+    // TODO setup aggr using constructor
     private ActorRef aggr;
 
     private S_Type type;
@@ -105,8 +102,9 @@ public class ClassSlave  extends AbstractActorWithStash
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(BestClass.class,this::handleNewBest)
-                .match(Query.class,this::handleQuery)
+                .match(  BestClass.class,this::handleNewBest)
+                .match(  Query.class,this::handleQuery)
+                .match(  PoisonPill.class, x -> getContext().stop(self()))
                 .build();
     }
 

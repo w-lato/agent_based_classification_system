@@ -4,6 +4,7 @@ import agh.edu.agents.ClassSlave;
 import agh.edu.agents.Learner;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.learning.ClassRes;
+import agh.edu.learning.params.ParamsIBk;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.testkit.TestKit;
@@ -11,16 +12,19 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.Duration;
+import weka.classifiers.Evaluation;
 import weka.classifiers.functions.SMO;
+import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class LearnerTest
 {
-    static int N = 50;
+    static int N = 20;
     static Instances data;
     static Instances train;
     static ActorRef S;
@@ -65,7 +69,7 @@ public class LearnerTest
     }
 
 
-    // TODO something is runing but it couldn't reach better class than default one
+    // TODO something is running but it couldn't reach better class than default one
     @Test
     public void testMLPOptimization() throws Exception {
         final TestKit testProbe = new TestKit(system);
@@ -79,6 +83,32 @@ public class LearnerTest
             return testProbe.expectMsgClass( ClassSlave.BestClass.class );
         });
         System.out.println( results.getConf() );
+    }
+
+    @Test
+    public void testLoadFetureWithAllConfigsUsed() throws Exception {
+
+
+        //        final TestKit testProbe = new TestKit(system);
+//        ActorRef test = testProbe.testActor();
+//        S = system.actorOf(Learner.props("EXP/ALL_USED", S_Type.IBK, train, system.deadLetters()));
+//        Thread.sleep( 1000000 );
+
+        ParamsIBk p = new ParamsIBk();
+        List<String> l = p.getParamsCartProd();
+        for (int i = 0; i < l.size(); i++)
+        {
+            System.out.println( "-- " + l.get(i) );
+
+            IBk ibk = (IBk) p.clasFromStr( l.get( i ) );
+            System.out.println( ibk.getWindowSize() + "  " + ibk.getKNN()  + " " + ibk.getCrossValidate() );
+            ibk.buildClassifier( data );
+            System.out.println( ibk.getWindowSize() + "  " + ibk.getKNN()  + " " + ibk.getCrossValidate() );
+            Evaluation e = new Evaluation( data );
+            e.crossValidateModel( ibk, data, 5, new Random(1) );
+            System.out.println( e.toSummaryString() );
+        }
+
     }
 
 }

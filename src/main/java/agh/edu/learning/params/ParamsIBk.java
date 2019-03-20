@@ -37,7 +37,7 @@ public class ParamsIBk implements Params
     @Override
     public List<String> getParamsCartProd() {
         List<String> l = new ArrayList<>();
-        int[] windows = {1,20,70,150,300,500,700,900,1200};
+        int[] windows = {100,150,300,500,800,1200};
         for (int i = 0; i < windows.length; i++)
         {
             for (int j = 1; j < 11; j++)

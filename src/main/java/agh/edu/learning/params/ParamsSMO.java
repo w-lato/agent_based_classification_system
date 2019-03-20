@@ -33,8 +33,8 @@ public class ParamsSMO implements Params
             String par = String.valueOf( i );
             if( i == POLY)
             {
-                // 30 possible exp values
-                for (double j = 0.0; j < 15; j+=0.5)
+                // 15 possible exp values
+                for (double j = 0.0; j < 15; j+=1.0)
                 {
                     // lower_order - BOOLEAN
                     for (int k = 0; k < 2; k++)
@@ -45,10 +45,10 @@ public class ParamsSMO implements Params
             }
             if( i == NORM_POLY )
             {
-                // 30 possible exp values
-                for (double j = 0.0; j < 15; j+=0.5)
+                // 15 possible exp values
+                for (double j = 0.0; j < 15; j+=1.0)
                 {
-                    if( Double.compare(j, 0.0) == 0 ) continue;
+                    if( Double.compare(j, 1.0) == 0 ) continue;
                     // lower_order - BOOLEAN
                     for (int k = 0; k < 2; k++)
                     {
@@ -59,7 +59,7 @@ public class ParamsSMO implements Params
             if( i == RBF )
             {
                 // gamma values
-                for (int j = 0; j <rbf_vals.length; j++)
+                for (int j = 0; j < rbf_vals.length; j++)
                 {
                     l.add(i + "," + rbf_vals[j]);
                 }

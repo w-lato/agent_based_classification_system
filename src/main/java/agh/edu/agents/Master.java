@@ -58,6 +58,9 @@ public class Master extends AbstractActorWithStash {
     {
         if( !exp_processing )
         {
+            exp_processing = true;
+            onReset("");
+
             System.out.println(" -----------!!------------ "+ c.getConf_name());
             this.curr = c;
             int N = c.getAgents().length;
@@ -82,53 +85,70 @@ public class Master extends AbstractActorWithStash {
                 learners.put( new_learner, cur_type );
             }
             System.out.println(" ALL SETUP ");
-            exp_processing = true;
         } else {
             stash();
         }
+    }
 
-//        if (slaves != null && slaves.size() != 0) {
-//            for (ActorRef x : slaves) {
-//                x.tell(new Master.Kill(), ActorRef.noSender());
-//            }
-//            slaves.clear();
-//        }
-//        vote_method = c.class_method;
-//        slaves = new ArrayList<>();
-//        Map<ActorRef, S_Type> types = new HashMap<>();
+    private void onReset(String s)
+    {
+        if( !slaves.isEmpty() )
+        {
+            slaves.forEach( (k,v)-> k.tell( PoisonPill.class, ActorRef.noSender() ) );
+            slaves.clear();
+        }
+        if( !learners.isEmpty() )
+        {
+            learners.forEach( (k,v)-> k.tell( PoisonPill.class, ActorRef.noSender() ) );
+            learners.clear();
+        }
+        if( aggregator != null ) aggregator.tell( PoisonPill.class, ActorRef.noSender() );
+        if( !data_split.isEmpty() ) data_split.clear();
+        curr = null;
+        exp_processing = false;
     }
 
     private void onLoad(LoadExp le) throws Exception
     {
-        RunConf rc = ConfParser.getConfFrom( le.getConf_path() );
-        this.curr = rc;
-
-        String dir = le.getExp_dir_path();
-        Set<String> IDs = Files.walk( Paths.get( dir ) )
-                .map( x -> x.getFileName().toString().split(".")[0] )
-                .collect(Collectors.toSet());
-
-        for (String id : IDs)
+        if( !exp_processing )
         {
-            Path c_p = Paths.get( dir + id + ".conf" );
-            String m_p = dir + id + ".model";
-            String d_p =  dir + id + ".arff";
+            exp_processing = true;
+            onReset("");
 
-            S_Type type = Loader.getType( c_p );
-            LinkedHashMap<String, String> used_confs = Loader.getConfigs( c_p );
-            Classifier model = Loader.getModel( m_p );
-            Instances data = Loader.getData( d_p );
+            RunConf rc = ConfParser.getConfFrom( le.getConf_path() );
+            this.curr = rc;
 
-            // TODO slave
-            ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSetup( aggregator, type ) ) );
-            slaves.put( new_slave , type );
+            String dir = le.getExp_dir_path();
+            Set<String> IDs = Files.walk( Paths.get( dir ) )
+                    .map( x -> x.getFileName().toString().split(".")[0] )
+                    .collect(Collectors.toSet());
 
-            // TODO learner
-            ActorRef new_learner = getContext().actorOf( Learner.props(dir +"/"+id,model,type,data, new_slave, used_confs));
-            learners.put( new_learner, type );
+            for (String id : IDs)
+            {
+                Path c_p = Paths.get( dir + id + ".conf" );
+                String m_p = dir + id + ".model";
+                String d_p =  dir + id + ".arff";
+
+                S_Type type = Loader.getType( c_p );
+                LinkedHashMap<String, String> used_confs = Loader.getConfigs( c_p );
+                Classifier model = Loader.getModel( m_p );
+                Instances data = Loader.getData( d_p );
+
+                // slave
+                ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSetup( aggregator, type ) ) );
+                slaves.put( new_slave , type );
+
+                // learner
+                ActorRef new_learner = getContext().actorOf( Learner.props(dir +"/"+id,model,type,data, new_slave, used_confs));
+                learners.put( new_learner, type );
+            }
+            // aggr
+            aggregator = getContext().actorOf(Aggregator.props( self(), rc.getClass_method() ));
         }
-        // aggr
-        aggregator = getContext().actorOf(Aggregator.props( self(), rc.getClass_method() ));
+        else {
+            stash();
+        }
+
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,8 +162,10 @@ public class Master extends AbstractActorWithStash {
     public AbstractActor.Receive createReceive() {
         return receiveBuilder()
 //                .matchEquals("STOP", getContext().stop(self()))
+                .matchEquals("RESET", this::onReset)
                 .match(  RunConf.class, this::onConfig)
                 .match(  LoadExp.class, this::onLoad)
+                .match(  PoisonPill.class, x -> getContext().stop(self()))
                 .matchAny(o -> { System.out.println("Master received unknown message: " + o); })
                 .build();
     }

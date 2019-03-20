@@ -4,17 +4,20 @@ import agh.edu.learning.params.Params;
 import agh.edu.learning.params.ParamsIBk;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import weka.classifiers.lazy.IBk;
+
+import java.util.List;
 
 public class IBKParamsTest
 {
     String s1;
-    Params p;
+    static Params p;
     IBk ibk;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeClass
+    public static void setup() throws Exception {
         p = new ParamsIBk();
     }
 
@@ -26,5 +29,25 @@ public class IBKParamsTest
         Assert.assertEquals( "Wrong kernel type", 1,  ibk.getWindowSize());
         Assert.assertEquals( "Wrong kernel type", ibk.getKNN(), 1);
         Assert.assertEquals( "Wrong kernel type", ibk.getMeanSquared(), Boolean.TRUE);
+    }
+
+    @Test
+    public void testGetFromStr()
+    {
+        List<String> l = p.getParamsCartProd();
+        for (int i = 0; i < l.size(); i++)
+        {
+            String cur = l.get(i);
+            System.out.println( cur );
+            String[] aux = cur.split(",");
+            Integer window_siz = Integer.valueOf( aux[0] );
+            Integer knn = Integer.valueOf( aux[1] );
+            Boolean isMeanSquared = Boolean.valueOf( aux[2] );
+            ibk = (IBk) p.clasFromStr( cur );
+
+            Assert.assertEquals((int) window_siz, ibk.getWindowSize());
+            Assert.assertEquals((int) knn, ibk.getKNN());
+            Assert.assertEquals( isMeanSquared, ibk.getMeanSquared() );
+        }
     }
 }

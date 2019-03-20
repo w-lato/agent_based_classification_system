@@ -31,9 +31,9 @@ public class ParamsNB implements Params
     public Classifier clasFromStr(String params)
     {
         NaiveBayes naiveBayes = new NaiveBayes();
-        String[] parms = params.split(",");
-        naiveBayes.setUseKernelEstimator( Boolean.valueOf( parms[0] ) );
-        naiveBayes.setUseSupervisedDiscretization( Boolean.valueOf( parms[1] ) );
+        String[] p = params.split(",");
+        naiveBayes.setUseKernelEstimator( Boolean.valueOf( p[0] ) );
+        naiveBayes.setUseSupervisedDiscretization( Boolean.valueOf( p[1] ) );
         return naiveBayes;
     }
 
@@ -41,7 +41,7 @@ public class ParamsNB implements Params
         return conf;
     }
 
-public Classifier genRandomParams(Random gen) {
+    public Classifier genRandomParams(Random gen) {
         conf = "NaiveBayes:";
         NaiveBayes naiveBayes = new NaiveBayes();
         for (int i = 0; i < 4; i++)
@@ -61,16 +61,13 @@ public Classifier genRandomParams(Random gen) {
         return null;
     }
 
+    // true,true is impossible - settings are conflicting with each other
     @Override
     public List<String> getParamsCartProd() {
         List<String> l = new ArrayList<>();
-        for (int i = 0; i < 2; i++)
-        {
-            for (int j = 0; j < 2; j++)
-            {
-                l.add( (i==1) + "," + (j==1) );
-            }
-        }
+        l.add("false,false");
+        l.add("false,true");
+        l.add("true,false");
         return l;
     }
 

@@ -37,9 +37,9 @@ public class ClassPredTests
 
         ActorSystem system = ActorSystem.create("testSystem");
         ActorRef m = ActorRef.noSender();
-        A = system.actorOf(ClassSlave.props(new ClassSetup(m, train, S_Type.RF)));
-        B = system.actorOf(ClassSlave.props(new ClassSetup(m, train, S_Type.RF)));
-        C = system.actorOf(ClassSlave.props(new ClassSetup(m, train, S_Type.RF)));
+        A = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF)));
+        B = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF)));
+        C = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF)));
 
         probs = new HashMap<>();
         grades = new HashMap<>();

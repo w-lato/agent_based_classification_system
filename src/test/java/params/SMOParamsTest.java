@@ -9,6 +9,9 @@ import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.NormalizedPolyKernel;
 import weka.classifiers.functions.supportVector.PolyKernel;
 import weka.classifiers.functions.supportVector.RBFKernel;
+import weka.classifiers.trees.RandomForest;
+
+import java.util.List;
 
 public class SMOParamsTest
 {
@@ -40,5 +43,45 @@ public class SMOParamsTest
         smo = ((SMO) p.clasFromStr(s1));
         Assert.assertEquals( "Wrong kernel type", smo.getKernel().getClass(), RBFKernel.class);
         Assert.assertEquals( "Wrong exp. value", ((RBFKernel) smo.getKernel()).getGamma(), 0.001, 0.001);
+    }
+
+    @Test
+    public void testGetFromStr()
+    {
+        List<String> l = p.getParamsCartProd();
+        for (int i = 0; i < l.size(); i++)
+        {
+            String cur = l.get(i);
+            String[] aux = cur.split(",");
+            int kernel_type = Integer.valueOf( aux[0] );
+            smo = (SMO) p.clasFromStr( cur );
+            if( kernel_type == 0 )
+            {
+                double exp = Double.valueOf( aux[1] );
+                boolean lower_order = Boolean.valueOf( aux[2] );
+                PolyKernel pk = (PolyKernel) smo.getKernel();
+
+                Assert.assertTrue( smo.getKernel() instanceof PolyKernel );
+                Assert.assertEquals( exp, pk.getExponent(), 0.0 );
+                Assert.assertEquals( lower_order, pk.getUseLowerOrder());
+            }
+            if( kernel_type == 1 )
+            {
+                double exp = Double.valueOf( aux[1] );
+                boolean lower_order = Boolean.valueOf( aux[2] );
+
+                NormalizedPolyKernel pk = (NormalizedPolyKernel) smo.getKernel();
+                Assert.assertTrue( smo.getKernel() instanceof NormalizedPolyKernel );
+                Assert.assertEquals( exp, pk.getExponent(), 0.0 );
+                Assert.assertEquals( lower_order, pk.getUseLowerOrder());
+            }
+            if( kernel_type == 2)
+            {
+                double gamma = Double.valueOf( aux[1] );
+                RBFKernel rbf = (RBFKernel) smo.getKernel();
+                Assert.assertTrue( smo.getKernel() instanceof RBFKernel );
+                Assert.assertEquals( gamma, rbf.getGamma(), 0.0 );
+            }
+        }
     }
 }
