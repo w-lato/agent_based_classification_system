@@ -2,24 +2,28 @@ package agh.edu.agents;
 
 import agh.edu.agents.enums.ClassStrat;
 import agh.edu.agents.enums.S_Type;
+import agh.edu.agents.ClassSlave.ClassSetup;
 import agh.edu.agents.experiment.*;
 import agh.edu.agents.experiment.Loader.LoadExp;
 import akka.actor.*;
+import weka.classifiers.Classifier;
 import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import static agh.edu.agents.enums.Split.SIMPLE;
 
 // TODO handle the class strategy - only one thing has to be changes in order to check different results
 // tODO handle slaves save and load - persistent
 // TODO kill scenario
+// TODO do we need map with Learners and types?
 public class Master extends AbstractActorWithStash {
     private boolean exp_processing  = false;
 
@@ -71,7 +75,7 @@ public class Master extends AbstractActorWithStash {
                 Instances cur_data = l.get(i);
                 S_Type cur_type = agents[i];
 
-                ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSlave.ClassSetup( aggregator, cur_data, cur_type ) ) );
+                ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSetup( aggregator, cur_type ) ) );
                 slaves.put( new_slave, cur_type );
                 data_split.put( new_slave, l.get(i) );
                 ActorRef new_learner = getContext().actorOf( Learner.props(exp_id, cur_type, cur_data, new_slave));
@@ -94,11 +98,37 @@ public class Master extends AbstractActorWithStash {
 //        Map<ActorRef, S_Type> types = new HashMap<>();
     }
 
-    private void onLoad(LoadExp le)
+    private void onLoad(LoadExp le) throws Exception
     {
         RunConf rc = ConfParser.getConfFrom( le.getConf_path() );
+        this.curr = rc;
 
+        String dir = le.getExp_dir_path();
+        Set<String> IDs = Files.walk( Paths.get( dir ) )
+                .map( x -> x.getFileName().toString().split(".")[0] )
+                .collect(Collectors.toSet());
 
+        for (String id : IDs)
+        {
+            Path c_p = Paths.get( dir + id + ".conf" );
+            String m_p = dir + id + ".model";
+            String d_p =  dir + id + ".arff";
+
+            S_Type type = Loader.getType( c_p );
+            LinkedHashMap<String, String> used_confs = Loader.getConfigs( c_p );
+            Classifier model = Loader.getModel( m_p );
+            Instances data = Loader.getData( d_p );
+
+            // TODO slave
+            ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSetup( aggregator, type ) ) );
+            slaves.put( new_slave , type );
+
+            // TODO learner
+            ActorRef new_learner = getContext().actorOf( Learner.props(dir +"/"+id,model,type,data, new_slave, used_confs));
+            learners.put( new_learner, type );
+        }
+        // aggr
+        aggregator = getContext().actorOf(Aggregator.props( self(), rc.getClass_method() ));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

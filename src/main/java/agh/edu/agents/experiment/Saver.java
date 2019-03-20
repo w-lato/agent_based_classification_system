@@ -42,7 +42,7 @@ public class Saver
     /**
      * Saves file in given directory:
      *  EXP/MNIST_1/TYPE_MODEL_ID.model - a model
-     *  EXP/MNIST_1/TYPE_MODEL_ID.meta  - data related to used config, grading, and already tested configs
+     *  EXP/MNIST_1/TYPE_MODEL_ID.conf  - data related to used config, grading, and already tested configs
      *  EXP/MNIST_1/TYPE_MODEL_ID.arff  - .arff data used to train the model
      *
      * */

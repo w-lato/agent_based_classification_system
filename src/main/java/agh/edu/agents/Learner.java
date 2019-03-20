@@ -2,6 +2,7 @@ package agh.edu.agents;
 
 import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.experiment.Saver;
+import agh.edu.agents.ClassSlave.BestClass;
 import agh.edu.learning.ClassRes;
 import agh.edu.learning.DefaultClassifierFactory;
 import agh.edu.learning.params.ParamsFactory;
@@ -18,10 +19,9 @@ import weka.classifiers.functions.supportVector.RBFKernel;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import static agh.edu.MAIN.crossValidationSplit;
 
 // tODO inform Slave about the number of processed data instances
@@ -30,7 +30,7 @@ import static agh.edu.MAIN.crossValidationSplit;
 // TODO used instances
 public class Learner extends AbstractActorWithTimers {
 
-    private String save_id;
+    private String save_id; // EXP/exp_dir/type_id
     private ActorRef parent;
 
     private ClassRes best_cr;
@@ -86,15 +86,46 @@ public class Learner extends AbstractActorWithTimers {
         best_cr = new ClassRes( type,best,data );
         used_configs.put( best_conf,Saver.gradeToString( best_cr ) );
         Saver.saveModel( save_id,current, best_cr,type,data,used_configs);
-        parent.tell( new ClassSlave.BestClass( best, best_conf, best_cr),self());
+        parent.tell( new BestClass( best, best_conf, best_cr),self());
 
         System.out.println("Learner created");
         getTimers().startSingleTimer(null, "NEW_CONF", Duration.ofSeconds(2));
         getTimers().startSingleTimer(null, "SAVE_MODEL", Duration.ofMinutes(2));
     }
 
+    private Learner(String save_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, String> used_configs) throws Exception
+    {
+        params = ParamsFactory.getParams( type, data );
+        configs = params.getParamsCartProd();
+        this.used_configs = used_configs;
+        configs = configs.stream().filter( x-> !this.used_configs.containsKey(x) ).collect(Collectors.toList());
+        this.best = best;
+        this.best_conf = used_configs.get( used_configs.keySet().iterator().next() );
+        this.best_cr = new ClassRes( type, best, data );
+
+        if( configs.isEmpty() )
+        {
+            parent.tell( new BestClass( best, best_conf, best_cr), self());
+            self().tell( PoisonPill.getInstance(), ActorRef.noSender() );
+            return;
+        }
+        this.save_id = save_id;
+        this.parent = parent;
+        this.data = data;
+        r = new Random(System.currentTimeMillis());
+        this.type = type;
+
+        System.out.println("Learner from load created");
+        getTimers().startSingleTimer(null, "NEW_CONF", Duration.ofSeconds(2));
+    }
+
     static public Props props(String save_id, S_Type type, Instances data, ActorRef parent) {
         return Props.create(Learner.class, () -> new Learner(save_id, type, data, parent));
+    }
+
+    static public Props props(String save_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, String> used_configs)
+    {
+        return Props.create(Learner.class, () -> new Learner(save_id, best, type, data, parent, used_configs));
     }
 
 
@@ -108,7 +139,7 @@ public class Learner extends AbstractActorWithTimers {
             best_cr = new_cr;
             best = current;
             best_conf = conf;
-            parent.tell( new ClassSlave.BestClass( best, best_conf, best_cr), self());
+            parent.tell( new BestClass( best, best_conf, best_cr), self());
         }
     }
 

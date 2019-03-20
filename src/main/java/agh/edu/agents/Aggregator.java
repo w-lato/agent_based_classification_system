@@ -13,6 +13,7 @@ import java.util.Map;
 
 // TODO BETTER Way to identify the actor in reference
 // TODO method which sets class strat & a method which will use all possible strategies
+// TODO load agent's grades - now we have to eval model and then send it to Learner and to aggregator...
 public class Aggregator extends AbstractActorWithStash {
 
 

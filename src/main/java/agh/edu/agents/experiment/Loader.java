@@ -2,12 +2,15 @@ package agh.edu.agents.experiment;
 
 import agh.edu.agents.enums.S_Type;
 import weka.classifiers.Classifier;
+import weka.core.Instances;
 import weka.core.SerializationHelper;
+import weka.core.converters.ConverterUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,10 +37,10 @@ public class Loader
         return S_Type.valueOf( s.get(0).split(":")[0] );
     }
 
-    public static Map<String, String> getConfigs(Path p) throws IOException
+    public static LinkedHashMap<String, String> getConfigs(Path p) throws IOException
     {
         List<String> s = Files.readAllLines( p );
-        Map<String,String> m = new HashMap<>();
+        LinkedHashMap<String,String> m = new LinkedHashMap<>();
         for (int i = 1; i < s.size() - 1; i++)
         {
             m.put( s.get(i), s.get(i + 1) );
@@ -49,4 +52,13 @@ public class Loader
     {
         return (Classifier) SerializationHelper.read( p );
     }
+
+    public static Instances getData(String s) throws Exception
+    {
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource( s );
+        Instances instances = source.getDataSet();
+        instances.setClassIndex( instances.numAttributes() - 1 );
+        return instances;
+    }
+
 }

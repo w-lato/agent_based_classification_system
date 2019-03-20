@@ -24,7 +24,6 @@ public class ClassSlave  extends AbstractActorWithStash
     private String conf;
     private ClassRes cr;
 
-    private Instances data;
 
 
 
@@ -37,7 +36,6 @@ public class ClassSlave  extends AbstractActorWithStash
     {
         aggr = sp.aggr;
         type = sp.type;
-        data = sp.data;
     }
 
 
@@ -69,13 +67,11 @@ public class ClassSlave  extends AbstractActorWithStash
     public static final class ClassSetup
     {
         ActorRef aggr;
-        Instances data;
         S_Type type;
 
-        public ClassSetup(ActorRef aggr, Instances data, S_Type type)
+        public ClassSetup(ActorRef aggr, S_Type type)
         {
             this.aggr = aggr;
-            this.data = data;
             this.type = type;
         }
     }
@@ -117,7 +113,7 @@ public class ClassSlave  extends AbstractActorWithStash
     public static void main(String[] args)
     {
         ActorSystem system = ActorSystem.create("testSystem");
-        ActorRef m = system.actorOf( ClassSlave.props(new ClassSetup(ActorRef.noSender(), null, S_Type.SMO)) ,"master" );
+        ActorRef m = system.actorOf( ClassSlave.props(new ClassSetup(ActorRef.noSender(), S_Type.SMO)) ,"master" );
 
         for (int i = 0; i < 10; i++) {
             m.tell( new Query(i,null),ActorRef.noSender() );
