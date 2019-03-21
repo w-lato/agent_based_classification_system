@@ -11,8 +11,6 @@ import agh.edu.agents.Aggregator.ClassGrade;
 
 public class ClassSlave  extends AbstractActorWithStash
 {
-//    private ActorRef learner;
-    // TODO setup aggr using constructor
     private ActorRef aggr;
 
     private S_Type type;
@@ -22,13 +20,11 @@ public class ClassSlave  extends AbstractActorWithStash
     private String model_id;
     private ClassRes cr;
 
-
-
-
     public static Props props(ClassSetup sp)
     {
         return Props.create(ClassSlave.class, ()-> new ClassSlave(sp) );
     }
+    public static Props props(ClassSetup sp, Classifier model) { return Props.create(ClassSlave.class, ()-> new ClassSlave(sp, model) ); }
 
     public ClassSlave(ClassSetup sp)
     {
@@ -37,6 +33,13 @@ public class ClassSlave  extends AbstractActorWithStash
         type = sp.type;
     }
 
+    private ClassSlave(ClassSetup sp, Classifier model)
+    {
+        this.model = model;
+        model_id = sp.model_id;
+        aggr = sp.aggr;
+        type = sp.type;
+    }
 
     private void handleNewBest(BestClass bc)
     {

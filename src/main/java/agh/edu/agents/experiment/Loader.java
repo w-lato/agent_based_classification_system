@@ -5,30 +5,15 @@ import weka.classifiers.Classifier;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.core.converters.ConverterUtils;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Loader
 {
-    public static final class LoadExp
-    {
-        private final String exp_dir_path;
-        private final String conf_path;
-
-        public LoadExp(String exp_dir_path) throws IOException
-        {
-            this.exp_dir_path = exp_dir_path;
-            String conf_name = exp_dir_path.substring( exp_dir_path.lastIndexOf("/") + 1, exp_dir_path.lastIndexOf("_") );
-            conf_path = "CONF/" + conf_name;
-        }
-        public String getExp_dir_path() { return exp_dir_path; }
-        public String getConf_path() { return conf_path; }
-    }
 
     public static S_Type getType(Path p) throws IOException
     {

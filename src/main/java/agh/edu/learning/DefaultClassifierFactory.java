@@ -7,9 +7,6 @@ import weka.classifiers.functions.Logistic;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.lazy.IBk;
 import weka.classifiers.meta.AdaBoostM1;
-import weka.classifiers.rules.PART;
-import weka.classifiers.rules.ZeroR;
-import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
 
 public class DefaultClassifierFactory

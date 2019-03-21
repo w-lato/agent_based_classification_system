@@ -4,6 +4,7 @@ import agh.edu.agents.enums.ClassStrat;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.enums.Split;
 import weka.core.Instances;
+
 import java.util.Optional;
 
 // TODO is class_method necessary?
