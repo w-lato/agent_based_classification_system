@@ -85,32 +85,4 @@ public class ConfParser
         }
         return l.toArray(new S_Type[0]);
     }
-
-
-
-    public static void main(String[] args) throws IOException
-    {
-        System.out.println ( S_Type.SMO.name());
-        String data = new String(Files.readAllBytes(Paths.get("CONF/default")));
-        System.out.println( data );
-        JSONObject obj = new JSONObject(data);
-        Integer pageName = obj.getJSONObject("agents").getInt("J48");
-
-        System.out.println(pageName);
-
-        JSONObject arr = obj.getJSONObject("split");
-        for (int i = 0; i < arr.length(); i++) {
-//            String post_id = arr.getJSONObject(i).getString("method");
-//            System.out.println(post_id);
-        }
-
-        S_Type[] arr1 = toENumArr( obj.getJSONObject("agents") );
-        for (int i = 0; i < arr1.length; i++)
-        {
-            System.out.println( arr1[i] );
-        }
-
-        RunConf rc = getConfFrom( "CONF/default" );
-        System.out.println("dsfd");
-    }
 }

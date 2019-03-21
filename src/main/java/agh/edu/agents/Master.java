@@ -172,41 +172,4 @@ public class Master extends AbstractActorWithStash {
                 .matchAny(o -> { System.out.println("Master received unknown message: " + o); })
                 .build();
     }
-
-
-
-    public static void main(String[] args)
-    {
-        ActorSystem system = ActorSystem.create("testSystem");
-        ConverterUtils.DataSource source = null;
-        try {
-
-//            source = new ConverterUtils.DataSource( "DATA\\mnist_train.arff");
-            source = new ConverterUtils.DataSource( "DATA\\spambase.arff");
-            Instances train = source.getDataSet();
-            source = new ConverterUtils.DataSource( "DATA\\mnist_test.arff");
-            Instances test = source.getDataSet();
-            ActorRef m = system.actorOf( Master.props() ,"master" );
-
-
-
-            RunConf RC = new RunConf.Builder()
-                    .conf_name("TEST_CONF")
-                    .agents(new S_Type[]{
-//                            S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,S_Type.SMO,
-//                            S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,
-                            S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP,S_Type.MLP
-                    })
-                    .split_meth(SIMPLE)
-                    .class_method( ClassStrat.WEIGHTED )
-                    .train( train )
-//                    .test( test )
-                    .build();
-
-            RC = ConfParser.getConfFrom( "CONF/END_TEST" );
-            m.tell( RC, ActorRef.noSender() );
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }

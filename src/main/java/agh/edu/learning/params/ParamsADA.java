@@ -33,34 +33,4 @@ public class ParamsADA  implements Params
         }
         return l;
     }
-
-    public static void main(String[] args) throws Exception {
-        System.load("C:\\Users\\wlato\\Documents\\IdeaProjects\\IdeaProjects\\masters_thesis\\DLL\\libopenblas.dll");
-
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource("DATA/mnist_train.arff");
-        Instances instances = source.getDataSet();
-        Instances train = instances.trainCV(20,0);
-        Instances test = instances.testCV(20,0);
-
-
-        do {
-            test.remove(0);
-        } while (test.size() >= 1000);
-
-        ParamsSMO paramsSMO = new ParamsSMO();
-        Random r = new Random();
-
-        for (int i = 1000; i < 30000; i += 1000)
-        {
-            AdaBoostM1 smo = new AdaBoostM1();
-            smo.setWeightThreshold( i );
-            smo.setUseResampling( false );
-            smo.buildClassifier( train );
-            long s = System.currentTimeMillis();
-            Evaluation evaluation = new Evaluation( train );
-            evaluation.crossValidateModel( smo, test, 10, new Random( System.currentTimeMillis() ) );
-            System.out.println( "$$ " + (System.currentTimeMillis() - s) );
-            System.out.println(evaluation.toSummaryString());
-        }
-    }
 }

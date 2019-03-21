@@ -81,14 +81,4 @@ public class Splitter
         data.setClassIndex( data.numAttributes() - 1 );
         data.stratify( n );
     }
-
-    public static void main(String[] args) throws Exception {
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\mnist_train.arff");
-        Instances data = source.getDataSet();
-        data.randomize( new Random(1));
-        data.setClassIndex( data.numAttributes() - 1);
-
-        Splitter s = new Splitter();;
-        fillSplit( data.testCV(10,0), 010, 0.2 );
-    }
 }

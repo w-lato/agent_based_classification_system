@@ -112,16 +112,4 @@ public class ClassSlave  extends AbstractActorWithStash
                 .match(  PoisonPill.class, x -> getContext().stop(self()))
                 .build();
     }
-
-    public static void main(String[] args)
-    {
-//        ActorSystem system = ActorSystem.create("testSystem");
-//        ActorRef m = system.actorOf( ClassSlave.props(new ClassSetup(ActorRef.noSender(), S_Type.SMO)) ,"master" );
-//
-//        for (int i = 0; i < 10; i++) {
-//            m.tell( new Query(i,null),ActorRef.noSender() );
-//        }
-//        m.tell("UNSTASH", ActorRef.noSender());
-//        m.tell( new Query(10,null),ActorRef.noSender() );
-    }
 }

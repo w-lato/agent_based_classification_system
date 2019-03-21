@@ -10,8 +10,6 @@ import agh.edu.learning.params.ParamsSMO;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.bytedeco.javacpp.presets.opencv_core;
 import org.junit.*;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.SMO;

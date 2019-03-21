@@ -28,19 +28,6 @@ public class ParamsLog implements Params
         return conf;
     }
 
-    public Classifier genRandomParams(Random gen) {
-        Logistic log = new Logistic();
-        boolean congGrad = gen.nextBoolean();
-        double ridge = gen.nextDouble() * 15.0;
-        int iter = gen.nextInt(16);
-
-        log.setUseConjugateGradientDescent( congGrad );
-        log.setRidge( ridge );
-        log.setMaxIts( iter );
-        conf = "Log:congGrad:"+congGrad+",ridge:"+ridge+",iter:"+iter;
-        return log;
-    }
-
     @Override
     public List<String> getParamsCartProd()
     {

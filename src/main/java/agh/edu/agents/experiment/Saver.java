@@ -70,22 +70,4 @@ public class Saver
 
         return s.toString();
     }
-
-    public static String gradeToString(ClassRes cr)
-    {
-        StringBuilder s = new StringBuilder();
-
-        // acc
-        s.append(cr.getAcc() ).append(":");
-
-        // fscore
-        double[] aux = cr.getFscore();
-        for (double aux1 : aux) { s.append(aux1).append(","); }
-        s.deleteCharAt( s.lastIndexOf(",") );
-        s.append(":");
-        aux = cr.getAUROC();
-        for (double aux1 : aux) { s.append(aux1).append(","); }
-        s.deleteCharAt( s.lastIndexOf(",") );
-        return s.toString();
-    }
 }
