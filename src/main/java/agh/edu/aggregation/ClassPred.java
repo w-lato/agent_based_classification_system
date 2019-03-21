@@ -4,6 +4,7 @@ import agh.edu.agents.Aggregator.ClassGrade;
 import agh.edu.agents.enums.ClassStrat;
 import agh.edu.learning.ClassRes;
 import akka.actor.ActorRef;
+import org.bytedeco.javacpp.presets.opencv_core;
 import weka.core.matrix.Matrix;
 
 import java.util.*;
@@ -14,8 +15,8 @@ public class ClassPred
     private static Map<Integer,Integer> aux_ctr= new HashMap<>();
 
     public static List<Integer> getPreds(ClassStrat s,
-                                       Map<ActorRef, ClassGrade> perf,
-                                       Map<ActorRef,List<double[]>> probs)
+                                       Map<String, ClassGrade> perf,
+                                       Map<String,List<double[]>> probs)
     {
         switch (s)
         {
@@ -27,7 +28,7 @@ public class ClassPred
 
 
     // TODO normalize weights??
-    static List<Integer> softVoting(Map<ActorRef, ClassGrade> perf, Map<ActorRef,List<double[]>> probs )
+    static List<Integer> softVoting(Map<String, ClassGrade> perf, Map<String,List<double[]>> probs )
     {
         Object[] ACTs =  perf.keySet().toArray();
         int M = probs.get(ACTs[0]).size(); // rows
@@ -54,7 +55,7 @@ public class ClassPred
                 .collect(Collectors.toList());
     }
 
-    static List<Integer> majorityVoting( Map<ActorRef,List<double[]>> probs )
+    static List<Integer> majorityVoting( Map<String,List<double[]>> probs )
     {
         int N = ((List<double[]>) probs.values().toArray()[0]).size();
         List<Integer> l = new ArrayList<>();

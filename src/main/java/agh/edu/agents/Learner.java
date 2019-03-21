@@ -13,6 +13,7 @@ import akka.actor.PoisonPill;
 import akka.actor.Props;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
+import weka.core.SerializationHelper;
 
 import java.time.Duration;
 import java.util.*;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 // TODO does config has to be chosen randomly?
 // TODO used instances
 public class Learner extends AbstractActorWithTimers {
+    private final double delta = 0.000001;
 
     private String model_id; // EXP/exp_dir/type_id
     private ActorRef parent;
@@ -128,12 +130,18 @@ public class Learner extends AbstractActorWithTimers {
     {
         System.out.println(" %%%% ");
         ClassRes new_cr = new ClassRes( type, model, data );
-        used_configs.put(curr_conf, new_cr.toGrade());
-        if( new_cr.compareTo( best_cr ) > 0 )
+        int cmp = new_cr.compareTo( best_cr );
+
+        if( cmp == 0 ) used_configs.put( curr_conf, new_cr.getGrade() - delta );
+        else used_configs.put(curr_conf, new_cr.getGrade());
+
+        if( cmp > 0 )
         {
+            System.out.println( " ^^ model repl. " + best_conf + "  with " + curr_conf );
             best_cr = new_cr;
             best = current;
             best_conf = conf;
+            SerializationHelper.write(model_id + ".model", best );
             parent.tell( new BestClass( best, best_conf, best_cr), self());
         }
     }

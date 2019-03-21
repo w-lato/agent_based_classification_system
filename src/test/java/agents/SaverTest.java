@@ -10,6 +10,8 @@ import agh.edu.learning.params.ParamsSMO;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
+import org.bytedeco.javacpp.presets.opencv_core;
 import org.junit.*;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.SMO;
@@ -164,25 +166,53 @@ public class SaverTest
     }
 
 
-//    @Test
-//    public void testIfAgentsSavesThingsAtTheEnd() throws Exception
-//    {
-//        ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\iris.arff");
-//        data = source.getDataSet();
-//        data.setClassIndex( data.numAttributes() - 1);
-//        int n = 5;
-//        data.stratify(n);
-//        data = source.getDataSet().testCV(n,0);
-//        data.setClassIndex( data.numAttributes() - 1);
-//
-//        ActorSystem system = ActorSystem.create("testSystem");
-//        RunConf rc = ConfParser.getConfFrom( "CONF/END_TEST" );
-//        ActorRef m = system.actorOf( Master.props() ,"master" );
-//        m.tell( rc, ActorRef.noSender() );
-//        Thread.sleep( 60000 );
-//
-//        System.out.println("END END END");
-//    }
+    @Test
+    public void testIfAgentsSavesThingsAtTheEnd() throws Exception
+    {
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\iris.arff");
+        data = source.getDataSet();
+        data.setClassIndex( data.numAttributes() - 1);
+
+
+        ActorSystem system = ActorSystem.create("testSystem");
+        RunConf rc = ConfParser.getConfFrom( "CONF/END_TEST" );
+        ActorRef m = system.actorOf( Master.props() ,"master" );
+        m.tell( rc, ActorRef.noSender() );
+        Thread.sleep( 300 * 1000 );
+
+        Path path = Files.walk(Paths.get("EXP/")).filter(x->x.getFileName().toString()
+                .contains("END_TEST")).findFirst().orElse(null);
+
+        assert path != null;
+        String m_1 = path.toString() + "/NA_1";
+        NaiveBayes nb = (NaiveBayes) SerializationHelper.read( m_1 + ".model" );
+        List<String> l = Files.readAllLines( Paths.get( m_1 + ".conf" ) );
+
+        String[] conf = l.get(1).split(":")[0].split(",");
+        if( !conf[0].equals("default") )
+        {
+            Assert.assertEquals((boolean) Boolean.valueOf(conf[0]), nb.getUseKernelEstimator());
+            Assert.assertEquals((boolean) Boolean.valueOf(conf[1]), nb.getUseSupervisedDiscretization());
+        } else {
+            Assert.assertFalse( nb.getUseKernelEstimator());
+            Assert.assertFalse( nb.getUseSupervisedDiscretization());
+        }
+
+        // the second model
+        String m_2 = path.toString() + "/NA_1";
+        NaiveBayes nb2 = (NaiveBayes) SerializationHelper.read( m_2 + ".model" );
+        List<String> l2 = Files.readAllLines( Paths.get( m_2 + ".conf" ) );
+
+        String[] conf2 = l2.get(1).split(":")[0].split(",");
+        if( !conf[0].equals("default") )
+        {
+            Assert.assertEquals((boolean) Boolean.valueOf(conf2[0]), nb2.getUseKernelEstimator());
+            Assert.assertEquals((boolean) Boolean.valueOf(conf2[1]), nb2.getUseSupervisedDiscretization());
+        } else {
+            Assert.assertFalse( nb2.getUseKernelEstimator());
+            Assert.assertFalse( nb2.getUseSupervisedDiscretization());
+        }
+    }
 
 
     @AfterClass

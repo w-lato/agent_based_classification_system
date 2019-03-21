@@ -15,13 +15,12 @@ import java.util.Map;
 // TODO BETTER Way to identify the actor in reference
 // TODO method which sets class strat & a method which will use all possible strategies
 // TODO load agent's grades - now we have to eval model and then send it to Learner and to aggregator...
-public class Aggregator extends AbstractActorWithStash {
-
-
+public class Aggregator extends AbstractActorWithStash
+{
     ActorRef master;
     ClassStrat strat;
 
-    Map<ActorRef,ClassGrade> perf;
+    Map<String, ClassGrade> perf;
     Map<Integer, ResultsHolder> results;
 
 
@@ -35,7 +34,7 @@ public class Aggregator extends AbstractActorWithStash {
     }
 
 
-    private void handleClassUpdate(ClassGrade cg) { perf.put( getSender(), cg ); }
+    private void handleClassUpdate(ClassGrade cg) { perf.put( cg.getModel_id(), cg ); }
 
     private void handleClassResult(ClassRes cr)
     {
@@ -45,13 +44,14 @@ public class Aggregator extends AbstractActorWithStash {
     private void handlePartialRes(PartialRes pr)
     {
         int id = pr.ID;
-        ActorRef slave = sender();
+        String model_id = pr.model_id;
         if( results.containsKey( id ) )
         {
-            results.get( id ).appendPredsAndProbs( pr, slave, perf );
-        } else {
+            results.get( id ).appendPredsAndProbs( pr, model_id, perf );
+        }
+        else {
             ResultsHolder rh = new ResultsHolder( id, strat );
-            rh.appendPredsAndProbs( pr, slave, perf );
+            rh.appendPredsAndProbs( pr, model_id, perf );
             results.put( id, rh );
         }
         List<Integer> l = ClassPred.getPreds ( strat, perf, results.get(id).getProbs() );
@@ -95,6 +95,7 @@ public class Aggregator extends AbstractActorWithStash {
         public double getAcc_wgt() { return acc_wgt; }
         public double getFmeas_wgt() { return fmeas_wgt; }
         public double getGrade() { return grade; }
+        public String getModel_id() { return model_id; }
 
         public ClassGrade(double[] fscore, double[] AUROC, double acc, double acc_wgt, double fmeas_wgt, double grade)
         {

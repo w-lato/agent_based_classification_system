@@ -21,8 +21,8 @@ import java.util.Map;
 
 public class ClassPredTests
 {
-    Map<ActorRef,List<double[]>> probs;
-    Map<ActorRef, ClassGrade> grades;
+    Map<String,List<double[]>> probs;
+    Map<String, ClassGrade> grades;
     ActorRef A;
     ActorRef B;
     ActorRef C;
@@ -81,9 +81,9 @@ public class ClassPredTests
         l3.add( c4 );
         l3.add( c5 );
 
-        probs.put(A,l1);
-        probs.put(B,l2);
-        probs.put(C,l3);
+        probs.put("A",l1);
+        probs.put("B",l2);
+        probs.put("C",l3);
 
         // GRADES
         double[] fm_1 = {1,2,3};
@@ -110,9 +110,9 @@ public class ClassPredTests
         double g_3 = 0.15;
         ClassGrade cg_3 = new ClassGrade( fm_3, au_3, acc_3, acc_w_3, fm_w_3, g_3 );
 
-        grades.put( A, cg_1 );
-        grades.put( B, cg_2 );
-        grades.put( C, cg_3 );
+        grades.put( "A", cg_1 );
+        grades.put( "B", cg_2 );
+        grades.put( "C", cg_3 );
     }
 
     @Test
@@ -135,5 +135,4 @@ public class ClassPredTests
         Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get(C)), 0.2));
         Assert.assertArrayEquals(  new Integer[]{1,1,0,0,0}, l.toArray() );
     }
-
 }

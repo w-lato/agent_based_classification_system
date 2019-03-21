@@ -10,10 +10,6 @@ import java.util.*;
 
 public class ParamsNB implements Params
 {
-    private final int true_false  = 1;
-    private final int false_true  = 2;
-    private final int true_true   = 3;
-
     String conf;
     Map<Integer, Boolean> used_configs;
 
@@ -41,31 +37,12 @@ public class ParamsNB implements Params
         return conf;
     }
 
-    public Classifier genRandomParams(Random gen) {
-        conf = "NaiveBayes:";
-        NaiveBayes naiveBayes = new NaiveBayes();
-        for (int i = 0; i < 4; i++)
-        {
-            if(!used_configs.get(i))
-            {
-                used_configs.put(i,true);
-                boolean kerEst  = i == true_false || i == true_true;
-                boolean dupDisc = i == false_true || i == true_true;
-
-                naiveBayes.setUseKernelEstimator(kerEst);
-                naiveBayes.setUseSupervisedDiscretization(dupDisc);
-                conf += ",kernelEstimator:"+ kerEst + ",superDiscret:" + dupDisc;
-                return naiveBayes;
-            }
-        }
-        return null;
-    }
 
     // true,true is impossible - settings are conflicting with each other
+    // false,false is default
     @Override
     public List<String> getParamsCartProd() {
         List<String> l = new ArrayList<>();
-        l.add("false,false");
         l.add("false,true");
         l.add("true,false");
         return l;

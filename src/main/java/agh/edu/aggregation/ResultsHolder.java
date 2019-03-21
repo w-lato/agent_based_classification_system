@@ -17,11 +17,11 @@ public class ResultsHolder
     private final Integer ID;
     private final ClassStrat strat;
     // TODO replace this with List<ActorRef> because it will be hart to convert it from string to ref
-    private final List<ActorRef> class_order;
-    private final Map<ActorRef,List<double[]>> probs;
+    private final List<String> class_order;
+    private final Map<String,List<double[]>> probs;
     private final List<StringBuilder> results;
 
-    public Map<ActorRef, List<double[]>> getProbs() {
+    public Map<String, List<double[]>> getProbs() {
         return probs;
     }
 
@@ -34,21 +34,21 @@ public class ResultsHolder
         results = new ArrayList<>(); // the final outcome
     }
 
-    public void appendPredsAndProbs(PartialRes pr, ActorRef ref, Map<ActorRef, ClassGrade> perf)
+    public void appendPredsAndProbs(PartialRes pr, String model_id, Map<String, ClassGrade> perf)
     {
-        if( !results.contains( ref ) )
+        if( !results.contains( model_id ) )
         {
-            class_order.add( ref );
-            probs.put( ref, pr.getCr().getProbs() );
+            class_order.add( model_id );
+            probs.put( model_id, pr.getCr().getProbs() );
             calculatePreds( strat, perf );
         }
         else
         {
-            System.out.println(" ###  TWO RESPONSES FROM SLAVE: " + ref);
+            System.out.println(" ###  TWO RESPONSES FROM SLAVE: " + model_id);
         }
     }
 
-    public void calculatePreds(ClassStrat strategy, Map<ActorRef, ClassGrade> perf)
+    public void calculatePreds(ClassStrat strategy, Map<String, ClassGrade> perf)
     {
         List<String> l = ClassPred.getPreds( strategy,perf, probs)
                 .stream()
