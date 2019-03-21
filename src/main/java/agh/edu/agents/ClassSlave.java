@@ -19,6 +19,7 @@ public class ClassSlave  extends AbstractActorWithStash
 
     private Classifier model = null;
     private String conf;
+    private String model_id;
     private ClassRes cr;
 
 
@@ -31,6 +32,7 @@ public class ClassSlave  extends AbstractActorWithStash
 
     public ClassSlave(ClassSetup sp)
     {
+        model_id = sp.model_id;
         aggr = sp.aggr;
         type = sp.type;
     }
@@ -40,7 +42,7 @@ public class ClassSlave  extends AbstractActorWithStash
     {
         conf = bc.conf;
         cr = bc.results;
-        aggr.tell( new ClassGrade( cr ), self());
+        aggr.tell( new ClassGrade( cr, model_id ), self());
         if( model == null )
         {
             model = bc.model;
@@ -57,7 +59,7 @@ public class ClassSlave  extends AbstractActorWithStash
             stash();
         } else {
             ClassRes to_send = new ClassRes( type, model, q.batch );
-            aggr.tell( new PartialRes( q.id, to_send ), self() );
+            aggr.tell( new PartialRes( q.id, to_send, model_id ), self() );
         }
     }
 
@@ -65,11 +67,13 @@ public class ClassSlave  extends AbstractActorWithStash
     {
         ActorRef aggr;
         S_Type type;
+        String model_id;
 
-        public ClassSetup(ActorRef aggr, S_Type type)
+        public ClassSetup(ActorRef aggr, S_Type type, String model_id)
         {
             this.aggr = aggr;
             this.type = type;
+            this.model_id = model_id;
         }
     }
 
@@ -97,6 +101,7 @@ public class ClassSlave  extends AbstractActorWithStash
         }
 
         public String getConf() { return conf; }
+        public ClassRes getResults() { return results; }
     }
 
     @Override
@@ -110,13 +115,13 @@ public class ClassSlave  extends AbstractActorWithStash
 
     public static void main(String[] args)
     {
-        ActorSystem system = ActorSystem.create("testSystem");
-        ActorRef m = system.actorOf( ClassSlave.props(new ClassSetup(ActorRef.noSender(), S_Type.SMO)) ,"master" );
-
-        for (int i = 0; i < 10; i++) {
-            m.tell( new Query(i,null),ActorRef.noSender() );
-        }
-        m.tell("UNSTASH", ActorRef.noSender());
-        m.tell( new Query(10,null),ActorRef.noSender() );
+//        ActorSystem system = ActorSystem.create("testSystem");
+//        ActorRef m = system.actorOf( ClassSlave.props(new ClassSetup(ActorRef.noSender(), S_Type.SMO)) ,"master" );
+//
+//        for (int i = 0; i < 10; i++) {
+//            m.tell( new Query(i,null),ActorRef.noSender() );
+//        }
+//        m.tell("UNSTASH", ActorRef.noSender());
+//        m.tell( new Query(10,null),ActorRef.noSender() );
     }
 }

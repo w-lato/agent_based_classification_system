@@ -17,7 +17,7 @@ import java.util.Random;
 
 public class ConfParserTests
 {
-    String mnist_conf = "CONF/default";
+    String mnist_conf = "CONF/DEFAULT_TEST";
     static Instances train;
     static Instances test;
 

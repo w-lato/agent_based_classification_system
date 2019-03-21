@@ -36,13 +36,15 @@ public class Loader
         return S_Type.valueOf( s.get(0).split(":")[0] );
     }
 
-    public static LinkedHashMap<String, String> getConfigs(Path p) throws IOException
+    public static LinkedHashMap<String, Double> getConfigs(Path p) throws IOException
     {
         List<String> s = Files.readAllLines( p );
-        LinkedHashMap<String,String> m = new LinkedHashMap<>();
-        for (int i = 1; i < s.size() - 1; i++)
+        LinkedHashMap<String, Double> m = new LinkedHashMap<>();
+        for (int i = 1; i < s.size(); i++)
         {
-            m.put( s.get(i), s.get(i + 1) );
+            System.out.println( s.get(i) );
+            String[] aux = s.get(i).split(":");
+            m.put( aux[0], Double.valueOf( aux[1] ) );
         }
         return m;
     }

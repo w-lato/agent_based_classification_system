@@ -1,38 +1,49 @@
 package agents;
 
+import agh.edu.agents.Aggregator;
 import agh.edu.agents.ClassSlave;
 import agh.edu.agents.Learner;
 import agh.edu.agents.enums.S_Type;
+import agh.edu.agents.experiment.Loader;
 import agh.edu.learning.ClassRes;
 import agh.edu.learning.params.ParamsIBk;
+import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.testkit.TestKit;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import scala.collection.JavaConverters;
+import scala.collection.immutable.Seq;
 import scala.concurrent.duration.Duration;
+import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static akka.japi.JAPI.seq;
+
 public class LearnerTest
 {
-    static int N = 20;
+    static int N = 50;
     static Instances data;
     static Instances train;
     static ActorRef S;
-    static ActorRef L;
-    static ActorRef A;
     static ActorSystem system;
-    static SMO smo;
-    static ClassRes cr;
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -57,58 +68,81 @@ public class LearnerTest
     public void testBestClassAndQueryForwardMessage() throws Exception {
         final TestKit testProbe = new TestKit(system);
         ActorRef test = testProbe.testActor();
-        S = system.actorOf(Learner.props("TO_DELETE",S_Type.SMO, train, test));
+        String exp_path = "EXP/FOR_TESTS_0/";
+        ActorRef slave = system.actorOf( ClassSlave.props( new ClassSlave.ClassSetup(test, S_Type.SMO,exp_path +"SMO_1")) );
+        S = system.actorOf(Learner.props(exp_path,S_Type.SMO, train, slave));
 
-        ClassSlave.BestClass results = testProbe.within(Duration.create(15, TimeUnit.SECONDS), () -> {
-            return testProbe.expectMsgClass( ClassSlave.BestClass.class );
+        Aggregator.ClassGrade results = testProbe.within(Duration.create(15, TimeUnit.SECONDS), () -> {
+            return testProbe.expectMsgClass( Aggregator.ClassGrade.class );
         });
-        results = testProbe.within(Duration.create(300, TimeUnit.SECONDS), () -> {
-            return testProbe.expectMsgClass( ClassSlave.BestClass.class );
-        });
-        System.out.println( results.getConf() );
+//        double reaq_grade = "EXP/FOR_TESTS_0/"
+//        System.out.println( results. );
     }
 
 
-    // TODO something is running but it couldn't reach better class than default one
-    @Test
-    public void testMLPOptimization() throws Exception {
-        final TestKit testProbe = new TestKit(system);
-        ActorRef test = testProbe.testActor();
-        S = system.actorOf(Learner.props("TO_DELETE", S_Type.MLP, train, test));
-
-        ClassSlave.BestClass results = testProbe.within(Duration.create(300, TimeUnit.SECONDS), () -> {
-            return testProbe.expectMsgClass( ClassSlave.BestClass.class );
-        });
-        results = testProbe.within(Duration.create(300, TimeUnit.SECONDS), () -> {
-            return testProbe.expectMsgClass( ClassSlave.BestClass.class );
-        });
-        System.out.println( results.getConf() );
-    }
+//    // TODO something is running but it couldn't reach better class than default one
+//    @Test
+//    public void testMLPOptimization() throws Exception {
+//        final TestKit testProbe = new TestKit(system);
+//        ActorRef test = testProbe.testActor();
+//        S = system.actorOf(Learner.props("TO_DELETE", S_Type.MLP, train, test));
+//
+//        ClassSlave.BestClass results = testProbe.within(Duration.create(300, TimeUnit.SECONDS), () -> {
+//            return testProbe.expectMsgClass( ClassSlave.BestClass.class );
+//        });
+//        results = testProbe.within(Duration.create(300, TimeUnit.SECONDS), () -> {
+//            return testProbe.expectMsgClass( ClassSlave.BestClass.class );
+//        });
+//        System.out.println( results.getConf() );
+//    }
 
     @Test
     public void testLoadFetureWithAllConfigsUsed() throws Exception {
+        final TestKit testProbe = new TestKit(system);
+        ActorRef test = testProbe.testActor();
 
+        LinkedHashMap<String,Double> used_conf = Loader.getConfigs(Paths.get("EXP/FOR_TESTS_0/NA_1.conf") );
+        Classifier model = Loader.getModel( "EXP/FOR_TESTS_0/NA_1.model" );
+        S = system.actorOf(Learner.props("EXP/FOR_TESTS_0/NA_1",model, S_Type.NA, train, test, used_conf));
 
-        //        final TestKit testProbe = new TestKit(system);
-//        ActorRef test = testProbe.testActor();
-//        S = system.actorOf(Learner.props("EXP/ALL_USED", S_Type.IBK, train, system.deadLetters()));
-//        Thread.sleep( 1000000 );
+        ClassSlave.BestClass results = testProbe.within(Duration.create(10, TimeUnit.SECONDS), () -> {
+            return testProbe.expectMsgClass( ClassSlave.BestClass.class );
+        });
 
-        ParamsIBk p = new ParamsIBk();
-        List<String> l = p.getParamsCartProd();
-        for (int i = 0; i < l.size(); i++)
-        {
-            System.out.println( "-- " + l.get(i) );
-
-            IBk ibk = (IBk) p.clasFromStr( l.get( i ) );
-            System.out.println( ibk.getWindowSize() + "  " + ibk.getKNN()  + " " + ibk.getCrossValidate() );
-            ibk.buildClassifier( data );
-            System.out.println( ibk.getWindowSize() + "  " + ibk.getKNN()  + " " + ibk.getCrossValidate() );
-            Evaluation e = new Evaluation( data );
-            e.crossValidateModel( ibk, data, 5, new Random(1) );
-            System.out.println( e.toSummaryString() );
-        }
-
+        Assert.assertEquals( "false,true", results.getConf() );
+        ClassRes cr = new ClassRes(S_Type.NA, model, train);
+        Assert.assertEquals( cr.compareTo(results.getResults()), 0 );
+        Assert.assertTrue( S.isTerminated() );
     }
 
+    @Test
+    public void testUnfinishedSetOfConfigs() throws Exception
+    {
+        final TestKit testProbe = new TestKit(system);
+        ActorRef test = testProbe.testActor();
+
+        LinkedHashMap<String,Double> used_conf = Loader.getConfigs(Paths.get("EXP/FOR_TESTS_0/IBK_1.conf") );
+        Classifier model = Loader.getModel( "EXP/FOR_TESTS_0/IBK_1.model" );
+        S = system.actorOf(Learner.props("EXP/FOR_TESTS_0/IBK_1",model, S_Type.IBK, train, test, used_conf));
+
+        ClassSlave.BestClass results = testProbe.within(Duration.create(80, TimeUnit.SECONDS), () -> {
+            return testProbe.expectMsgClass( ClassSlave.BestClass.class );
+        });
+
+        Assert.assertEquals( "default", results.getConf() );
+        ClassRes cr = new ClassRes(S_Type.IBK, model, train);
+        Assert.assertEquals( cr.compareTo(results.getResults()), 0 );
+        Assert.assertTrue( !S.isTerminated() );
+
+        // check if its updating conf file with a new one
+        Thread.sleep( 120 * 1000 );
+        Path conf = Paths.get( "EXP/FOR_TESTS_0/IBK_1.conf" );
+        List<String> l = Files.readAllLines( conf );
+        Assert.assertTrue( l.size() > 2);
+        while (l.size() > 2)
+        {
+            l.remove( l.size() - 1 );
+        }
+        Files.write( conf, l );
+    }
 }

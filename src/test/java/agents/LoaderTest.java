@@ -40,21 +40,24 @@ public class LoaderTest
         SMO smo = new SMO();
         smo.buildClassifier( data );
         ClassRes cr = new ClassRes( type, smo, data );
-        Map<String,String> m = new HashMap<>();
-        m.put("A","9123");
-        m.put("B","0001");
-        m.put("C","5670");
-        m.put("D","2000");
+        Map<String,Double> m = new HashMap<>();
+        m.put("A",9123.01);
+        m.put("B",1.001);
+        m.put("C",5670.0);
+        m.put("D",200.0);
 
         String exp_dir = Saver.setupNewExp("TEST_DIR") + "/some_id";
         Saver.saveModel( exp_dir, smo, cr, type, data, m );
 
-        // test
+        // test loaded conf
         Path A = Paths.get( exp_dir + ".conf" );
         S_Type loaded_type = Loader.getType( A );
-        Map<String,String> loaded_map = Loader.getConfigs( A );
         Assert.assertEquals( type, loaded_type );
-        m.forEach((k,v) -> { Assert.assertEquals( loaded_map.get( k ), v ); });
+        Map<String,Double> loaded_map = Loader.getConfigs( A );
+        m.forEach((k,v) -> {
+            assert loaded_map.get( k ) != null;
+            Assert.assertEquals( loaded_map.get( k ), v ,0.0001);
+        });
 
         // test loaded model
         SMO loaded_smo = (SMO) Loader.getModel( exp_dir + ".model" );

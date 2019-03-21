@@ -12,17 +12,11 @@ import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
 import weka.classifiers.Classifier;
-import weka.classifiers.Evaluation;
-import weka.classifiers.functions.*;
-import weka.classifiers.functions.supportVector.PolyKernel;
-import weka.classifiers.functions.supportVector.RBFKernel;
 import weka.core.Instances;
-import weka.core.converters.ConverterUtils;
+
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static agh.edu.MAIN.crossValidationSplit;
 
 // tODO inform Slave about the number of processed data instances
 // TODO remove souts
@@ -30,7 +24,7 @@ import static agh.edu.MAIN.crossValidationSplit;
 // TODO used instances
 public class Learner extends AbstractActorWithTimers {
 
-    private String save_id; // EXP/exp_dir/type_id
+    private String model_id; // EXP/exp_dir/type_id
     private ActorRef parent;
 
     private ClassRes best_cr;
@@ -44,7 +38,7 @@ public class Learner extends AbstractActorWithTimers {
     private Params params;
 
     private List<String> configs;
-    private Map<String,String> used_configs;
+    private Map<String,Double> used_configs;
     private Classifier current;
 
     private Instances data;
@@ -56,10 +50,10 @@ public class Learner extends AbstractActorWithTimers {
      * as current and as best classifier.
      *
      */
-    public Learner(String save_path, S_Type type, Instances data, ActorRef parent) throws Exception
+    public Learner(String model_id, S_Type type, Instances data, ActorRef parent) throws Exception
     {
         used_configs = new HashMap<>();
-        this.save_id = save_path + "/" + type + "_" + Saver.getIntID();
+        this.model_id = model_id;
         this.parent = parent;
         this.data = data;
         r = new Random(System.currentTimeMillis());
@@ -84,8 +78,8 @@ public class Learner extends AbstractActorWithTimers {
         System.out.println("  CURRENT : " + current);
         current.buildClassifier( data );
         best_cr = new ClassRes( type,best,data );
-        used_configs.put( best_conf,Saver.gradeToString( best_cr ) );
-        Saver.saveModel( save_id,current, best_cr,type,data,used_configs);
+        used_configs.put( best_conf, best_cr.toGrade() );
+        Saver.saveModel(this.model_id,current, best_cr,type,data,used_configs);
         parent.tell( new BestClass( best, best_conf, best_cr),self());
 
         System.out.println("Learner created");
@@ -93,23 +87,24 @@ public class Learner extends AbstractActorWithTimers {
         getTimers().startSingleTimer(null, "SAVE_MODEL", Duration.ofMinutes(2));
     }
 
-    private Learner(String save_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, String> used_configs) throws Exception
+    private Learner(String model_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, Double> used_configs) throws Exception
     {
         params = ParamsFactory.getParams( type, data );
         configs = params.getParamsCartProd();
         this.used_configs = used_configs;
         configs = configs.stream().filter( x-> !this.used_configs.containsKey(x) ).collect(Collectors.toList());
         this.best = best;
-        this.best_conf = used_configs.get( used_configs.keySet().iterator().next() );
+        this.best_conf = used_configs.keySet().iterator().next();
         this.best_cr = new ClassRes( type, best, data );
+        parent.tell( new BestClass( best, best_conf, best_cr), self());
 
         if( configs.isEmpty() )
         {
-            parent.tell( new BestClass( best, best_conf, best_cr), self());
+            System.out.println("NO CONFS :: DELETING SELF ");
             self().tell( PoisonPill.getInstance(), ActorRef.noSender() );
             return;
         }
-        this.save_id = save_id;
+        this.model_id = model_id;
         this.parent = parent;
         this.data = data;
         r = new Random(System.currentTimeMillis());
@@ -123,7 +118,7 @@ public class Learner extends AbstractActorWithTimers {
         return Props.create(Learner.class, () -> new Learner(save_id, type, data, parent));
     }
 
-    static public Props props(String save_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, String> used_configs)
+    static public Props props(String save_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, Double> used_configs)
     {
         return Props.create(Learner.class, () -> new Learner(save_id, best, type, data, parent, used_configs));
     }
@@ -133,7 +128,7 @@ public class Learner extends AbstractActorWithTimers {
     {
         System.out.println(" %%%% ");
         ClassRes new_cr = new ClassRes( type, model, data );
-        used_configs.put(curr_conf,Saver.gradeToString( new_cr ));
+        used_configs.put(curr_conf, new_cr.toGrade());
         if( new_cr.compareTo( best_cr ) > 0 )
         {
             best_cr = new_cr;
@@ -149,7 +144,7 @@ public class Learner extends AbstractActorWithTimers {
         if( configs.isEmpty() )
         {
             System.out.println( "ALL CONFIGS USED" );
-            Saver.saveModel( save_id, best, best_cr, type, data, used_configs );
+            Saver.saveModel(model_id, best, best_cr, type, data, used_configs );
             getContext().stop(self());
             return;
         }
@@ -171,8 +166,8 @@ public class Learner extends AbstractActorWithTimers {
 
     private void onSaveModel(String s) throws Exception
     {
-        System.out.println(save_id + "  ::  SAVED");
-        Saver.saveModel( save_id, best, best_cr, type, data, used_configs);
+        System.out.println(model_id + "  ::  SAVED");
+        Saver.saveModel(model_id, best, best_cr, type, data, used_configs);
         getTimers().startSingleTimer(null, "SAVE_MODEL", Duration.ofMinutes(2));
     }
 

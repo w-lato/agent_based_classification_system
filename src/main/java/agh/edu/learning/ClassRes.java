@@ -16,6 +16,8 @@ import java.util.Random;
 
 public final class ClassRes implements Comparable<ClassRes>
 {
+    private double grade;
+
     private double[] fscore;
     private double[] AUROC;
     private double  acc;
@@ -54,6 +56,8 @@ public final class ClassRes implements Comparable<ClassRes>
 
     public double getFmeas_wgt() { return fmeas_wgt; }
 
+    public double getGrade() { return grade; }
+
     public ClassRes(S_Type type, Classifier model, Instances data) throws Exception
     {
         Evaluation eval = new Evaluation(data);
@@ -75,6 +79,7 @@ public final class ClassRes implements Comparable<ClassRes>
             setupProbsAndPreds( eval, data, model );
             checkValues();
         }
+        this.grade = toGrade();
     }
 
     private void handleMLP(MLP mlp, Instances data) throws Exception {
@@ -156,6 +161,11 @@ public final class ClassRes implements Comparable<ClassRes>
         B = B * fmeas_wgt  + o.acc * acc_wgt;
 
         return Double.compare( A,B );
+    }
+
+    public double toGrade()
+    {
+        return ClassRes.computeWeight( this);
     }
 
     public static double computeWeight(double[] fscore, double acc, double fmeas_wgt, double acc_wgt)

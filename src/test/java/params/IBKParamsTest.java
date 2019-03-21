@@ -26,7 +26,7 @@ public class IBKParamsTest
     {
         s1 = p.getParamsCartProd().get(1);
         ibk = ((IBk) p.clasFromStr(s1));
-        Assert.assertEquals( "Wrong kernel type", 1,  ibk.getWindowSize());
+        Assert.assertEquals( "Wrong kernel type", 100,  ibk.getWindowSize());
         Assert.assertEquals( "Wrong kernel type", ibk.getKNN(), 1);
         Assert.assertEquals( "Wrong kernel type", ibk.getMeanSquared(), Boolean.TRUE);
     }

@@ -37,9 +37,9 @@ public class ClassPredTests
 
         ActorSystem system = ActorSystem.create("testSystem");
         ActorRef m = ActorRef.noSender();
-        A = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF)));
-        B = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF)));
-        C = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF)));
+        A = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF,"A")));
+        B = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF,"B")));
+        C = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF,"C")));
 
         probs = new HashMap<>();
         grades = new HashMap<>();
@@ -91,21 +91,24 @@ public class ClassPredTests
         double acc_1 = 0.5;
         double acc_w_1 = 0.5;
         double fm_w_1 = 0.5;
-        ClassGrade cg_1 = new ClassGrade( fm_1, au_1, acc_1, acc_w_1, fm_w_1 );
+        double g_1 = 6.0;
+        ClassGrade cg_1 = new ClassGrade( fm_1, au_1, acc_1, acc_w_1, fm_w_1, g_1 );
 
         double[] fm_2 = {10,10,10};
         double[] au_2 = {10,10,10};
         double acc_2 = 1.0;
         double acc_w_2 = 0.5;
         double fm_w_2 = 0.5;
-        ClassGrade cg_2 = new ClassGrade( fm_2, au_2, acc_2, acc_w_2, fm_w_2 );
+        double g_2 = 30.0;
+        ClassGrade cg_2 = new ClassGrade( fm_2, au_2, acc_2, acc_w_2, fm_w_2, g_2 );
 
         double[] fm_3 = {0.1,0.1,0.1};
         double[] au_3 = {0.1,0.1,0.1};
         double acc_3 = 0.1;
         double acc_w_3 = 0.5;
         double fm_w_3 = 0.5;
-        ClassGrade cg_3 = new ClassGrade( fm_3, au_3, acc_3, acc_w_3, fm_w_3 );
+        double g_3 = 0.15;
+        ClassGrade cg_3 = new ClassGrade( fm_3, au_3, acc_3, acc_w_3, fm_w_3, g_3 );
 
         grades.put( A, cg_1 );
         grades.put( B, cg_2 );

@@ -42,52 +42,6 @@ public class SaverTest
         data.setClassIndex( data.numAttributes() - 1);
     }
 
-    @Test
-    public void testSavingInFile() throws Exception
-    {
-        S_Type type = S_Type.SMO;
-        SMO smo = new SMO();
-        smo.buildClassifier( data );
-        ClassRes cr = new ClassRes( type, smo, data );
-        Map<String,String> m = new HashMap<>();
-        m.put("A","9123");
-        m.put("B","0001");
-        m.put("C","5670");
-        m.put("D","2000");
-
-        String exp_dir = Saver.setupNewExp("TEST_DIR") + "/some_id";
-        Saver.saveModel( exp_dir, smo, cr, type, data, m );
-
-        // check if files were created
-        Assert.assertTrue(Files.exists( Paths.get( exp_dir + ".model" ) ));
-        Assert.assertTrue(Files.exists( Paths.get( exp_dir + ".arff" ) ));
-        Assert.assertTrue(Files.exists( Paths.get( exp_dir + ".conf" ) ));
-
-        // check if files contain valid data
-        List<String> l = Files.readAllLines(Paths.get(exp_dir+".conf"));
-        S_Type read_type = S_Type.valueOf(l.get(0).split("\n")[0].split(":")[0]);
-        Assert.assertEquals( type, read_type );
-
-        double grade = ClassRes.computeWeight( cr );
-        double read_grade  = Double.valueOf( l.get(0).split("\n")[0].split(":")[1] );
-        Assert.assertEquals( grade, read_grade,0.001 );
-
-        String the_rest = "A\n" + "9123\n" + "C\n" + "5670\n" + "D\n" + "2000\n" + "B\n" + "0001\n";
-        StringBuilder read_rest = new StringBuilder();
-        for (int i = 1; i < l.size(); i++)
-        {
-            read_rest.append(l.get(i)).append("\n");
-        }
-        Assert.assertEquals( the_rest, read_rest.toString());
-
-        // check if model from file is working
-        SMO read_smo = (SMO) SerializationHelper.read(exp_dir+".model");
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource( exp_dir+".arff");
-        Instances read_instances = source.getDataSet();
-        read_instances.setClassIndex( read_instances.numAttributes() - 1 );
-        ClassRes read_cr = new ClassRes( read_type, read_smo, read_instances );
-        Assert.assertEquals(0, cr.compareTo(read_cr));
-    }
 
     @Test
     public void testAgentSetup() throws IOException, InterruptedException {
@@ -96,8 +50,8 @@ public class SaverTest
         ActorRef m = system.actorOf( Master.props() ,"master" );
         m.tell( rc, ActorRef.noSender() );
 
-        Thread.sleep( 5000 );
-        List<String> l = Files.list(Paths.get("EXP/TEST_CASE_0"))
+        Thread.sleep( 15*1000 );
+        List<String> l = Files.list(Paths.get("EXP/TEST_CASE_1"))
                 .map(Path::getFileName)
                 .map(Path::toString)
                 .collect(Collectors.toList());
@@ -110,17 +64,62 @@ public class SaverTest
         Assert.assertEquals(3, count_SMOs);
     }
 
+
+    @Test
+    public void testSavingInFile() throws Exception
+    {
+        S_Type type = S_Type.SMO;
+        SMO smo = new SMO();
+        smo.buildClassifier( data );
+        ClassRes cr = new ClassRes( type, smo, data );
+        Map<String,Double> m = new HashMap<>();
+        m.put("A",9123.01);
+        m.put("B",1.001);
+        m.put("C",5670.0);
+        m.put("D",200.0);
+
+        String exp_dir = Saver.setupNewExp("TEST_DIR") + "/some_id";
+        Saver.saveModel( exp_dir, smo, cr, type, data, m );
+
+        // check if files were created
+        Assert.assertTrue(Files.exists( Paths.get( exp_dir + ".model" ) ));
+        Assert.assertTrue(Files.exists( Paths.get( exp_dir + ".arff" ) ));
+        Assert.assertTrue(Files.exists( Paths.get( exp_dir + ".conf" ) ));
+
+        // check if files contain valid data
+        List<String> l = Files.readAllLines(Paths.get(exp_dir+".conf"));
+        S_Type read_type = S_Type.valueOf(l.get(0).split(":")[0]);
+        Assert.assertEquals( type, read_type );
+
+        String the_rest = "SMO:0.5:0.5\n" + "A:9123.01\n" + "C:5670.0\n" + "D:200.0\n" + "B:1.001\n";
+        StringBuilder read_rest = new StringBuilder();
+        for (int i = 0; i < l.size(); i++)
+        {
+            read_rest.append(l.get(i)).append("\n");
+        }
+        Assert.assertEquals( the_rest, read_rest.toString());
+
+        // check if model from file is working
+        SMO read_smo = (SMO) SerializationHelper.read(exp_dir+".model");
+        ConverterUtils.DataSource source = new ConverterUtils.DataSource( exp_dir+".arff");
+        Instances read_instances = source.getDataSet();
+        read_instances.setClassIndex( read_instances.numAttributes() - 1 );
+        ClassRes read_cr = new ClassRes( read_type, read_smo, read_instances );
+        Assert.assertEquals(0, cr.compareTo(read_cr));
+    }
+
     @Test
     public void checkOptimizationSaving() throws Exception {
         S_Type type = S_Type.SMO;
         SMO smo = new SMO();
         smo.buildClassifier( data );
         ClassRes cr = new ClassRes( type, smo, data );
-        Map<String,String> m = new HashMap<>();
-        m.put("A","9123");
-        m.put("B","0001");
-        m.put("C","5670");
-        m.put("D","2000");
+        Map<String,Double> m = new HashMap<>();
+        m.put("A",9123.01);
+        m.put("B",1.001);
+        m.put("C",5670.0);
+        m.put("D",200.0);
+
 
         String exp_dir = Saver.setupNewExp("TEST_DIR") + "/some_id";
         Saver.saveModel( exp_dir, smo, cr, type, data, m );
@@ -130,19 +129,24 @@ public class SaverTest
         smo.buildClassifier( data );
 
         cr = new ClassRes( type, smo, data);
-        m.put( "E","9999" );
+        m.put( "E",9999.0 );
         Saver.saveModel( exp_dir, smo, cr, type, data, m );
 
         // check updated files
         List<String> l = Files.readAllLines(Paths.get(exp_dir+".conf"));
-        S_Type read_type = S_Type.valueOf(l.get(0).split("\n")[0].split(":")[0]);
+        S_Type read_type = S_Type.valueOf(l.get(0).split(":")[0]);
         Assert.assertEquals( type, read_type );
 
-        double grade = ClassRes.computeWeight( cr );
-        double read_grade  = Double.valueOf( l.get(0).split("\n")[0].split(":")[1] );
-        Assert.assertEquals( grade, read_grade,0.001 );
+        double grade = Double.valueOf( l.get(1).split(":")[1]);
+        double acc_wght = Double.valueOf( l.get(0).split(":")[1]);
+        double f1_wght = Double.valueOf( l.get(0).split(":")[2]);
+        double read_grade  = Double.valueOf( l.get(1).split(":")[1]);
 
-        String the_rest = "E\n" + "9999\n" + "A\n" + "9123\n" + "C\n" + "5670\n" + "D\n" + "2000\n" + "B\n" + "0001\n";
+        Assert.assertEquals( read_grade, 9999.0,0.001 );
+        Assert.assertEquals( acc_wght, 0.5,0.001 );
+        Assert.assertEquals( f1_wght,  0.5,0.001 );
+
+        String the_rest = "E:9999.0\n" + "A:9123.01\n" + "C:5670.0\n" + "D:200.0\n" + "B:1.001\n";
         StringBuilder read_rest = new StringBuilder();
         for (int i = 1; i < l.size(); i++)
         {
@@ -160,27 +164,25 @@ public class SaverTest
     }
 
 
-    @Test
-    public void testIfAgentsSavesThingsAtTheEnd() throws Exception
-    {
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\iris.arff");
-        data = source.getDataSet();
-        data.setClassIndex( data.numAttributes() - 1);
-        int n = 5;
-        data.stratify(n);
-        data = source.getDataSet().testCV(n,0);
-        data.setClassIndex( data.numAttributes() - 1);
-
-        ActorSystem system = ActorSystem.create("testSystem");
-        RunConf rc = ConfParser.getConfFrom( "CONF/END_TEST" );
-        ActorRef m = system.actorOf( Master.props() ,"master" );
-        m.tell( rc, ActorRef.noSender() );
-        Thread.sleep( 60000 );
-
-
-
-        System.out.println("END END END");
-    }
+//    @Test
+//    public void testIfAgentsSavesThingsAtTheEnd() throws Exception
+//    {
+//        ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\iris.arff");
+//        data = source.getDataSet();
+//        data.setClassIndex( data.numAttributes() - 1);
+//        int n = 5;
+//        data.stratify(n);
+//        data = source.getDataSet().testCV(n,0);
+//        data.setClassIndex( data.numAttributes() - 1);
+//
+//        ActorSystem system = ActorSystem.create("testSystem");
+//        RunConf rc = ConfParser.getConfFrom( "CONF/END_TEST" );
+//        ActorRef m = system.actorOf( Master.props() ,"master" );
+//        m.tell( rc, ActorRef.noSender() );
+//        Thread.sleep( 60000 );
+//
+//        System.out.println("END END END");
+//    }
 
 
     @AfterClass

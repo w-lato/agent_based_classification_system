@@ -63,9 +63,12 @@ public class Aggregator extends AbstractActorWithStash {
     public static final class PartialRes
     {
         private final Integer ID;
+        private final String model_id;
         private final ClassRes cr;
 
-        public PartialRes(Integer ID, ClassRes cr) {
+        public PartialRes(Integer ID, ClassRes cr, String model_id)
+        {
+            this.model_id = model_id;
             this.ID = ID;
             this.cr = cr;
         }
@@ -77,19 +80,23 @@ public class Aggregator extends AbstractActorWithStash {
 
     public static final class ClassGrade
     {
+        private String model_id;
+
         private final double[] fscore;
         private final double[] AUROC;
         private final double acc;
         private final double acc_wgt;
         private final double fmeas_wgt;
+        private final double grade;
 
         public double[] getFscore() { return fscore; }
         public double[] getAUROC() { return AUROC; }
         public double getAcc() { return acc; }
         public double getAcc_wgt() { return acc_wgt; }
         public double getFmeas_wgt() { return fmeas_wgt; }
+        public double getGrade() { return grade; }
 
-        public ClassGrade(double[] fscore, double[] AUROC, double acc, double acc_wgt, double fmeas_wgt)
+        public ClassGrade(double[] fscore, double[] AUROC, double acc, double acc_wgt, double fmeas_wgt, double grade)
         {
             int N = fscore.length;
             this.fscore = new double[ N ];
@@ -102,19 +109,19 @@ public class Aggregator extends AbstractActorWithStash {
                 this.fscore[ i ] = fscore[ i ];
                 this.AUROC[ i ] = AUROC[ i ];
             }
+            this.grade = grade;
         }
 
-        public ClassGrade(ClassRes cr)
+        public ClassGrade(ClassRes cr, String model_id)
         {
-            this( cr.getFscore(), cr.getAUROC(), cr.getAcc(), cr.getAcc_wgt(),cr.getFmeas_wgt() );
+            this( cr.getFscore(), cr.getAUROC(), cr.getAcc(), cr.getAcc_wgt(),cr.getFmeas_wgt(), cr.getGrade());
+            this.model_id = model_id;
         }
     }
     
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-
-
                 .match(PoisonPill.class, x -> getContext().stop(self()))
                 .matchAny( x -> System.out.println("?? " + x ) )
                 .build();

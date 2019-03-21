@@ -46,7 +46,7 @@ public class Saver
      *  EXP/MNIST_1/TYPE_MODEL_ID.arff  - .arff data used to train the model
      *
      * */
-    public static void saveModel(String save_path, Classifier model, ClassRes grade, S_Type type, Instances data, Map<String,String> used_configs) throws Exception
+    public static void saveModel(String save_path, Classifier model, ClassRes grade, S_Type type, Instances data, Map<String,Double> used_configs) throws Exception
     {
         String s = modelMetadata( type, grade, used_configs );
         // save to files
@@ -56,17 +56,17 @@ public class Saver
             Files.write(Paths.get(      save_path + ".arff"), data.toString().getBytes());
     }
 
-    private static String modelMetadata(S_Type type, ClassRes grade, Map<String,String> used_configs )
+    private static String modelMetadata(S_Type type, ClassRes grade, Map<String,Double> used_configs )
     {
         StringBuilder s = new StringBuilder();
 
-        // TYPE:GRADE
-        s.append( type ).append( ":").append( ClassRes.computeWeight( grade ) ).append("\n");
-
-        // TRIED_CONFIGS:WITH_THEIR_GRADES
+        // TYPE:ACC_WGHT:F1_WGHT
+        s.append( type ).append(":").append( grade.getAcc_wgt() )
+                .append(":").append(grade.getFmeas_wgt()).append("\n");
+        // CONF_STR:GRADE
         used_configs.entrySet().stream()
                 .sorted(Collections.reverseOrder( Map.Entry.comparingByValue() ))
-                .forEach( x-> s.append(x.getKey()).append("\n").append(x.getValue()).append("\n") );
+                .forEach( x-> s.append(x.getKey()).append(":").append(x.getValue()).append("\n") );
 
         return s.toString();
     }

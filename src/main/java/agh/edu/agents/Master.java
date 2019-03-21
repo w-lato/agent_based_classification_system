@@ -25,6 +25,7 @@ import static agh.edu.agents.enums.Split.SIMPLE;
 // TODO kill scenario
 // TODO do we need map with Learners and types?
 public class Master extends AbstractActorWithStash {
+    private final String dir_prefix = "EXP/";
     private boolean exp_processing  = false;
 
     private RunConf curr;
@@ -77,11 +78,12 @@ public class Master extends AbstractActorWithStash {
             {
                 Instances cur_data = l.get(i);
                 S_Type cur_type = agents[i];
-
-                ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSetup( aggregator, cur_type ) ) );
+                String model_id = exp_id + "/" + cur_type + "_" + Saver.getIntID();
+                System.out.println( model_id );
+                ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSetup( aggregator, cur_type, model_id ) ) );
                 slaves.put( new_slave, cur_type );
                 data_split.put( new_slave, l.get(i) );
-                ActorRef new_learner = getContext().actorOf( Learner.props(exp_id, cur_type, cur_data, new_slave));
+                ActorRef new_learner = getContext().actorOf( Learner.props(model_id, cur_type, cur_data, new_slave));
                 learners.put( new_learner, cur_type );
             }
             System.out.println(" ALL SETUP ");
@@ -125,21 +127,22 @@ public class Master extends AbstractActorWithStash {
 
             for (String id : IDs)
             {
+                String model_id = dir + id;
                 Path c_p = Paths.get( dir + id + ".conf" );
-                String m_p = dir + id + ".model";
-                String d_p =  dir + id + ".arff";
+                String m_p = model_id  + ".model";
+                String d_p =  model_id + ".arff";
 
                 S_Type type = Loader.getType( c_p );
-                LinkedHashMap<String, String> used_confs = Loader.getConfigs( c_p );
+                LinkedHashMap<String, Double> used_confs = Loader.getConfigs( c_p );
                 Classifier model = Loader.getModel( m_p );
                 Instances data = Loader.getData( d_p );
 
                 // slave
-                ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSetup( aggregator, type ) ) );
+                ActorRef new_slave = getContext().actorOf( ClassSlave.props( new ClassSetup( aggregator, type, model_id) ) );
                 slaves.put( new_slave , type );
 
                 // learner
-                ActorRef new_learner = getContext().actorOf( Learner.props(dir +"/"+id,model,type,data, new_slave, used_confs));
+                ActorRef new_learner = getContext().actorOf( Learner.props(model_id,model,type,data, new_slave, used_confs));
                 learners.put( new_learner, type );
             }
             // aggr
