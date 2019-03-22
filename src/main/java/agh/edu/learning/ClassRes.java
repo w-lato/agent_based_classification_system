@@ -1,7 +1,7 @@
 package agh.edu.learning;
 
-import agh.edu.agents.Aggregator;
 import agh.edu.agents.enums.S_Type;
+import agh.edu.aggregation.ClassGrade;
 import agh.edu.learning.custom.MLP;
 import org.jetbrains.annotations.NotNull;
 import weka.classifiers.Classifier;
@@ -187,7 +187,7 @@ public final class ClassRes implements Comparable<ClassRes>
             );
     }
 
-    public static double computeWeight(Aggregator.ClassGrade cr)
+    public static double computeWeight(ClassGrade cr)
     {
         return computeWeight(
                 cr.getFscore(),

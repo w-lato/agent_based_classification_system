@@ -9,7 +9,7 @@ import agh.edu.learning.ClassRes;
 import agh.edu.learning.params.ParamsSMO;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
+import akka.actor.Kill;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -46,6 +46,14 @@ public class SaverTest
         data = source.getDataSet().testCV(n,0);
         data.setClassIndex( data.numAttributes() - 1);
         cleanWorkspace();
+
+//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//            try {
+//                cleanWorkspace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }));
     }
 
 
@@ -69,8 +77,9 @@ public class SaverTest
         Assert.assertEquals(6, count_MLPs);
         Assert.assertEquals(3, count_SMOs);
 
-        m.tell("RESET", ActorRef.noSender());
-        m.tell(PoisonPill.class, ActorRef.noSender());
+//        m.tell("RESET", ActorRef.noSender());
+        m.tell("INSTANT_KILL", ActorRef.noSender());
+        m.tell(Kill.getInstance(), ActorRef.noSender());
     }
 
 
@@ -87,7 +96,8 @@ public class SaverTest
         m.put("C",5670.0);
         m.put("D",200.0);
 
-        String exp_dir = Saver.setupNewExp("TEST_DIR") + "/some_id";
+        String cur_dir = Saver.setupNewExp("TEST_DIR");
+        String exp_dir =  cur_dir + "/other_id";
         Saver.saveModel( exp_dir, smo, cr, type, data, m );
 
         // check if files were created
@@ -95,11 +105,22 @@ public class SaverTest
         Assert.assertTrue(Files.exists( Paths.get( exp_dir + ".arff" ) ));
         Assert.assertTrue(Files.exists( Paths.get( exp_dir + ".conf" ) ));
 
-        // check if files contain valid data
+
+        // check if model from file is working
         List<String> l = Files.readAllLines(Paths.get(exp_dir+".conf"));
         S_Type read_type = S_Type.valueOf(l.get(0).split(":")[0]);
-        Assert.assertEquals( type, read_type );
 
+        // TODO some process is using other_id.arff - and cannot be deleted
+//        SMO read_smo = (SMO) SerializationHelper.read(exp_dir+".model");
+//        Instances read_instances = ConverterUtils.DataSource.read( exp_dir+".arff" );
+//        read_instances.setClassIndex( read_instances.numAttributes() - 1 );
+//        ClassRes read_cr = new ClassRes( read_type, read_smo, read_instances );
+//        Assert.assertEquals(0, cr.compareTo(read_cr));
+//        FileUtils.deleteQuietly( Paths.get( exp_dir + ".arff" ).toFile() );
+
+
+        // check if files contain valid data
+        Assert.assertEquals( type, read_type );
         String the_rest = "SMO:0.5:0.5\n" + "A:9123.01\n" + "C:5670.0\n" + "D:200.0\n" + "B:1.001\n";
         StringBuilder read_rest = new StringBuilder();
         for (int i = 0; i < l.size(); i++)
@@ -108,17 +129,20 @@ public class SaverTest
         }
         Assert.assertEquals( the_rest, read_rest.toString());
 
-        // check if model from file is working
-        SMO read_smo = (SMO) SerializationHelper.read(exp_dir+".model");
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource( exp_dir+".arff");
-        Instances read_instances = source.getDataSet();
-        read_instances.setClassIndex( read_instances.numAttributes() - 1 );
-        ClassRes read_cr = new ClassRes( read_type, read_smo, read_instances );
-        Assert.assertEquals(0, cr.compareTo(read_cr));
+        String err_file = Paths.get( exp_dir + ".arff" ).toAbsolutePath().toString();
+        System.out.println( err_file );
+        Runtime.getRuntime().exec("cmd /c start cmd.exe /K \"Del /F "+ err_file + " && exit\"");
+        Thread.sleep(1000);
+//        FileDeleteStrategy.FORCE.delete( Paths.get( exp_dir + ".arff" ).toFile() );
+//        FileUtils.forceDelete( Paths.get( exp_dir + ".arff" ).toFile() );
+//        Files.delete(  );
+
+//        FileUtils.cleanDirectory( Paths.get( cur_dir ).toFile() );
     }
 
     @Test
-    public void checkOptimizationSaving() throws Exception {
+    public void checkOptimizationSaving() throws Exception
+    {
         S_Type type = S_Type.SMO;
         SMO smo = new SMO();
         smo.buildClassifier( data );
@@ -130,7 +154,8 @@ public class SaverTest
         m.put("D",200.0);
 
 
-        String exp_dir = Saver.setupNewExp("TEST_DIR") + "/some_id";
+        String cur_dir =  Saver.setupNewExp("TEST_DIR");
+        String exp_dir =  cur_dir + "/some_id";
         Saver.saveModel( exp_dir, smo, cr, type, data, m );
 
         ParamsSMO p = new ParamsSMO();
@@ -146,7 +171,6 @@ public class SaverTest
         S_Type read_type = S_Type.valueOf(l.get(0).split(":")[0]);
         Assert.assertEquals( type, read_type );
 
-        double grade = Double.valueOf( l.get(1).split(":")[1]);
         double acc_wght = Double.valueOf( l.get(0).split(":")[1]);
         double f1_wght = Double.valueOf( l.get(0).split(":")[2]);
         double read_grade  = Double.valueOf( l.get(1).split(":")[1]);
@@ -165,8 +189,9 @@ public class SaverTest
 
         // check if model from file is working
         SMO read_smo = (SMO) SerializationHelper.read(exp_dir+".model");
-        ConverterUtils.DataSource source = new ConverterUtils.DataSource( exp_dir+".arff");
-        Instances read_instances = source.getDataSet();
+//        ConverterUtils.DataSource source = new ConverterUtils.DataSource( );
+        Instances read_instances = ConverterUtils.DataSource.read( exp_dir+".arff" );
+//        Instances read_instances = source.getDataSet();
         read_instances.setClassIndex( read_instances.numAttributes() - 1 );
         ClassRes read_cr = new ClassRes( read_type, read_smo, read_instances );
         Assert.assertEquals(0, cr.compareTo(read_cr));
@@ -177,6 +202,7 @@ public class SaverTest
     @Test
     public void testIfAgentsSavesThingsAtTheEnd() throws Exception
     {
+        System.out.println( "======================================================== END SAVE TEST STARTED" );
         ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\iris.arff");
         data = source.getDataSet();
         data.setClassIndex( data.numAttributes() - 1);
@@ -191,7 +217,8 @@ public class SaverTest
                 .contains("END_TEST")).findFirst().orElse(null);
 
         assert path != null;
-        String m_1 = path.toString() + "/NA_1";
+        String m_1 = Files.walk(path).filter(x->x.getFileName().toString().contains("NA_")).findFirst().get().toString();
+        m_1 = m_1.split("\\.")[0];
         NaiveBayes nb = (NaiveBayes) SerializationHelper.read( m_1 + ".model" );
         List<String> l = Files.readAllLines( Paths.get( m_1 + ".conf" ) );
 
@@ -206,7 +233,8 @@ public class SaverTest
         }
 
         // the second model
-        String m_2 = path.toString() + "/NA_1";
+        String m_2 = Files.walk(path).filter(x->x.getFileName().toString().contains("NA_")).findFirst().get().toString();
+        m_2 = m_2.split("\\.")[0];
         NaiveBayes nb2 = (NaiveBayes) SerializationHelper.read( m_2 + ".model" );
         List<String> l2 = Files.readAllLines( Paths.get( m_2 + ".conf" ) );
 
@@ -219,10 +247,11 @@ public class SaverTest
             Assert.assertFalse( nb2.getUseKernelEstimator());
             Assert.assertFalse( nb2.getUseSupervisedDiscretization());
         }
-        m.tell("RESET", ActorRef.noSender());
-        m.tell(PoisonPill.class, ActorRef.noSender());
+        int num_of_confs = Math.toIntExact(Files.walk(path).filter(x -> x.getFileName().toString().contains(".conf")).count());
+        Assert.assertEquals( num_of_confs, 2 );
+        m.tell("INSTANT_KILL", ActorRef.noSender());
+        m.tell(Kill.getInstance(), ActorRef.noSender());
     }
-
 
     @AfterClass
     public static void cleanWorkspace() throws IOException
@@ -237,11 +266,8 @@ public class SaverTest
 
         for (Path path : l)
         {
-            if(Files.exists( path ) )
-            {
-                FileUtils.cleanDirectory( path.toFile() );
-                Files.delete(path);
-            }
+            if( Files.isDirectory( path ) ) FileUtils.cleanDirectory( path.toFile() );
+            Files.deleteIfExists( path );
         }
     }
 }

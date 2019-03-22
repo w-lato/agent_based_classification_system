@@ -42,7 +42,9 @@ dependencies
     // https://mvnrepository.com/artifact/org.nd4j/nd4j-native-platform
     compile group: 'org.nd4j', name: 'nd4j-native-platform', version: '1.0.0-beta3'
 
-    
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+//    testCompile group: 'commons-io', name: 'commons-io', version: '2.6'
+
 
 // 
     // https://mvnrepository.com/artifact/com.github.fommil.netlib/netlib-native_system-win-x86_64

@@ -121,9 +121,9 @@ public class ClassPredTests
         List<Integer> l = ClassPred.getPreds( ClassStrat.WEIGHTED, grades, probs );
         assert l != null;
 
-        Assert.assertEquals(0, Double.compare(grades.get("A").getGrade(), 3.25));
-        Assert.assertEquals(0, Double.compare(grades.get("B").getGrade(), 15.5));
-        Assert.assertEquals(0, Double.compare(grades.get("C").getGrade(), 0.2));
+        Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("A")), 3.25));
+        Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("B")), 15.5));
+        Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("C")), 0.2));
         Assert.assertArrayEquals(  new Integer[]{1,1,0,0,0}, l.toArray() );
     }
 }

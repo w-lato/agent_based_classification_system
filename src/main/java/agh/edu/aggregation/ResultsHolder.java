@@ -51,10 +51,16 @@ public class ResultsHolder
         // M_1:M_2:M_3
         to_save.add( String.join(":", ids) );
 
-        for( String m_id :  ids)
+        int N = probs.get( ids.iterator().next() ).size();
+        List<double[]> aux = new ArrayList();
+        for (int i = 0; i < N; i++)
         {
-            List<double[]> l = probs.get( m_id );
-            to_save.add( l.stream().map(Arrays::toString).collect(Collectors.joining(":")) );
+            aux.clear();
+            for( String m_id :  ids)
+            {
+                aux.add( probs.get( m_id ).get( i ) );
+            }
+            to_save.add( aux.stream().map(Arrays::toString).collect(Collectors.joining(":")) );
         }
         return String.join("\n", to_save);
     }

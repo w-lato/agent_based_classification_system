@@ -191,4 +191,11 @@ public class Learner extends AbstractActorWithTimers {
                 })
                 .build();
     }
+
+
+    @Override
+    public void postStop() throws Exception {
+        super.postStop();
+        System.out.println( "LEARNER STOPPED: " + model_id );
+    }
 }

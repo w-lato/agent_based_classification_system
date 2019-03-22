@@ -118,4 +118,10 @@ public class ClassSlave  extends AbstractActorWithStash
                 .match(  PoisonPill.class, x -> getContext().stop(self()))
                 .build();
     }
+
+    @Override
+    public void postStop()  {
+        super.postStop();
+        System.out.println( "LEARNER STOPPED: " + model_id );
+    }
 }

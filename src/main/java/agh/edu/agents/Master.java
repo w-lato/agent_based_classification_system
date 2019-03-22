@@ -50,15 +50,33 @@ public class Master extends AbstractActorWithStash {
     {
         if( !slaves.isEmpty() )
         {
-            slaves.forEach( (k,v)-> k.tell( PoisonPill.class, ActorRef.noSender() ) );
+            slaves.forEach( (k,v)-> k.tell( PoisonPill.getInstance(), ActorRef.noSender() ) );
             slaves.clear();
         }
         if( !learners.isEmpty() )
         {
-            learners.forEach( (k,v)-> k.tell( PoisonPill.class, ActorRef.noSender() ) );
+            learners.forEach( (k,v)-> k.tell( PoisonPill.getInstance(), ActorRef.noSender() ) );
             learners.clear();
         }
-        if( aggregator != null ) aggregator.tell( PoisonPill.class, ActorRef.noSender() );
+        if( aggregator != null ) aggregator.tell( PoisonPill.getInstance(), ActorRef.noSender() );
+        if( !data_split.isEmpty() ) data_split.clear();
+        curr = null;
+        exp_processing = false;
+    }
+
+    private void onKill(String s)
+    {
+        if( !slaves.isEmpty() )
+        {
+            slaves.forEach( (k,v)-> k.tell( Kill.getInstance(), ActorRef.noSender() ) );
+            slaves.clear();
+        }
+        if( !learners.isEmpty() )
+        {
+            learners.forEach( (k,v)-> k.tell( Kill.getInstance(), ActorRef.noSender() ) );
+            learners.clear();
+        }
+        if( aggregator != null ) aggregator.tell( Kill.getInstance(), ActorRef.noSender() );
         if( !data_split.isEmpty() ) data_split.clear();
         curr = null;
         exp_processing = false;
@@ -227,8 +245,15 @@ public class Master extends AbstractActorWithStash {
 
                 // others
                 .matchEquals("RESET", this::onReset)
+                .matchEquals("INSTANT_KILL", this::onKill)
                 .match(  PoisonPill.class, x -> getContext().stop(self()))
                 .matchAny(o -> { System.out.println("Master received unknown message: " + o); })
                 .build();
+    }
+
+    @Override
+    public void postStop()  {
+        super.postStop();
+        System.out.println( "MASTER STOPPED: ");
     }
 }

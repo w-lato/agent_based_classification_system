@@ -55,7 +55,7 @@ public class Saver
         // save to files
         SerializationHelper.write(  save_path + ".model", model  );
         Files.write(Paths.get(          save_path + ".conf"), s.getBytes());
-        if( Files.notExists(Paths.get(  save_path + ".arff")))
+        if( !Files.exists(Paths.get(  save_path + ".arff")))
             Files.write(Paths.get(      save_path + ".arff"), data.toString().getBytes());
     }
 
