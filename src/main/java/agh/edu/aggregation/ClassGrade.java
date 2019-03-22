@@ -4,6 +4,7 @@ import agh.edu.learning.ClassRes;
 
 import java.util.Arrays;
 
+// tODO from and to string tests
 public final class ClassGrade
 {
     private String model_id;

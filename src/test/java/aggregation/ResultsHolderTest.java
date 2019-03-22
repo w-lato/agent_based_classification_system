@@ -16,16 +16,16 @@ public class ResultsHolderTest
         LinkedHashMap<String, List<double[]>> m = new LinkedHashMap<>();
         List l1 = new ArrayList();
         l1.add( new double[]{1.0,0.0,0.0} );
-        l1.add( new double[]{1.0,0.0,0.0} );
-        l1.add( new double[]{1.0,0.0,0.0} );
+        l1.add( new double[]{11.0,0.0,0.0} );
+        l1.add( new double[]{21.0,0.0,0.0} );
 
         List l2 = new ArrayList();
         l2.add( new double[]{0.0,1.0,0.0} );
-        l2.add( new double[]{0.0,1.0,0.0} );
+        l2.add( new double[]{0.0,81.0,0.0} );
         l2.add( new double[]{0.0,1.0,0.0} );
 
         List l3 = new ArrayList();
-        l3.add( new double[]{0.0,0.50,1.0} );
+        l3.add( new double[]{0.0,0.50,91.0} );
         l3.add( new double[]{0.0,0.50,1.0} );
         l3.add( new double[]{0.0,0.50,1.0} );
 
@@ -37,9 +37,9 @@ public class ResultsHolderTest
         ResultsHolder rh = new ResultsHolder(id,m);
         String s = rh.toString();
         String should_be = "#0\n" + "M_1:M_2:M_3\n" +
-                "[1.0, 0.0, 0.0]:[0.0, 1.0, 0.0]:[0.0, 0.5, 1.0]\n" +
-                "[1.0, 0.0, 0.0]:[0.0, 1.0, 0.0]:[0.0, 0.5, 1.0]\n" +
-                "[1.0, 0.0, 0.0]:[0.0, 1.0, 0.0]:[0.0, 0.5, 1.0]";
+                "[1.0, 0.0, 0.0]:[0.0, 1.0, 0.0]:[0.0, 0.5, 91.0]\n" +
+                "[11.0, 0.0, 0.0]:[0.0, 81.0, 0.0]:[0.0, 0.5, 1.0]\n" +
+                "[21.0, 0.0, 0.0]:[0.0, 1.0, 0.0]:[0.0, 0.5, 1.0]";
 
         Assert.assertEquals( should_be, s );
 

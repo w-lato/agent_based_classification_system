@@ -40,19 +40,20 @@ public class ResultsHolder
         }
     }
 
+    //#ID
+    //M_1:M_2:M_3
+    //[0,1,0]:[0,0,1]:[1,0,0]
     @Override
     public String toString()
     {
         List<String> to_save = new ArrayList<>();
         Set<String> ids = probs.keySet();
 
-        //#ID
         to_save.add("#"+ID);
-        // M_1:M_2:M_3
         to_save.add( String.join(":", ids) );
-
         int N = probs.get( ids.iterator().next() ).size();
         List<double[]> aux = new ArrayList();
+
         for (int i = 0; i < N; i++)
         {
             aux.clear();
