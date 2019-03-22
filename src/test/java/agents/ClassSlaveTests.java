@@ -1,13 +1,12 @@
 package agents;
 
-import agh.edu.agents.Aggregator;
-import agh.edu.agents.Aggregator.ClassGrade;
 import agh.edu.agents.Aggregator.PartialRes;
 import agh.edu.agents.ClassSlave;
 import agh.edu.agents.ClassSlave.BestClass;
 import agh.edu.agents.ClassSlave.ClassSetup;
 import agh.edu.agents.ClassSlave.Query;
 import agh.edu.agents.enums.S_Type;
+import agh.edu.aggregation.ClassGrade;
 import agh.edu.learning.ClassRes;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;

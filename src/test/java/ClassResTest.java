@@ -51,7 +51,7 @@ public class ClassResTest
         ClassRes cr2 = new ClassRes(S_Type.MLP, mlp, train);
 
         Assert.assertTrue( cr1.compareTo( cr2 ) < 0 );
-        Assert.assertTrue( cr1.compareTo( cr1 ) == 0 );
+        Assert.assertEquals(0, cr1.compareTo(cr1));
         Assert.assertTrue( cr2.compareTo( cr1 ) > 0 );
 
         System.out.println( "SMO: acc " + cr1.getAcc() + " F-1 " + cr1.getSumOfFscore() );

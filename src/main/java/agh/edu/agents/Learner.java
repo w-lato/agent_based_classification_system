@@ -1,12 +1,12 @@
 package agh.edu.agents;
 
+import agh.edu.agents.ClassSlave.BestClass;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.experiment.Saver;
-import agh.edu.agents.ClassSlave.BestClass;
 import agh.edu.learning.ClassRes;
 import agh.edu.learning.DefaultClassifierFactory;
-import agh.edu.learning.params.ParamsFactory;
 import agh.edu.learning.params.Params;
+import agh.edu.learning.params.ParamsFactory;
 import akka.actor.AbstractActorWithTimers;
 import akka.actor.ActorRef;
 import akka.actor.PoisonPill;

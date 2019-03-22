@@ -9,7 +9,6 @@ import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.NormalizedPolyKernel;
 import weka.classifiers.functions.supportVector.PolyKernel;
 import weka.classifiers.functions.supportVector.RBFKernel;
-import weka.classifiers.trees.RandomForest;
 
 import java.util.List;
 

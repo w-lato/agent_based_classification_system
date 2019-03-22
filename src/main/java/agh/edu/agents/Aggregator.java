@@ -1,6 +1,7 @@
 package agh.edu.agents;
 
 import agh.edu.agents.enums.ClassStrat;
+import agh.edu.aggregation.ClassGrade;
 import agh.edu.aggregation.ClassPred;
 import agh.edu.aggregation.ResultsHolder;
 import agh.edu.learning.ClassRes;
@@ -9,14 +10,16 @@ import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-// TODO BETTER Way to identify the actor in reference
 // TODO method which sets class strat & a method which will use all possible strategies
 // TODO load agent's grades - now we have to eval model and then send it to Learner and to aggregator...
 public class Aggregator extends AbstractActorWithStash
 {
+    String exp_id; // EXP/exp_id
+
     ActorRef master;
     ClassStrat strat;
 
@@ -32,6 +35,12 @@ public class Aggregator extends AbstractActorWithStash
     static public Props props(ActorRef coord, ClassStrat strat) {
         return Props.create(Aggregator.class, () -> new Aggregator(coord,strat));
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //                                    HANDLERS
 
 
     private void handleClassUpdate(ClassGrade cg) { perf.put( cg.getModel_id(), cg ); }
@@ -50,14 +59,18 @@ public class Aggregator extends AbstractActorWithStash
             results.get( id ).appendPredsAndProbs( pr, model_id, perf );
         }
         else {
-            ResultsHolder rh = new ResultsHolder( id, strat );
+            ResultsHolder rh = new ResultsHolder( id );
             rh.appendPredsAndProbs( pr, model_id, perf );
             results.put( id, rh );
         }
         List<Integer> l = ClassPred.getPreds ( strat, perf, results.get(id).getProbs() );
         // TODO classify each row of data and send the results
-
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //                                    MESSAGES
 
 
     public static final class PartialRes
@@ -75,48 +88,6 @@ public class Aggregator extends AbstractActorWithStash
 
         public ClassRes getCr() {
             return cr;
-        }
-    }
-
-    public static final class ClassGrade
-    {
-        private String model_id;
-
-        private final double[] fscore;
-        private final double[] AUROC;
-        private final double acc;
-        private final double acc_wgt;
-        private final double fmeas_wgt;
-        private final double grade;
-
-        public double[] getFscore() { return fscore; }
-        public double[] getAUROC() { return AUROC; }
-        public double getAcc() { return acc; }
-        public double getAcc_wgt() { return acc_wgt; }
-        public double getFmeas_wgt() { return fmeas_wgt; }
-        public double getGrade() { return grade; }
-        public String getModel_id() { return model_id; }
-
-        public ClassGrade(double[] fscore, double[] AUROC, double acc, double acc_wgt, double fmeas_wgt, double grade)
-        {
-            int N = fscore.length;
-            this.fscore = new double[ N ];
-            this.AUROC = new double[ N ];
-            this.acc_wgt = acc_wgt;
-            this.fmeas_wgt = fmeas_wgt;
-
-            this.acc = acc;
-            for (int i = 0; i < N; i++) {
-                this.fscore[ i ] = fscore[ i ];
-                this.AUROC[ i ] = AUROC[ i ];
-            }
-            this.grade = grade;
-        }
-
-        public ClassGrade(ClassRes cr, String model_id)
-        {
-            this( cr.getFscore(), cr.getAUROC(), cr.getAcc(), cr.getAcc_wgt(),cr.getFmeas_wgt(), cr.getGrade());
-            this.model_id = model_id;
         }
     }
     

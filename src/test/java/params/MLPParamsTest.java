@@ -7,8 +7,6 @@ import org.deeplearning4j.nn.api.Layer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import sun.rmi.server.InactiveGroupException;
-import weka.classifiers.functions.Logistic;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 

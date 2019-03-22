@@ -1,8 +1,10 @@
 import org.junit.Test;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
+
 import java.util.HashMap;
 import java.util.Map;
+
 import static junit.framework.TestCase.assertTrue;
 
 public class StratificationTest

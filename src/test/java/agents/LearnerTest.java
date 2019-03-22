@@ -1,13 +1,11 @@
 package agents;
 
-import agh.edu.agents.Aggregator;
 import agh.edu.agents.ClassSlave;
 import agh.edu.agents.Learner;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.experiment.Loader;
+import agh.edu.aggregation.ClassGrade;
 import agh.edu.learning.ClassRes;
-import agh.edu.learning.params.ParamsIBk;
-import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.testkit.TestKit;
@@ -15,27 +13,18 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import scala.collection.JavaConverters;
-import scala.collection.immutable.Seq;
 import scala.concurrent.duration.Duration;
 import weka.classifiers.Classifier;
-import weka.classifiers.Evaluation;
-import weka.classifiers.functions.SMO;
-import weka.classifiers.lazy.IBk;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-
-import static akka.japi.JAPI.seq;
 
 public class LearnerTest
 {
@@ -72,8 +61,8 @@ public class LearnerTest
         ActorRef slave = system.actorOf( ClassSlave.props( new ClassSlave.ClassSetup(test, S_Type.SMO,exp_path +"SMO_1")) );
         S = system.actorOf(Learner.props(exp_path,S_Type.SMO, train, slave));
 
-        Aggregator.ClassGrade results = testProbe.within(Duration.create(15, TimeUnit.SECONDS), () -> {
-            return testProbe.expectMsgClass( Aggregator.ClassGrade.class );
+        ClassGrade results = testProbe.within(Duration.create(15, TimeUnit.SECONDS), () -> {
+            return testProbe.expectMsgClass( ClassGrade.class );
         });
 //        double reaq_grade = "EXP/FOR_TESTS_0/"
 //        System.out.println( results. );

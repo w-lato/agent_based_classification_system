@@ -5,7 +5,6 @@ import agh.edu.learning.params.ParamsADA;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import weka.classifiers.lazy.IBk;
 import weka.classifiers.meta.AdaBoostM1;
 
 import java.util.List;

@@ -1,6 +1,5 @@
 package params;
 
-import agh.edu.learning.custom.MLP;
 import agh.edu.learning.params.Params;
 import agh.edu.learning.params.ParamsNB;
 import org.junit.Assert;
@@ -8,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 import weka.classifiers.bayes.NaiveBayes;
 
-import javax.swing.text.StyledEditorKit;
 import java.util.List;
 
 public class NBParamsTest

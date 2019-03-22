@@ -1,79 +1,86 @@
 package agh.edu.aggregation;
 
 import agh.edu.agents.Aggregator.PartialRes;
-import agh.edu.agents.Aggregator.ClassGrade;
-import agh.edu.agents.enums.ClassStrat;
-import akka.actor.ActorRef;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 
-// TODO some kind of identifiers to ActorRef... probably similar to save files
 public class ResultsHolder
 {
     private final Integer ID;
-    private final ClassStrat strat;
-    // TODO replace this with List<ActorRef> because it will be hart to convert it from string to ref
-    private final List<String> class_order;
-    private final Map<String,List<double[]>> probs;
-    private final List<StringBuilder> results;
+    private final LinkedHashMap<String,List<double[]>> probs;
 
-    public Map<String, List<double[]>> getProbs() {
+    public Integer getID() { return ID; }
+    public LinkedHashMap<String, List<double[]>> getProbs() {
         return probs;
     }
 
-    public ResultsHolder(Integer ID, ClassStrat strat)
+    public ResultsHolder(Integer ID)
     {
         this.ID = ID;
-        this.strat = strat;
-        class_order = new ArrayList<>();
-        probs = new HashMap<>();
-        results = new ArrayList<>(); // the final outcome
+        probs = new LinkedHashMap<>();
+    }
+
+    public ResultsHolder(Integer ID, LinkedHashMap<String,List<double[]>> m)
+    {
+        this.ID = ID;
+        probs = m;
     }
 
     public void appendPredsAndProbs(PartialRes pr, String model_id, Map<String, ClassGrade> perf)
     {
-        if( !results.contains( model_id ) )
+        if( !probs.containsKey( model_id ) )
         {
-            class_order.add( model_id );
             probs.put( model_id, pr.getCr().getProbs() );
-            calculatePreds( strat, perf );
         }
         else
         {
-            System.out.println(" ###  TWO RESPONSES FROM SLAVE: " + model_id);
+            System.out.println(" ###  TWO RESPONSES TO THE SAME QUERY FROM SLAVE: " + model_id);
         }
     }
 
-    public void calculatePreds(ClassStrat strategy, Map<String, ClassGrade> perf)
+    @Override
+    public String toString()
     {
-        List<String> l = ClassPred.getPreds( strategy,perf, probs)
-                .stream()
-                .map(String::valueOf)
-                .collect(Collectors.toList());
+        List<String> to_save = new ArrayList<>();
+        Set<String> ids = probs.keySet();
 
-        if( results.isEmpty() )
+        //#ID
+        to_save.add("#"+ID);
+        // M_1:M_2:M_3
+        to_save.add( String.join(":", ids) );
+
+        for( String m_id :  ids)
         {
-            l.forEach( x -> results.add(new StringBuilder(x)) );
+            List<double[]> l = probs.get( m_id );
+            to_save.add( l.stream().map(Arrays::toString).collect(Collectors.joining(":")) );
         }
-        else
+        return String.join("\n", to_save);
+    }
+
+    public static ResultsHolder fromString( String s )
+    {
+        List<String> l = Arrays.asList( s.split("\n") );
+        Integer query_id = Integer.valueOf( l.get(0).substring(1) );
+        String[] keys = l.get(1).split(":");
+        LinkedHashMap<String,List<double[]>> m = new LinkedHashMap<>();
+
+        for (String key : keys) { m.put(key, new ArrayList<>()); }
+        for (int i = 2; i < l.size(); i++)
         {
-            for (int i = 0; i < results.size(); i++)
+            String[] aux = l.get( i ).split(":");
+            for (int i1 = 0; i1 < aux.length; i1++)
             {
-                results.get(i).append(l.get(i));
+                String[] str_dbls = aux[i1].substring(1,aux[i1].length() - 1).split(",");
+                double[] x = new double[ str_dbls.length ];
+                for (int i2 = 0; i2 < str_dbls.length; i2++)
+                {
+                    x[i2] = Double.valueOf( str_dbls[i2] );
+                }
+                m.get( keys[i1] ).add( x );
             }
         }
-    }
-
-    private String arrToStr(double[] arr)
-    {
-        StringBuilder s = new StringBuilder();
-        for (double v : arr) {
-            s.append(v).append(',');
-        }
-        return s.toString();
+        return new ResultsHolder( query_id, m );
     }
 }

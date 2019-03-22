@@ -1,12 +1,15 @@
 package agh.edu.agents;
 
+import agh.edu.agents.Aggregator.PartialRes;
 import agh.edu.agents.enums.S_Type;
+import agh.edu.aggregation.ClassGrade;
 import agh.edu.learning.ClassRes;
-import akka.actor.*;
+import akka.actor.AbstractActorWithStash;
+import akka.actor.ActorRef;
+import akka.actor.PoisonPill;
+import akka.actor.Props;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
-import agh.edu.agents.Aggregator.PartialRes;
-import agh.edu.agents.Aggregator.ClassGrade;
 
 
 public class ClassSlave  extends AbstractActorWithStash

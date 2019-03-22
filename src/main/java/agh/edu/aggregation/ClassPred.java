@@ -1,10 +1,6 @@
 package agh.edu.aggregation;
 
-import agh.edu.agents.Aggregator.ClassGrade;
 import agh.edu.agents.enums.ClassStrat;
-import agh.edu.learning.ClassRes;
-import akka.actor.ActorRef;
-import org.bytedeco.javacpp.presets.opencv_core;
 import weka.core.matrix.Matrix;
 
 import java.util.*;
@@ -14,10 +10,8 @@ public class ClassPred
 {
     private static Map<Integer,Integer> aux_ctr= new HashMap<>();
 
-    public static List<Integer> getPreds(ClassStrat s,
-                                       Map<String, ClassGrade> perf,
-                                       Map<String,List<double[]>> probs)
-    {
+    public static List<Integer> getPreds(ClassStrat s, Map<String, ClassGrade> perf,
+                                       Map<String,List<double[]>> probs) {
         switch (s)
         {
             case MAJORITY: return majorityVoting( probs );
@@ -47,7 +41,7 @@ public class ClassPred
             arr.add( new Matrix( tmp, M, N ));
         }
 
-        Object[] wghts = perf.values().stream().map(ClassRes::computeWeight).toArray();
+        Object[] wghts = perf.values().stream().map(ClassGrade::getGrade).toArray();
         for (int i = 0; i < N; i++) { arr.get(i).timesEquals((Double) wghts[i]); }
         Matrix aux = arr.stream().reduce( Matrix::plus ).orElse(null);
         return Arrays.stream(aux.getArray())

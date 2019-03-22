@@ -3,7 +3,6 @@ package params;
 import agh.edu.learning.params.Params;
 import agh.edu.learning.params.ParamsIBk;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import weka.classifiers.lazy.IBk;

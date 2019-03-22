@@ -5,15 +5,12 @@ import agh.edu.agents.experiment.ConfParser;
 import agh.edu.agents.experiment.RunConf;
 import agh.edu.agents.experiment.Splitter;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Random;
 
 public class ConfParserTests
 {

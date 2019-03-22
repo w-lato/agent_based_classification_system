@@ -1,9 +1,5 @@
-import agh.edu.agents.Aggregator;
-import agh.edu.agents.Aggregator.ClassGrade;
-import agh.edu.agents.ClassSlave;
-import agh.edu.agents.ClassSlave.ClassSetup;
 import agh.edu.agents.enums.ClassStrat;
-import agh.edu.agents.enums.S_Type;
+import agh.edu.aggregation.ClassGrade;
 import agh.edu.aggregation.ClassPred;
 import agh.edu.learning.ClassRes;
 import akka.actor.ActorRef;
@@ -23,9 +19,7 @@ public class ClassPredTests
 {
     Map<String,List<double[]>> probs;
     Map<String, ClassGrade> grades;
-    ActorRef A;
-    ActorRef B;
-    ActorRef C;
+
 
     @Before
     public void setup() throws Exception {
@@ -37,9 +31,6 @@ public class ClassPredTests
 
         ActorSystem system = ActorSystem.create("testSystem");
         ActorRef m = ActorRef.noSender();
-        A = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF,"A")));
-        B = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF,"B")));
-        C = system.actorOf(ClassSlave.props(new ClassSetup(m, S_Type.RF,"C")));
 
         probs = new HashMap<>();
         grades = new HashMap<>();
@@ -129,10 +120,10 @@ public class ClassPredTests
     {
         List<Integer> l = ClassPred.getPreds( ClassStrat.WEIGHTED, grades, probs );
         assert l != null;
-//        l.forEach(System.out::println);
-        Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get(A)), 3.25));
-        Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get(B)), 15.5));
-        Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get(C)), 0.2));
+
+        Assert.assertEquals(0, Double.compare(grades.get("A").getGrade(), 3.25));
+        Assert.assertEquals(0, Double.compare(grades.get("B").getGrade(), 15.5));
+        Assert.assertEquals(0, Double.compare(grades.get("C").getGrade(), 0.2));
         Assert.assertArrayEquals(  new Integer[]{1,1,0,0,0}, l.toArray() );
     }
 }

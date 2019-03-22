@@ -9,13 +9,18 @@ import agh.edu.learning.ClassRes;
 import agh.edu.learning.params.ParamsSMO;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
 import org.apache.commons.io.FileUtils;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.SMO;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.core.converters.ConverterUtils;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,6 +45,7 @@ public class SaverTest
         data.stratify(n);
         data = source.getDataSet().testCV(n,0);
         data.setClassIndex( data.numAttributes() - 1);
+        cleanWorkspace();
     }
 
 
@@ -62,6 +68,9 @@ public class SaverTest
         Assert.assertEquals(9, count_ADAs);
         Assert.assertEquals(6, count_MLPs);
         Assert.assertEquals(3, count_SMOs);
+
+        m.tell("RESET", ActorRef.noSender());
+        m.tell(PoisonPill.class, ActorRef.noSender());
     }
 
 
@@ -164,13 +173,13 @@ public class SaverTest
     }
 
 
+    // todo DEAL WITH ID OF MODEL /na_1 
     @Test
     public void testIfAgentsSavesThingsAtTheEnd() throws Exception
     {
         ConverterUtils.DataSource source = new ConverterUtils.DataSource( "DATA\\iris.arff");
         data = source.getDataSet();
         data.setClassIndex( data.numAttributes() - 1);
-
 
         ActorSystem system = ActorSystem.create("testSystem");
         RunConf rc = ConfParser.getConfFrom( "CONF/END_TEST" );
@@ -210,6 +219,8 @@ public class SaverTest
             Assert.assertFalse( nb2.getUseKernelEstimator());
             Assert.assertFalse( nb2.getUseSupervisedDiscretization());
         }
+        m.tell("RESET", ActorRef.noSender());
+        m.tell(PoisonPill.class, ActorRef.noSender());
     }
 
 

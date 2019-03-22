@@ -1,6 +1,7 @@
 package agh.edu.agents.experiment;
 
 import agh.edu.agents.enums.S_Type;
+import agh.edu.aggregation.ClassGrade;
 import agh.edu.learning.ClassRes;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
@@ -8,7 +9,9 @@ import weka.core.SerializationHelper;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -70,4 +73,19 @@ public class Saver
 
         return s.toString();
     }
+
+    private static void saveAgg(String exp_id, Map<String, ClassGrade> perf) throws IOException {
+        String s = exp_id +"/AGG/";
+        Path p = Paths.get( s );
+
+        // save model_id:grades
+        List<String> to_save = new ArrayList<>(perf.keySet());
+        to_save = to_save.stream().map( x-> x + ":" + perf.get(x).toString() ).collect(Collectors.toList());
+        Files.write(p,to_save);
+
+        // save aggr's model
+
+        // TODO save results of tests? "ResultsHolder"?
+    }
+
 }

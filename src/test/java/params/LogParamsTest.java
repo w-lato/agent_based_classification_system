@@ -6,7 +6,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import weka.classifiers.functions.Logistic;
-import weka.classifiers.meta.AdaBoostM1;
 
 import java.util.List;
 

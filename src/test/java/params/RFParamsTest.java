@@ -5,7 +5,6 @@ import agh.edu.learning.params.ParamsRF;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.trees.RandomForest;
 
 import java.util.List;
