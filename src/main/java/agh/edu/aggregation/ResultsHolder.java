@@ -28,11 +28,11 @@ public class ResultsHolder
         probs = m;
     }
 
-    public void appendPredsAndProbs(PartialRes pr, String model_id, Map<String, ClassGrade> perf)
+    public void appendProbs(String model_id,List<double[]> part_probs, Map<String, ClassGrade> perf)
     {
         if( !probs.containsKey( model_id ) )
         {
-            probs.put( model_id, pr.getCr().getProbs() );
+            probs.put( model_id, part_probs);
         }
         else
         {

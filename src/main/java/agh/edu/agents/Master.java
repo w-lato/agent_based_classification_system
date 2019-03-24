@@ -18,7 +18,6 @@ import static agh.edu.agents.enums.Split.SIMPLE;
 
 // TODO handle the class strategy - only one thing has to be changes in order to check different results
 // tODO handle slaves save and load - persistent
-// TODO kill scenario
 // TODO do we need map with Learners and types?
 public class Master extends AbstractActorWithStash {
     private final String dir_prefix = "EXP/";
@@ -26,6 +25,7 @@ public class Master extends AbstractActorWithStash {
     private boolean exp_processing  = false;
 
     private RunConf curr;
+    private String exp_path;
 
     private Map<ActorRef,S_Type> slaves;
     private Map<ActorRef,S_Type> learners;
@@ -132,17 +132,14 @@ public class Master extends AbstractActorWithStash {
     {
         if( !exp_processing )
         {
-            String dir = le.exp_dir_path;
-            loadRunConf( le.conf_path, dir );
-
-            Set<String> IDs = Files.walk( Paths.get( dir ) )
-                    .map( x -> x.getFileName().toString().split(".")[0] )
-                    .collect(Collectors.toSet());
+            exp_path = le.exp_dir_path;
+            loadRunConf( le.conf_path, exp_path );
+            Set<String> IDs = getModelIDs( exp_path);
 
             for (String id : IDs)
             {
-                String model_id = dir + id;
-                Path c_p = Paths.get( dir + id + ".conf" );
+                String model_id = exp_path +"/"+ id;
+                Path c_p = Paths.get( model_id + ".conf" );
                 String m_p = model_id  + ".model";
                 String d_p =  model_id + ".arff";
 
@@ -168,17 +165,14 @@ public class Master extends AbstractActorWithStash {
     private void onSlaveOnly(SlaveOnlyExp conf) throws Exception {
         if( !exp_processing )
         {
-            String dir = conf.exp_dir_path;
-            loadRunConf( conf.conf_path, dir );
-
-            Set<String> IDs = Files.walk( Paths.get( dir ) )
-                    .map( x -> x.getFileName().toString().split(".")[0] )
-                    .collect(Collectors.toSet());
+            exp_path = conf.exp_dir_path;
+            loadRunConf( conf.conf_path, exp_path );
+            Set<String> IDs = getModelIDs( exp_path );
 
             for( String id : IDs)
             {
-                String model_id = dir + id;
-                Path c_p = Paths.get( dir + id + ".conf" );
+                String model_id = exp_path + "/" + id;
+                Path c_p = Paths.get( model_id + ".conf" );
                 String m_p = model_id  + ".model";
 
                 S_Type type = Loader.getType( c_p );
@@ -205,6 +199,30 @@ public class Master extends AbstractActorWithStash {
         Aggregator.AggSetup setup = Loader.getAggSetup( Paths.get(exp_dir_path + agg_postfix+ "/agg.conf"), self() );
         aggregator = getContext().actorOf(Aggregator.props( setup ));
     }
+
+    private Set<String> getModelIDs(String exp_id) throws IOException {
+        return Files.list( Paths.get( exp_id ) )
+                .filter( x-> !Files.isDirectory(x) )
+                .map( x ->  x.getFileName().toString().split("\\.")[0] )
+                .collect(Collectors.toSet());
+
+    }
+
+    private void onLabel(Instances data) throws IOException
+    {
+        int query_id = Loader.getNextQueryID(exp_path + "/AGG");
+        data.setClassIndex( data.numAttributes() -1 );
+
+        // save query data
+        Saver.saveQueryData( exp_path, query_id, data );
+        ClassSlave.Query q = new ClassSlave.Query( query_id,data );
+        for (ActorRef slave : slaves.keySet())
+        {
+            slave.tell( q, self() );
+        }
+        System.out.println( "   :!: QUERY " + query_id + " SENT TO SLAVES" );
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
@@ -236,9 +254,14 @@ public class Master extends AbstractActorWithStash {
         }
     }
 
+
+
     @Override
     public AbstractActor.Receive createReceive() {
         return receiveBuilder()
+
+                // classify
+                .match(  Instances.class,    this::onLabel)
 
                 // configs
                 .match(  RunConf.class,      this::onConfig)
@@ -246,10 +269,10 @@ public class Master extends AbstractActorWithStash {
                 .match(  SlaveOnlyExp.class, this::onSlaveOnly)
 
                 // others
-                .matchEquals("RESET", this::onReset)
-                .matchEquals("INSTANT_KILL", this::onKill)
-                .match(  PoisonPill.class, x -> getContext().stop(self()))
-                .matchAny(o -> { System.out.println("Master received unknown message: " + o); })
+                .matchEquals("RESET",          this::onReset)
+                .matchEquals("INSTANT_KILL",   this::onKill)
+                .match(             PoisonPill.class, x -> getContext().stop(self()))
+                .matchAny(                            o -> { System.out.println("Master received unknown message: " + o); })
                 .build();
     }
 

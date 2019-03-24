@@ -65,34 +65,34 @@ public class ClassSlaveTests
         system = null;
     }
 
-    @Test
-    public void testBestClassAndQueryForwardMessage() throws Exception {
-        final TestKit testProbe = new TestKit(system);
-        ActorRef test = testProbe.testActor();
-
-        ClassRes cr = new ClassRes(S_Type.SMO,smo,train);
-        S = system.actorOf(ClassSlave.props(new ClassSetup(test, S_Type.RF,"S")));
-        S.tell( new Query(1,train.testCV(10,1)), ActorRef.noSender());
-        testProbe.expectNoMessage( Duration.apply(3,TimeUnit.SECONDS) );
-
-        S.tell( new BestClass(smo,"default",cr), ActorRef.noSender());
-        ClassGrade cg = testProbe.expectMsgClass( ClassGrade.class );
-
-        Assert.assertNotNull( cg.getAUROC() );
-        Assert.assertNotNull( cg.getFscore() );
-
-        Assert.assertTrue( Double.compare(cg.getAcc(),0.0) >= 0 );
-        Assert.assertTrue( Double.compare(cg.getAcc(),1.0) <= 0 );
-
-        S.tell( new Query(1,train.testCV(10,1)), ActorRef.noSender());
-        PartialRes results = testProbe.within(Duration.create(10, TimeUnit.SECONDS), () -> {
-            return testProbe.expectMsgClass( PartialRes.class );
-        });
-
-        ClassRes x = results.getCr();
-        Assert.assertNotNull( x.getAUROC() );
-        Assert.assertNotNull( x.getFscore() );
-        Assert.assertTrue( Double.compare(x.getAcc(),0.0) >= 0 );
-        Assert.assertTrue( Double.compare(x.getAcc(),1.0) <= 0 );
-    }
+//    @Test
+//    public void testBestClassAndQueryForwardMessage() throws Exception {
+//        final TestKit testProbe = new TestKit(system);
+//        ActorRef test = testProbe.testActor();
+//
+//        ClassRes cr = new ClassRes(S_Type.SMO,smo,train);
+//        S = system.actorOf(ClassSlave.props(new ClassSetup(test, S_Type.RF,"S")));
+//        S.tell( new Query(1,train.testCV(10,1)), ActorRef.noSender());
+//        testProbe.expectNoMessage( Duration.apply(3,TimeUnit.SECONDS) );
+//
+//        S.tell( new BestClass(smo,"default",cr), ActorRef.noSender());
+//        ClassGrade cg = testProbe.expectMsgClass( ClassGrade.class );
+//
+//        Assert.assertNotNull( cg.getAUROC() );
+//        Assert.assertNotNull( cg.getFscore() );
+//
+//        Assert.assertTrue( Double.compare(cg.getAcc(),0.0) >= 0 );
+//        Assert.assertTrue( Double.compare(cg.getAcc(),1.0) <= 0 );
+//
+//        S.tell( new Query(1,train.testCV(10,1)), ActorRef.noSender());
+//        PartialRes results = testProbe.within(Duration.create(10, TimeUnit.SECONDS), () -> {
+//            return testProbe.expectMsgClass( PartialRes.class );
+//        });
+//
+//        ClassRes x = results.getCr();
+//        Assert.assertNotNull( x.getAUROC() );
+//        Assert.assertNotNull( x.getFscore() );
+//        Assert.assertTrue( Double.compare(x.getAcc(),0.0) >= 0 );
+//        Assert.assertTrue( Double.compare(x.getAcc(),1.0) <= 0 );
+//    }
 }

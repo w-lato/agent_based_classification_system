@@ -65,7 +65,8 @@ public class SaverTest
         m.tell( rc, ActorRef.noSender() );
 
         Thread.sleep( 15*1000 );
-        List<String> l = Files.list(Paths.get("EXP/TEST_CASE_1"))
+        Path test = Files.list( Paths.get("EXP/") ).filter(x-> x.toString().contains("TEST_CASE_")).findFirst().orElse(null);
+        List<String> l = Files.list( test )
                 .map(Path::getFileName)
                 .map(Path::toString)
                 .collect(Collectors.toList());
@@ -110,7 +111,7 @@ public class SaverTest
         List<String> l = Files.readAllLines(Paths.get(exp_dir+".conf"));
         S_Type read_type = S_Type.valueOf(l.get(0).split(":")[0]);
 
-        // TODO some process is using other_id.arff - and cannot be deleted
+        // TODO some process is using other_id.arff - and cannot be deleted no matter what
 //        SMO read_smo = (SMO) SerializationHelper.read(exp_dir+".model");
 //        Instances read_instances = ConverterUtils.DataSource.read( exp_dir+".arff" );
 //        read_instances.setClassIndex( read_instances.numAttributes() - 1 );
@@ -129,10 +130,8 @@ public class SaverTest
         }
         Assert.assertEquals( the_rest, read_rest.toString());
 
-        String err_file = Paths.get( exp_dir + ".arff" ).toAbsolutePath().toString();
-        System.out.println( err_file );
-        Runtime.getRuntime().exec("cmd /c start cmd.exe /K \"Del /F "+ err_file + " && exit\"");
-        Thread.sleep(1000);
+//        String err_file = Paths.get( exp_dir + ".arff" ).toAbsolutePath().toString();
+//        Runtime.getRuntime().exec("cmd /c start cmd.exe /K \"Del /F "+ err_file + " && exit\"");
 //        FileDeleteStrategy.FORCE.delete( Paths.get( exp_dir + ".arff" ).toFile() );
 //        FileUtils.forceDelete( Paths.get( exp_dir + ".arff" ).toFile() );
 //        Files.delete(  );

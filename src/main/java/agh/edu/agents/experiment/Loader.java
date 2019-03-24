@@ -4,6 +4,7 @@ import agh.edu.agents.Aggregator.AggSetup;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.aggregation.ClassGrade;
 import akka.actor.ActorRef;
+import scala.concurrent.java8.FuturesConvertersImpl;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
@@ -12,6 +13,7 @@ import weka.core.converters.ConverterUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -67,6 +69,18 @@ public class Loader
             }
         }
         return new AggSetup(master, id, m);
+    }
+
+    public static int getNextQueryID(String s) throws IOException {
+        Path p = Paths.get( s );
+        if ( Files.notExists( p )) return -1;
+        int query_id = Files.list(p).map(x -> x.getFileName().toString())
+                .filter(x -> x.startsWith("Q_") && x.endsWith(".arff"))
+                .map(x -> x.replace("Q_","").replace(".arff", ""))
+                .map(Integer::valueOf)
+                .max(Integer::compareTo)
+                .orElse(0);
+        return query_id + 1;
     }
 
 }

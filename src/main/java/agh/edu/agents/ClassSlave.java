@@ -9,7 +9,13 @@ import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
+import weka.core.Instance;
 import weka.core.Instances;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class ClassSlave  extends AbstractActorWithStash
@@ -44,6 +50,11 @@ public class ClassSlave  extends AbstractActorWithStash
         type = sp.type;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //
+
     private void handleNewBest(BestClass bc)
     {
         conf = bc.conf;
@@ -63,11 +74,28 @@ public class ClassSlave  extends AbstractActorWithStash
         if( model == null)
         {
             stash();
-        } else {
-            ClassRes to_send = new ClassRes( type, model, q.batch );
-            aggr.tell( new PartialRes( q.id, to_send, model_id ), self() );
+        }
+        else
+        {
+            Instances to_process = q.batch;
+            Evaluation eval = new Evaluation( to_process );
+            eval.evaluateModel( model, to_process );
+            List<double[]> probs = new ArrayList<>();
+            for (Instance instance : q.batch)
+            {
+                double[] doubles = model.distributionForInstance(instance);
+                probs.add(doubles);
+            }
+            aggr.tell( new PartialRes( q.id, model_id, probs ), self() );
+
+            unstashAll();
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //                                    MESSAGES
 
     public static final class ClassSetup
     {
@@ -110,12 +138,14 @@ public class ClassSlave  extends AbstractActorWithStash
         public ClassRes getResults() { return results; }
     }
 
+
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(  BestClass.class,this::handleNewBest)
-                .match(  Query.class,this::handleQuery)
-                .match(  PoisonPill.class, x -> getContext().stop(self()))
+
+                .match(  BestClass.class,    this::handleNewBest)
+                .match(  Query.class,        this::handleQuery)
+                .match(  PoisonPill.class,   x -> getContext().stop(self()))
                 .build();
     }
 
