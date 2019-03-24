@@ -22,6 +22,7 @@ import static agh.edu.agents.enums.Split.SIMPLE;
 // TODO do we need map with Learners and types?
 public class Master extends AbstractActorWithStash {
     private final String dir_prefix = "EXP/";
+    private final String agg_postfix = "/AGG/";
     private boolean exp_processing  = false;
 
     private RunConf curr;
@@ -99,10 +100,10 @@ public class Master extends AbstractActorWithStash {
                     : Splitter.fillSplit( c.getTrain(), N, c.getFill().get() );
 
             // setup aggregator
-            aggregator = getContext().actorOf(Aggregator.props( self(), c.getClass_method() ));
+            String exp_id = Saver.setupNewExp( c.getConf_name() );
+            aggregator = getContext().actorOf(Aggregator.props( self(), exp_id ));
 
             // setup slaves and learners
-            String exp_id = Saver.setupNewExp( c.getConf_name() );
             S_Type[] agents = c.getAgents();
             for (int i = 0; i < N; i++)
             {
@@ -119,7 +120,7 @@ public class Master extends AbstractActorWithStash {
                 ActorRef new_learner = getContext().actorOf( Learner.props(model_id, cur_type, cur_data, new_slave));
                 learners.put( new_learner, cur_type );
             }
-            System.out.println(" ALL SETUP ");
+            System.out.println(" !! ALL SETUP ");
         } else {
             stash();
         }
@@ -131,9 +132,9 @@ public class Master extends AbstractActorWithStash {
     {
         if( !exp_processing )
         {
-            setupNewRunConf( le.conf_path );
-
             String dir = le.exp_dir_path;
+            loadRunConf( le.conf_path, dir );
+
             Set<String> IDs = Files.walk( Paths.get( dir ) )
                     .map( x -> x.getFileName().toString().split(".")[0] )
                     .collect(Collectors.toSet());
@@ -167,8 +168,9 @@ public class Master extends AbstractActorWithStash {
     private void onSlaveOnly(SlaveOnlyExp conf) throws Exception {
         if( !exp_processing )
         {
-            setupNewRunConf( conf.conf_path );
             String dir = conf.exp_dir_path;
+            loadRunConf( conf.conf_path, dir );
+
             Set<String> IDs = Files.walk( Paths.get( dir ) )
                     .map( x -> x.getFileName().toString().split(".")[0] )
                     .collect(Collectors.toSet());
@@ -193,15 +195,15 @@ public class Master extends AbstractActorWithStash {
         }
     }
 
-    private void setupNewRunConf(String conf_path)
-    {
+    private void loadRunConf(String conf_path, String exp_dir_path) throws IOException {
         exp_processing = true;
         onReset("");
         RunConf rc = ConfParser.getConfFrom( conf_path );
         this.curr = rc;
 
         // aggr
-        aggregator = getContext().actorOf(Aggregator.props( self(), curr.getClass_method() ));
+        Aggregator.AggSetup setup = Loader.getAggSetup( Paths.get(exp_dir_path + agg_postfix+ "/agg.conf"), self() );
+        aggregator = getContext().actorOf(Aggregator.props( setup ));
     }
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

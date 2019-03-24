@@ -1,0 +1,16 @@
+{
+   "paths" : {
+        "train" : "DATA/mnist_train.arff",
+        "test"  : "DATA/mnist_test.arff"
+   },
+   "agents" : {
+        "SMO"  : 1,
+        "MLP"  : 1,
+        "RF"  : 2
+   },
+   "split" : {
+        "method" : "OVERLAP",
+        "fill"  : 0.4,
+   },
+   "class_strat" : "WEIGHTED"
+}

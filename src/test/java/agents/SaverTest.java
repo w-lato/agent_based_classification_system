@@ -247,8 +247,8 @@ public class SaverTest
             Assert.assertFalse( nb2.getUseKernelEstimator());
             Assert.assertFalse( nb2.getUseSupervisedDiscretization());
         }
-        int num_of_confs = Math.toIntExact(Files.walk(path).filter(x -> x.getFileName().toString().contains(".conf")).count());
-        Assert.assertEquals( num_of_confs, 2 );
+        int num_of_confs = Math.toIntExact(Files.walk(path).filter(x -> x.getFileName().toString().contains(".conf")).peek(System.out::println).count());
+        Assert.assertEquals( 3,num_of_confs);
         m.tell("INSTANT_KILL", ActorRef.noSender());
         m.tell(Kill.getInstance(), ActorRef.noSender());
     }

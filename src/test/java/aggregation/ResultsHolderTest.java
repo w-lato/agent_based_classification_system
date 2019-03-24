@@ -52,5 +52,19 @@ public class ResultsHolderTest
             Assert.assertArrayEquals( rh.getProbs().get( x.getKey() ).get(i), x.getValue().get(i),0.0001 );
             }
         });
+
+        // add new model
+        List l4 = new ArrayList();
+        l4.add( new double[]{9.0,6.50,3.0} );
+        l4.add( new double[]{8.0,5.50,2.0} );
+        l4.add( new double[]{7.0,4.50,1.0} );
+        m.put("M_4",l4);
+        ResultsHolder updated = new ResultsHolder(1,m);
+        s = updated.toString();
+        should_be = "#1\n" + "M_1:M_2:M_3:M_4\n" +
+                "[1.0, 0.0, 0.0]:[0.0, 1.0, 0.0]:[0.0, 0.5, 91.0]:[9.0, 6.5, 3.0]\n" +
+                "[11.0, 0.0, 0.0]:[0.0, 81.0, 0.0]:[0.0, 0.5, 1.0]:[8.0, 5.5, 2.0]\n" +
+                "[21.0, 0.0, 0.0]:[0.0, 1.0, 0.0]:[0.0, 0.5, 1.0]:[7.0, 4.5, 1.0]";
+        Assert.assertEquals( should_be,s );
     }
 }

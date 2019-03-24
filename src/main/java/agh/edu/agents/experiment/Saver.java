@@ -18,9 +18,10 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+// TODO save data from ResultsHolder
+// TODO save "future" model from Aggregator
 public class Saver
 {
-
     public static AtomicInteger id_gen = new AtomicInteger();
     public static final String save_dir = "EXP/";
 
@@ -28,7 +29,7 @@ public class Saver
 
     public static String setupNewExp(String conf_name) throws IOException
     {
-        System.out.println(" CONFFF " + conf_name);
+        System.out.println(" @@ NEW EXP " + conf_name);
         List<String> l = Files.list(Paths.get(save_dir))
                 .filter(Files::isDirectory)
                 .map(x->x.getFileName().toString())
@@ -36,10 +37,11 @@ public class Saver
 
         l = l.stream().map(x->x.substring(x.lastIndexOf("_")+1)).collect(Collectors.toList());
         int max = l.stream().map(Integer::valueOf).max(Integer::compareTo).orElse(-1);
-        String s = save_dir + conf_name.toUpperCase() + "_" + (max+1);
-        Files.createDirectories( Paths.get(s) );
+        String exp_id = save_dir + conf_name.toUpperCase() + "_" + (max+1);
+        Files.createDirectories( Paths.get(exp_id +"/AGG") );
+        Files.write( Paths.get( exp_id +"/AGG/agg.conf" ), exp_id.getBytes() );
 
-        return s;
+        return exp_id;
     }
 
     /**
@@ -74,18 +76,14 @@ public class Saver
         return s.toString();
     }
 
-    private static void saveAgg(String exp_id, Map<String, ClassGrade> perf) throws IOException {
-        String s = exp_id +"/AGG/";
-        Path p = Paths.get( s );
+    public static void saveAgg(String agg_id, Map<String, ClassGrade> perf) throws IOException {
+        Path p = Paths.get( agg_id );
 
         // save model_id:grades
         List<String> to_save = new ArrayList<>(perf.keySet());
-        to_save = to_save.stream().map( x-> x + ":" + perf.get(x).toString() ).collect(Collectors.toList());
+        to_save.set(0,agg_id);
+
+        to_save = to_save.stream().map( x-> x + "@" + perf.get(x).toString() ).collect(Collectors.toList());
         Files.write(p,to_save);
-
-        // save aggr's model
-
-        // TODO save results of tests? "ResultsHolder"?
     }
-
 }

@@ -4,7 +4,6 @@ import agh.edu.learning.ClassRes;
 
 import java.util.Arrays;
 
-// tODO from and to string tests
 public final class ClassGrade
 {
     private String model_id;
@@ -65,8 +64,8 @@ public final class ClassGrade
         double fmeas_wgt = Double.valueOf( arr[2] );
         double acc = Double.valueOf( arr[3] );
 
-        String f1[]  = arr[4].replace("[","").replace("]","").split(",");
-        String au[]  = arr[5].replace("[","").replace("]","").split(",");
+        String[] f1 = arr[4].replace("[", "").replace("]", "").split(",");
+        String[] au = arr[5].replace("[", "").replace("]", "").split(",");
         double[] fscore = new double[f1.length];
         double[] auroc = new double[au.length];
         for (int i = 0; i < f1.length; i++)
@@ -74,6 +73,6 @@ public final class ClassGrade
             fscore[i] = Double.valueOf(f1[i]);
             auroc[i] = Double.valueOf(au[i]);
         }
-        return new ClassGrade( fscore,auroc, acc, acc_wgt, fmeas_wgt, grade );
+        return new ClassGrade( fscore, auroc, acc, acc_wgt, fmeas_wgt, grade );
     }
 }

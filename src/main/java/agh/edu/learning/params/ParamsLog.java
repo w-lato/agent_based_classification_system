@@ -10,7 +10,6 @@ import java.util.*;
 
 public class ParamsLog implements Params
 {
-    private String conf;
 
     @Override
     public Classifier clasFromStr(String params)
@@ -24,9 +23,6 @@ public class ParamsLog implements Params
         return lr;
     }
 
-    public String getConf() {
-        return conf;
-    }
 
     @Override
     public List<String> getParamsCartProd()

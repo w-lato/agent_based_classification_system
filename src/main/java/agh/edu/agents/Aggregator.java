@@ -16,24 +16,40 @@ import java.util.Map;
 
 // TODO method which sets class strat & a method which will use all possible strategies
 // TODO load agent's grades - now we have to eval model and then send it to Learner and to aggregator...
+// TODO what we can do with STRAT - we should test every strategy to see which is the best one
 public class Aggregator extends AbstractActorWithStash
 {
     String exp_id; // EXP/exp_id
-
     ActorRef master;
-    ClassStrat strat;
 
+
+    ClassStrat strat;
     Map<String, ClassGrade> perf;
     Map<Integer, ResultsHolder> results;
 
 
-    public Aggregator(ActorRef coordinator, ClassStrat strat) {
+    public Aggregator(ActorRef coordinator,String exp_id)
+    {
         this.master = coordinator;
-        this.strat = strat;
+        this.exp_id = exp_id;
     }
 
-    static public Props props(ActorRef coord, ClassStrat strat) {
-        return Props.create(Aggregator.class, () -> new Aggregator(coord,strat));
+    public Aggregator(ActorRef coordinator,String exp_id, Map<String,ClassGrade> m)
+    {
+        this.master = coordinator;
+        this.exp_id = exp_id;
+        this.perf = m;
+    }
+
+
+    static public Props props(ActorRef master, String exp_id)
+    {
+        return Props.create(Aggregator.class, () -> new Aggregator(master,exp_id));
+    }
+
+    static public Props props(AggSetup setup)
+    {
+        return Props.create(Aggregator.class, () -> new Aggregator(setup.master, setup.exp_id, setup.m));
     }
 
 
@@ -54,6 +70,7 @@ public class Aggregator extends AbstractActorWithStash
     {
         int id = pr.ID;
         String model_id = pr.model_id;
+
         if( results.containsKey( id ) )
         {
             results.get( id ).appendPredsAndProbs( pr, model_id, perf );
@@ -90,7 +107,20 @@ public class Aggregator extends AbstractActorWithStash
             return cr;
         }
     }
-    
+
+    public static final class AggSetup
+    {
+        private ActorRef master;
+        private String exp_id;
+        private Map<String,ClassGrade> m;
+
+        public AggSetup(ActorRef master, String exp_id, Map<String, ClassGrade> m) {
+            this.master = master;
+            this.exp_id = exp_id;
+            this.m = m;
+        }
+    }
+
     @Override
     public Receive createReceive() {
         return receiveBuilder()
