@@ -1,7 +1,5 @@
 package agh.edu.aggregation;
 
-import agh.edu.agents.Aggregator.PartialRes;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
