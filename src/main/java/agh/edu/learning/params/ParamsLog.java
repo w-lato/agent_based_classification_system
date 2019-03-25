@@ -30,9 +30,9 @@ public class ParamsLog implements Params
         List<String> l = new ArrayList<>();
         for (int i = 0; i < 2; i++)
         {
-            for (double j = 0; j < 15.0; j += 0.5)
+            for (double j = 0; j < 15.0; j += 1.0)
             {
-                for (int k = 0; k < 16; k++)
+                for (int k = 5; k < 20; k++)
                 {
                     l.add( (i==1) + "," + j  + "," + k);
                 }
@@ -48,11 +48,7 @@ public class ParamsLog implements Params
         Instances train = instances.trainCV(20,0);
         Instances test = instances.testCV(20,0);
 
-        while (true)
-        {
-            test.remove(0);
-            if( test.size() < 1000 ) break;
-        }
+        while (test.size() > 1000) { test.remove(0);}
         List<Double> classes = new ArrayList();
         List<double[]> probs = new ArrayList();
 

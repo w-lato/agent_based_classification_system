@@ -78,7 +78,8 @@ public class Aggregator extends AbstractActorWithStash
 
     }
 
-    private void handlePartialRes(PartialRes pr) throws IOException {
+    private void handlePartialRes(PartialRes pr) throws IOException
+    {
         int id = pr.ID;
         String model_id = pr.model_id;
 
@@ -96,6 +97,7 @@ public class Aggregator extends AbstractActorWithStash
         System.out.println( "  :$: QUERY  " + id + "  RES. APPENDED from:  " + model_id  );
 //        List<Integer> l = ClassPred.getPreds ( strat, perf, results.get(id).getProbs() );
         // TODO classify each row of data and send the results
+        ClassPred.saveClassChangesOverTime( exp_id, id, perf, results.get(id).getProbs());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

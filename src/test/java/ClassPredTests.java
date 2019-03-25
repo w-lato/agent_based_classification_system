@@ -10,14 +10,11 @@ import org.junit.Test;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ClassPredTests
 {
-    Map<String,List<double[]>> probs;
+    LinkedHashMap<String,List<double[]>> probs;
     Map<String, ClassGrade> grades;
 
 
@@ -32,7 +29,7 @@ public class ClassPredTests
         ActorSystem system = ActorSystem.create("testSystem");
         ActorRef m = ActorRef.noSender();
 
-        probs = new HashMap<>();
+        probs = new LinkedHashMap<>();
         grades = new HashMap<>();
 
         List<double[]> l1 = new ArrayList<>();

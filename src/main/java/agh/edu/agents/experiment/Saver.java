@@ -1,5 +1,6 @@
 package agh.edu.agents.experiment;
 
+import agh.edu.agents.enums.ClassStrat;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.aggregation.ClassGrade;
 import agh.edu.aggregation.ResultsHolder;
@@ -83,7 +84,7 @@ public class Saver
         List<String> to_save = new ArrayList<>(perf.keySet());
         if( !to_save.isEmpty() )
         {
-            to_save = to_save.stream().map( x-> x + "@" + perf.get(x).toString() ).collect(Collectors.toList());
+            to_save = to_save.stream().map( x-> x.substring(x.lastIndexOf("/")+1) + "@" + perf.get(x).toString() ).collect(Collectors.toList());
         }
         to_save.add(0, exp_id);
         Files.write(p,to_save);
@@ -109,5 +110,12 @@ public class Saver
             Path p = Paths.get( exp_id + "/AGG/Q_" + id + ".res" );
             Files.write( p, results.get( id ).toString().getBytes() );
         }
+    }
+
+    public static void saveAggPredictions(String exp_id, int query_id, ClassStrat strat, List<String> to_save) throws IOException
+    {
+        Path p = Paths.get( exp_id + "/AGG/Q_"+query_id+ "_"+strat+".pred" );
+        String s = to_save.stream().collect(Collectors.joining("\n"));
+        Files.write( p, s.getBytes());
     }
 }

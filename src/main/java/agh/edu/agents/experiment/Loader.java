@@ -58,17 +58,17 @@ public class Loader
     public static AggSetup getAggSetup(Path p, ActorRef master) throws IOException
     {
         List<String> l = Files.readAllLines( p );
-        String id = l.get(0);
+        String exp_id = l.get(0);
         Map<String, ClassGrade> m = new HashMap<>();
         if( l.size() > 1 )
         {
             for (int i = 1; i < l.size(); i++)
             {
                 String[] aux = l.get(i).split("@");
-                m.put( aux[0], ClassGrade.fromString( aux[1] ) );
+                m.put( exp_id + "/" +aux[0], ClassGrade.fromString( aux[1] ) );
             }
         }
-        return new AggSetup(master, id, m);
+        return new AggSetup(master, exp_id, m);
     }
 
     public static int getNextQueryID(String s) throws IOException {
@@ -76,7 +76,7 @@ public class Loader
         if ( Files.notExists( p )) return -1;
         int query_id = Files.list(p).map(x -> x.getFileName().toString())
                 .filter(x -> x.startsWith("Q_") && x.endsWith(".arff"))
-                .map(x -> x.replace("Q_","").replace(".arff", ""))
+                .map(x -> x.replaceAll("[Q_|.arff|TRAIN]",""))
                 .map(Integer::valueOf)
                 .max(Integer::compareTo)
                 .orElse(0);
