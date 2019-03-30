@@ -91,7 +91,7 @@ public final class ClassRes implements Comparable<ClassRes>
         for (int i = 0; i < N; i++)
         {
             Instances in = data.trainCV(N,i);
-            MLP n_mlp  = new MLP(mlp.getLayerWiseConfigurations(), mlp.getNum_of_iter(), mlp.getBatch_num()) ;
+            MLP n_mlp  = new MLP(mlp.getLayerWiseConfigurations(), mlp.getNum_of_iter(), mlp.getBatch_size()) ;
 
             n_mlp.buildClassifier( in );
             Instances to_test = data.testCV(N, i);

@@ -203,7 +203,10 @@ public class Master extends AbstractActorWithStash {
     private Set<String> getModelIDs(String exp_id) throws IOException {
         return Files.list( Paths.get( exp_id ) )
                 .filter( x-> !Files.isDirectory(x) )
-                .map( x ->  x.getFileName().toString().split("\\.")[0] )
+                .map( x ->  {
+                    String str = x.getFileName().toString();
+                    return str.substring(0,str.lastIndexOf("."));
+                })
                 .collect(Collectors.toSet());
 
     }

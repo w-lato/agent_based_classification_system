@@ -14,14 +14,12 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
-// TODO check batch size - where to put it
-// TODO check if it is possible to add a layer to existing config
 public class MLP extends MultiLayerNetwork implements Classifier, Serializable
 {
     private int num_of_iter = 100;
-    private int batch_num = 5;
+    private int batch_size = 5;
 
-    public int getBatch_num() { return batch_num; }
+    public int getBatch_size() { return batch_size; }
     public int getNum_of_iter() {
         return num_of_iter;
     }
@@ -33,10 +31,10 @@ public class MLP extends MultiLayerNetwork implements Classifier, Serializable
         this.num_of_iter = num_of_iter;
     }
 
-    public MLP(MultiLayerConfiguration conf, int num_of_iter, int batch_num)
+    public MLP(MultiLayerConfiguration conf, int num_of_iter, int batch_size)
     {
         this(conf, num_of_iter);
-        this.batch_num = batch_num;
+        this.batch_size = batch_size;
     }
 
     @Override
@@ -45,21 +43,21 @@ public class MLP extends MultiLayerNetwork implements Classifier, Serializable
         double[] arr = new double[data.numClasses()];
         Arrays.fill( arr,0 );
         arr[((int) data.get(0).classValue())] = 1;
-        INDArray qwe = Nd4j.create( arr );
+        INDArray labels = Nd4j.create( arr );
         for (int i = 1; i < data.size(); i++)
         {
             Arrays.fill(arr,0);
             arr[((int) data.get(i).classValue())] = 1;
-            qwe = Nd4j.concat( 0, qwe, Nd4j.create( arr ) );
+            labels = Nd4j.concat( 0, labels, Nd4j.create( arr ) );
         }
-        INDArray xd = data.stream()
+        INDArray features = data.stream()
                 .map( Instance::toDoubleArray )
                 .map(x -> Arrays.copyOf(x, x.length - 1))
                 .map(Nd4j::create)
                 .reduce( (a,b) -> Nd4j.concat(0,a,b))
                 .orElse(null);
 
-        List<DataSet> l = new DataSet( xd, qwe ).dataSetBatches( batch_num );
+        List<DataSet> l = new DataSet( features, labels ).dataSetBatches( batch_size );
         for (int i = 0; i < num_of_iter; i++)
         {
             for (DataSet dataSet : l) { this.fit(dataSet); }
