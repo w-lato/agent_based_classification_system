@@ -45,7 +45,7 @@ public class ClassPredTests
         l1.add( a5 );
 
 
-        List<double[]> l2 = new ArrayList<>();
+        List<double[]> l2 = new ArrayList<>(); //
         double[] b1 = {0.1,  1,0.1};
         double[] b2 = {0.5,  1,0.5};
         double[] b3 = {  1,0.5,  0};
@@ -113,7 +113,7 @@ public class ClassPredTests
     }
 
     @Test
-    public void testProbSoftVoting()
+    public void testSoftVoting()
     {
         List<Integer> l = ClassPred.getPreds( ClassStrat.WEIGHTED, grades, probs );
         assert l != null;
@@ -122,5 +122,32 @@ public class ClassPredTests
         Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("B")), 15.5));
         Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("C")), 0.2));
         Assert.assertArrayEquals(  new Integer[]{1,1,0,0,0}, l.toArray() );
+    }
+
+
+
+
+    @Test
+    public void testProbWeightVoting()
+    {
+        probs.get("A").clear(); // 0.17
+        probs.get("B").clear(); // 0.82
+        probs.get("C").clear(); // 0.01
+
+        probs.get("A").add( new double[]{1.0, 0.0, 0.0  } );
+        probs.get("B").add( new double[]{0.49,0.51,0.0  } );
+        probs.get("C").add( new double[]{1.0,0.0,0.0  } );
+
+        probs.get("A").add( new double[]{1.0, 0.0, 0.0  } );
+        probs.get("B").add( new double[]{0.4,0.6,0.0  } );
+        probs.get("C").add( new double[]{1.0,0.0,0.0  } );
+
+        List<Integer> l = ClassPred.getPreds( ClassStrat.PROB_WEIGHT, grades, probs );
+        assert l != null;
+
+        Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("A")), 3.25));
+        Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("B")), 15.5));
+        Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("C")), 0.2));
+        Assert.assertArrayEquals(  new Integer[]{0,1}, l.toArray() );
     }
 }
