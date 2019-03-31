@@ -122,11 +122,11 @@ public class MLPParamsTest
             return true;
         }).collect(Collectors.toList());
 
-        s = p.getParamsCartProd();
         Set<Double> possible_classes = IntStream.range(0,train.numClasses()).mapToObj(Double::valueOf).collect(Collectors.toSet());
         List<Double> l = new ArrayList<>();
         Set<String> not_working = new HashSet<>();
-        for (int i = 526; i < s.size(); i++)
+//        for (int i = 526; i < s.size(); i++)
+        for (int i = 0; i < s.size(); i++)
         {
             try
             {

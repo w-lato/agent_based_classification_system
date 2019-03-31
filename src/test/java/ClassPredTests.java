@@ -135,11 +135,11 @@ public class ClassPredTests
         probs.get("C").clear(); // 0.01
 
         probs.get("A").add( new double[]{1.0, 0.0, 0.0  } );
-        probs.get("B").add( new double[]{0.49,0.51,0.0  } );
+        probs.get("B").add( new double[]{0.4,0.6,0.0  } );
         probs.get("C").add( new double[]{1.0,0.0,0.0  } );
 
         probs.get("A").add( new double[]{1.0, 0.0, 0.0  } );
-        probs.get("B").add( new double[]{0.4,0.6,0.0  } );
+        probs.get("B").add( new double[]{0.39,0.0,0.61  } );
         probs.get("C").add( new double[]{1.0,0.0,0.0  } );
 
         List<Integer> l = ClassPred.getPreds( ClassStrat.PROB_WEIGHT, grades, probs );
@@ -148,6 +148,6 @@ public class ClassPredTests
         Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("A")), 3.25));
         Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("B")), 15.5));
         Assert.assertEquals(0, Double.compare(ClassRes.computeWeight(grades.get("C")), 0.2));
-        Assert.assertArrayEquals(  new Integer[]{0,1}, l.toArray() );
+        Assert.assertArrayEquals(  new Integer[]{0,2}, l.toArray() );
     }
 }

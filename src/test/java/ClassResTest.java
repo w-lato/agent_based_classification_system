@@ -10,6 +10,7 @@ import weka.classifiers.functions.SMO;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+// TODO mlp conflicts with spambase dataset - config 500
 public class ClassResTest
 {
     private final int N = 10;
@@ -34,7 +35,7 @@ public class ClassResTest
         smo.buildClassifier( train );
 
         ParamsMLP p = new ParamsMLP( train );
-        MLP mlp = ((MLP) p.clasFromStr(p.getParamsCartProd().get(0)));
+        MLP mlp = ((MLP) p.clasFromStr(p.getParamsCartProd().get(500)));
         mlp.buildClassifier( train );
 
         Evaluation e1 = new Evaluation( test );

@@ -40,7 +40,7 @@ public class MasterTest
         rc = ConfParser.getConfFrom( "CONF/SLAVE_ONLY_TEST" );
         m = system.actorOf( Master.props() ,"master" );
 
-        test = ConverterUtils.DataSource.read( "DATA/mnist_train.arff" );
+        test = ConverterUtils.DataSource.read( "DATA/mnist_test.arff" );
         test.setClassIndex( test.numAttributes() - 1);
     }
 
@@ -55,13 +55,13 @@ public class MasterTest
         Thread.sleep( 60 * 1000 );
         int cur_id = Files.walk(Paths.get( exp_path +"/AGG/" ) ).map(x-> x.getFileName().toString())
                 .filter(x-> x.contains("Q_") && x.contains(".res"))
-                .map( x-> x.replace("Q_","").replace(".res","") )
+                .map( x-> x.replaceAll("[_A-Za-z.]","") )
                 .map(Integer::valueOf)
                 .max(Integer::compareTo)
                 .orElse(-1);
 
         // data and results file exists
-        String path_to_res = exp_path+ "/AGG/Q_" + (cur_id) + ".res";
+        String path_to_res = exp_path+ "/AGG/Q_RAW_" + (cur_id) + ".res";
         String path_to_arff = exp_path+ "/AGG/Q_" + (cur_id) + ".arff";
         Assert.assertTrue( Files.exists(Paths.get( path_to_res )));
         Assert.assertTrue( Files.exists(Paths.get( path_to_arff )));
@@ -82,7 +82,7 @@ public class MasterTest
         System.out.println( eval_res );
 
         // results file is made of four responses (we have 5 models)
-        List<String> l = Files.readAllLines( Paths.get( exp_path+"/AGG/Q_"+cur_id+".res" ) );
+        List<String> l = Files.readAllLines( Paths.get( exp_path+"/AGG/Q_RAW_"+cur_id+".res" ) );
         String s = l.stream().collect(Collectors.joining("\n"));
         ResultsHolder read_results = ResultsHolder.fromString( s );
         Assert.assertEquals( read_results.toString()

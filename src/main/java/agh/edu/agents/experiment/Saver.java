@@ -3,6 +3,7 @@ package agh.edu.agents.experiment;
 import agh.edu.agents.enums.ClassStrat;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.aggregation.ClassGrade;
+import agh.edu.aggregation.ClassPred;
 import agh.edu.aggregation.ResultsHolder;
 import agh.edu.learning.ClassRes;
 import weka.classifiers.Classifier;
@@ -103,12 +104,32 @@ public class Saver
         writer.close();
     }
 
-    public static void saveAggResults(String exp_id, Map<Integer,ResultsHolder> results) throws IOException {
+    // save few versions of prob data
+    // 1. raw (with no prob modifications)
+    // 2. every prob is multiplied by the performance of the classifier
+    // 3. the same as in 2nd, but with log(  )
+    public static void saveAggResults(String exp_id,Map<String,ClassGrade>  perf, Map<Integer,ResultsHolder> results) throws IOException {
         Set<Integer> ids = results.keySet();
+
+        // RAW
         for (Integer id : ids)
         {
-            Path p = Paths.get( exp_id + "/AGG/Q_" + id + ".res" );
+            Path p = Paths.get( exp_id + "/AGG/Q_RAW_" + id + ".res" );
             Files.write( p, results.get( id ).toString().getBytes() );
+        }
+
+        // MUL BY THE NORMALIZED GRADES
+        for (Integer id : ids)
+        {
+            Path p = Paths.get( exp_id + "/AGG/Q_WEIGHT_" + id + ".res" );
+            Files.write( p, results.get( id ).toString_with_weights(perf).getBytes() );
+        }
+
+        // LOG_e( prob * wght )
+        for (Integer id : ids)
+        {
+            Path p = Paths.get( exp_id + "/AGG/Q_LOG_" + id + ".res" );
+            Files.write( p, results.get( id ).toString_with_log_weights(perf).getBytes() );
         }
     }
 

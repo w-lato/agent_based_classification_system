@@ -3,7 +3,7 @@ package agh.edu.aggregation;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
+//  TODO needs some refactoring
 public class ResultsHolder
 {
     private final Integer ID;
@@ -50,7 +50,7 @@ public class ResultsHolder
         to_save.add("#"+ID);
         to_save.add( String.join(":", ids) );
         int N = probs.get( ids.iterator().next() ).size();
-        List<double[]> aux = new ArrayList();
+        List<double[]> aux = new ArrayList<>();
 
         for (int i = 0; i < N; i++)
         {
@@ -63,6 +63,76 @@ public class ResultsHolder
         }
         return String.join("\n", to_save);
     }
+
+    public String toString_with_weights(Map<String, ClassGrade> perf)
+    {
+        List<String> to_save = new ArrayList<>();
+        Set<String> ids = probs.keySet();
+
+        to_save.add("#"+ID);
+        to_save.add( String.join(":", ids) );
+        int N = probs.get( ids.iterator().next() ).size();
+        List<double[]> aux = new ArrayList<>();
+        double[] norm_wghts = ClassPred.SoftVotingVariations.normWeights( ids.size(),ids, perf );
+
+        int num_classes = probs.get( ids.iterator().next() ).get(0).length;
+        double[] arr = new double[ num_classes ];
+        // over rows
+        for (int i = 0; i < N; i++)
+        {
+            aux.clear();
+
+            // over cols
+            int ctr = 0;
+            for( String m_id :  ids)
+            {
+                System.arraycopy(probs.get( m_id ).get( i ),0,arr,0, num_classes);
+                for (int j = 0; j < arr.length; j++) {
+                    arr[j] = arr[j] * norm_wghts[ ctr ];
+                }
+                aux.add( arr );
+                ctr++;
+            }
+            to_save.add( aux.stream().map(Arrays::toString).collect(Collectors.joining(":")) );
+        }
+        return String.join("\n", to_save);
+    }
+
+
+    public String toString_with_log_weights(Map<String, ClassGrade> perf)
+    {
+        List<String> to_save = new ArrayList<>();
+        Set<String> ids = probs.keySet();
+
+        to_save.add("#"+ID);
+        to_save.add( String.join(":", ids) );
+        int N = probs.get( ids.iterator().next() ).size();
+        List<double[]> aux = new ArrayList<>();
+        double[] norm_wghts = ClassPred.SoftVotingVariations.normWeights( ids.size(),ids, perf );
+        // over rows
+        int num_classes = probs.get( ids.iterator().next() ).get(0).length;
+        double[] arr = new double[ num_classes ];
+        for (int i = 0; i < N; i++)
+        {
+            aux.clear();
+
+            // over cols
+            int ctr = 0;
+            for( String m_id :  ids)
+            {
+
+                System.arraycopy(probs.get( m_id ).get( i ),0,arr,0, num_classes);
+                for (int j = 0; j < arr.length; j++) {
+                    arr[j] = Math.log( arr[j] * norm_wghts[ ctr ]);
+                }
+                aux.add( arr );
+                ctr++;
+            }
+            to_save.add( aux.stream().map(Arrays::toString).collect(Collectors.joining(":")) );
+        }
+        return String.join("\n", to_save);
+    }
+
 
     public static ResultsHolder fromString( String s )
     {

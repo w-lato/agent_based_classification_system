@@ -2,6 +2,7 @@ package agh.edu.aggregation;
 
 import agh.edu.agents.enums.ClassStrat;
 import agh.edu.agents.experiment.Saver;
+import org.apache.commons.collections.map.HashedMap;
 import weka.core.matrix.Matrix;
 
 import java.io.IOException;
@@ -20,6 +21,8 @@ public class ClassPred
             case MAJORITY: return majorityVoting( probs );
             case WEIGHTED: return soft_v1(perf,probs);
             case PROB_WEIGHT: return soft_prob(perf,probs);
+//            case PROB_ENTROPY: return prob_entropy(perf,probs); // TODO bad performance
+            case F1_SCORE_VOTING: return f1_score_voting(perf,probs);
             default: return null;
         }
     }
@@ -86,6 +89,14 @@ public class ClassPred
         return res;
     }
 
+    static List<Integer> prob_entropy(Map<String, ClassGrade> perf, LinkedHashMap<String,List<double[]>> probs )
+    {
+        SoftVotingVariations svv = new SoftVotingVariations( perf, probs );
+        List<Integer> res = svv.getProbEntropy();
+        svv = null;
+        return res;
+    }
+
 
     static List<Integer> majorityVoting( Map<String,List<double[]>> probs )
     {
@@ -104,6 +115,26 @@ public class ClassPred
         }
         return l;
     }
+
+
+    static List<Integer> f1_score_voting( Map<String, ClassGrade> perf, LinkedHashMap<String,List<double[]>> probs )
+    {
+        int N = ((List<double[]>) probs.values().toArray()[0]).size();
+        List<Integer> l = new ArrayList<>();
+        int[] tmp = new int[ probs.keySet().size() ];
+
+        for (int i = 0, ctr = 0; i < N; i++, ctr = 0)
+        {
+            for (List<double[]> it : probs.values())
+            {
+                tmp[ ctr ] = maxIdxFrom( it.get( i ) );
+                ctr++;
+            }
+            l.add( get_highest_f1_class( tmp, perf, probs ) );
+        }
+        return l;
+    }
+
 
 
     static int maxIdxFrom(double[] arr)
@@ -130,6 +161,18 @@ public class ClassPred
         return findMode();
     }
 
+    static int get_highest_f1_class(int[] arr, Map<String, ClassGrade> perf, LinkedHashMap<String,List<double[]>> probs)
+    {
+        int ctr = 0;
+        double[] aux= new double[arr.length];
+        for (String id : probs.keySet())
+        {
+            int class_num = arr[ctr];
+            aux[ctr] = perf.get( id ).getFscore()[class_num] * perf.get( id ).getAUROC()[class_num] * perf.get( id ).getGrade();
+        }
+        return arr[ maxIdxFrom(aux) ];
+    }
+
     private static Integer findMode()
     {
         int max = aux_ctr.values()
@@ -144,7 +187,7 @@ public class ClassPred
         return -1;
     }
 
-    private static class SoftVotingVariations
+    public static class SoftVotingVariations
     {
         Set<String> ids;
         int rows;
@@ -170,7 +213,7 @@ public class ClassPred
         }
 
 
-        private double[] normWeights(int cols,Set<String> ids, Map<String, ClassGrade> perf)
+        public static double[] normWeights(int cols,Set<String> ids, Map<String, ClassGrade> perf)
         {
             double[] norm_wghts = new double[cols];
             double sum = 0.0;
@@ -207,7 +250,7 @@ public class ClassPred
         // probabilities are multiplied by wights and ummed up
         public List<Integer> getProbSoft()
         {
-            double[] aux = new double[cols];
+            double[] aux = new double[ num_of_classes ];
             return IntStream.range(0,rows)
                     .map( x -> {
                         int ctr = 0;
@@ -228,6 +271,57 @@ public class ClassPred
                     })
                     .boxed()
                     .collect(Collectors.toList());
+        }
+
+
+        public List<Integer> getProbEntropy()
+        {
+            double[] aux = new double[ num_of_classes ];
+            return IntStream.range(0,rows)
+                    .map( x -> {
+                        int ctr = 0;
+                        Arrays.fill( aux,0.0 );
+
+                        // iterate over cols
+                        for (String id : ids)
+                        {
+                            // mul wght * prob * entropy and then add everything
+                            double[] arr = probs.get(id).get(x);
+                            double entropy = getEntropy( arr );
+                            for (int i = 0; i < arr.length; i++)
+                            {
+                                aux[i] += arr[i] * norm_wghts[ctr] * (-entropy);
+                            }
+                            ctr++;
+                        }
+                        return maxIdxFrom( aux );
+                    })
+                    .boxed()
+                    .collect(Collectors.toList());
+        }
+
+
+        static double getEntropy(double[] arr)
+        {
+            Map<Double,Double> probs = new HashedMap();
+            int N = arr.length;
+            for (int i = 0; i < arr.length; i++)
+            {
+                double curr = arr[i];
+                if ( !probs.containsKey( curr ) ) probs.put( curr, 1.0 / N);
+                else probs.put( curr, (probs.get( curr ) + 1) / N );
+            }
+            double s = 0.0;
+            for (double v : arr)
+            {
+                s -=  probs.get( v ) * log2( v );
+            }
+            return s;
+        }
+
+        public static double log2(double n)
+        {
+            return Math.log(n) / Math.log(2);
         }
     }
 
