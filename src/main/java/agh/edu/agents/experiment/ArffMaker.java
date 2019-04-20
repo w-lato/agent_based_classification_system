@@ -1,15 +1,18 @@
 package agh.edu.agents.experiment;
 
+import agh.edu.aggregation.ResultsHolder;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
+// TODO sort results by classifiers name
 public class ArffMaker
 {
     public static void aggResToArff(String res_path, String arff_path) throws Exception {
@@ -21,12 +24,28 @@ public class ArffMaker
 
         // arff data
         List<String> to_save = Files.readAllLines(Paths.get( res_path ) );
-        int id = Integer.valueOf(to_save.remove(0).substring(1));
-        to_save.remove(0);
-        to_save = to_save.stream().map(x->x.replace("]:[",",").replaceAll("[\\[: \\]]","")).collect(Collectors.toList());
-        for (int i = 0; i < data.size(); i++)
+        int id = Integer.valueOf(to_save.get(0).substring(1));
+        ResultsHolder rh = ResultsHolder.fromString( String.join("\n",to_save) );
+        Map<String,List<double[]>> probs = rh.getProbs();
+        List<String> sorted_models = probs.keySet().stream().sorted().collect(Collectors.toList());
+
+        // create the @data
+        to_save.clear();
+        int N = probs.get( sorted_models.get(0) ).size();
+
+        // over rows
+        StringBuilder s = new StringBuilder();
+        for (int i = 0; i < N; i++)
         {
-            to_save.set( i, to_save.get(i) + "," +  (int)data.get(i).classValue());
+            // over sorted cols (models)
+            s.setLength(0);
+            for (String model_id : sorted_models)
+            {
+                s.append(Arrays.toString(probs.get(model_id).get(i)).replace("[","").replace("]",""));
+                s.append(",");
+            }
+            s.append( (int)data.get(i).classValue() );
+            to_save.add( s.toString() );
         }
 
         // prepare "prefix"

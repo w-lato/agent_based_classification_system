@@ -105,7 +105,7 @@ public class MasterTest
         // send one message more
         m.tell( test,ActorRef.noSender() );
         Thread.sleep( 30 * 1000 );
-        Assert.assertTrue( Files.exists(Paths.get(exp_path+ "/AGG/Q_" + (cur_id+1) + ".res")));
+        Assert.assertTrue( Files.exists(Paths.get(exp_path+ "/AGG/Q_RAW_" + (cur_id+1) + ".res")));
         Assert.assertTrue( Files.exists(Paths.get(exp_path+ "/AGG/Q_" + (cur_id+1) + ".arff")));
 
 

@@ -128,7 +128,7 @@ public class Learner extends AbstractActorWithTimers {
 
     public void handleEval(S_Type type, Classifier model, String conf) throws Exception
     {
-        System.out.println(" %%%% ");
+        System.out.println(model_id + " eval started for " + conf + "  :: " + System.currentTimeMillis());
         ClassRes new_cr = new ClassRes( type, model, data );
         int cmp = new_cr.compareTo( best_cr );
 
@@ -158,7 +158,7 @@ public class Learner extends AbstractActorWithTimers {
         }
         try
         {
-            System.out.println(" ---------- OPT " + type);
+            System.out.println(" ---------- OPT " + type + " " + System.currentTimeMillis());
 //            curr_conf = configs.remove( r.nextInt( configs.size() ) );
             curr_conf = configs.remove( 0 );
             current = params.clasFromStr( curr_conf );
@@ -176,7 +176,7 @@ public class Learner extends AbstractActorWithTimers {
     {
         System.out.println(model_id + "  ::  SAVED");
         Saver.saveModel(model_id, best, best_cr, type, data, used_configs);
-        getTimers().startSingleTimer(null, "SAVE_MODEL", Duration.ofMinutes(2));
+        getTimers().startSingleTimer(null, "SAVE_MODEL", Duration.ofSeconds(2));
     }
 
 
@@ -185,7 +185,7 @@ public class Learner extends AbstractActorWithTimers {
         return receiveBuilder()
                 .matchEquals("NEW_CONF", this::onSaveModel)
                 .matchEquals("SAVE_MODEL", this::onOptimizationStart)
-                .match(PoisonPill.class, x -> getContext().stop(self()))
+                .match( PoisonPill.class, x -> getContext().stop(self()))
                 .matchAny(m -> {
                     System.out.println("?? : " + m.getClass());
                 })

@@ -1,5 +1,6 @@
 package agh.edu.agents.enums;
 
+// TODO add only addition of probs with no multiplication
 public enum ClassStrat
 {
     MAJORITY("MAJORITY"), // HARD

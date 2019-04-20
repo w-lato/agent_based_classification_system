@@ -18,6 +18,7 @@ public class ParamsADA  implements Params
         String[] p = params.split(",");
         ada.setWeightThreshold( Integer.valueOf( p[0] ) );
         ada.setUseResampling( Boolean.valueOf( p[1] ) );
+
         return ada;
     }
 

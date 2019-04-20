@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 //  TODO needs some refactoring
+//  todo NORMALIZE the results of eight agg
 public class ResultsHolder
 {
     private final Integer ID;
@@ -78,23 +79,41 @@ public class ResultsHolder
         int num_classes = probs.get( ids.iterator().next() ).get(0).length;
         double[] arr = new double[ num_classes ];
         // over rows
+        double max_val = 0.0;
         for (int i = 0; i < N; i++)
         {
             aux.clear();
 
+            // over cols
+            for( String m_id :  ids)
+            {
+                System.arraycopy(probs.get( m_id ).get( i ),0,arr,0, num_classes);
+                for (int j = 0; j < arr.length; j++) {
+//                    arr[j] = arr[j] * norm_wghts[ ctr ];
+                    arr[j] = arr[j] * perf.get(m_id).getGrade();
+                    if(max_val < arr[j]) max_val = arr[j];
+                }
+                aux.add( arr );
+            }
+        }
+
+        for (int i = 0; i < N; i++)
+        {
+            aux.clear();
             // over cols
             int ctr = 0;
             for( String m_id :  ids)
             {
                 System.arraycopy(probs.get( m_id ).get( i ),0,arr,0, num_classes);
                 for (int j = 0; j < arr.length; j++) {
-                    arr[j] = arr[j] * norm_wghts[ ctr ];
+//                    arr[j] = arr[j] * norm_wghts[ ctr ];
+                    arr[j] = arr[j] * perf.get(m_id).getGrade() / max_val;
                 }
                 aux.add( arr );
-                ctr++;
             }
             to_save.add( aux.stream().map(Arrays::toString).collect(Collectors.joining(":")) );
         }
+
         return String.join("\n", to_save);
     }
 

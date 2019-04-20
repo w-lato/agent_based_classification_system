@@ -71,7 +71,11 @@ public class Aggregator extends AbstractActorWithStash
     //                                    HANDLERS
 
 
-    private void handleClassUpdate(ClassGrade cg) { perf.put( cg.getModel_id(), cg ); }
+    private void handleGradeUpdate(ClassGrade cg) throws IOException {
+        perf.put( cg.getModel_id(), cg );
+        Saver.saveAgg( exp_id, perf );
+        System.out.println(cg.getModel_id() +  " :: " + System.currentTimeMillis() +" :: " + cg.toString() );
+    }
 
     private void handleClassResult(ClassRes cr)
     {
@@ -138,6 +142,7 @@ public class Aggregator extends AbstractActorWithStash
         return receiveBuilder()
 
                 .match(    PartialRes.class,    this::handlePartialRes)
+                .match(    ClassGrade.class,    this::handleGradeUpdate)
                 .match(    PoisonPill.class,    x -> getContext().stop(self()))
                 .matchAny(                      x -> System.out.println(" AGG RECEIVED UNKNOWN MESSAGE?? " + x ) )
                 .build();

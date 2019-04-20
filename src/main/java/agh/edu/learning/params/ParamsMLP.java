@@ -4,6 +4,7 @@ import agh.edu.learning.custom.MLP;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
+import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.weights.WeightInit;
@@ -134,6 +135,7 @@ public class ParamsMLP implements Params
         int hid_inp = Integer.valueOf(conf[5]);
 
         return new NeuralNetConfiguration.Builder()
+                .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
                 .seed(  seed )
                 .optimizationAlgo( opt_alg )
                 .updater( updater )
@@ -165,6 +167,7 @@ public class ParamsMLP implements Params
         int hid_inp = Integer.valueOf(conf[5]);
 
         return new NeuralNetConfiguration.Builder()
+                .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
                 .seed( seed )
                 .optimizationAlgo(opt_alg)
                 .updater( updater )
@@ -202,6 +205,7 @@ public class ParamsMLP implements Params
         int hid_inp = Integer.valueOf(conf[5]);
 
         return new NeuralNetConfiguration.Builder()
+                .cudnnAlgoMode(ConvolutionLayer.AlgoMode.NO_WORKSPACE)
                 .seed( seed )
                 .optimizationAlgo(opt_alg)
                 .updater( updater )

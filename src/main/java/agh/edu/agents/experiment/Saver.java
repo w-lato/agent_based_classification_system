@@ -125,12 +125,12 @@ public class Saver
             Files.write( p, results.get( id ).toString_with_weights(perf).getBytes() );
         }
 
-        // LOG_e( prob * wght )
-        for (Integer id : ids)
-        {
-            Path p = Paths.get( exp_id + "/AGG/Q_LOG_" + id + ".res" );
-            Files.write( p, results.get( id ).toString_with_log_weights(perf).getBytes() );
-        }
+//        // LOG_e( prob * wght )
+//        for (Integer id : ids)
+//        {
+//            Path p = Paths.get( exp_id + "/AGG/Q_LOG_" + id + ".res" );
+//            Files.write( p, results.get( id ).toString_with_log_weights(perf).getBytes() );
+//        }
     }
 
     public static void saveAggPredictions(String exp_id, int query_id, ClassStrat strat, List<String> to_save) throws IOException
