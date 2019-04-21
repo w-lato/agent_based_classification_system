@@ -119,11 +119,12 @@ public class Saver
         }
 
         // MUL BY THE NORMALIZED GRADES
-        for (Integer id : ids)
-        {
-            Path p = Paths.get( exp_id + "/AGG/Q_WEIGHT_" + id + ".res" );
-            Files.write( p, results.get( id ).toString_with_weights(perf).getBytes() );
-        }
+        // TODO fix
+//        for (Integer id : ids)
+//        {
+//            Path p = Paths.get( exp_id + "/AGG/Q_WEIGHT_" + id + ".res" );
+//            Files.write( p, results.get( id ).toString_with_weights(perf).getBytes() );
+//        }
 
 //        // LOG_e( prob * wght )
 //        for (Integer id : ids)

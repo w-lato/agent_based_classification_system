@@ -97,7 +97,7 @@ public class Master extends AbstractActorWithStash {
             this.curr = c;
             int N = c.getAgents().length;
             List<Instances> l = c.getSplit_meth().equals(SIMPLE) ? Splitter.equalSplit( c.getTrain(), N )
-                    : Splitter.fillSplit( c.getTrain(), N, c.getFill().get() );
+                    : Splitter.OLsplit( c.getTrain(), c.getFill().get(), N );
 
             // setup aggregator
             String exp_id = Saver.setupNewExp( c.getConf_name() );

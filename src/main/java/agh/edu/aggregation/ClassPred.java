@@ -22,7 +22,7 @@ public class ClassPred
             case WEIGHTED: return soft_v1(perf,probs);
             case PROB_WEIGHT: return soft_prob(perf,probs);
 //            case PROB_ENTROPY: return prob_entropy(perf,probs); // TODO bad performance
-            case F1_SCORE_VOTING: return f1_score_voting(perf,probs);
+//            case F1_SCORE_VOTING: return f1_score_voting(perf,probs);
             default: return null;
         }
     }

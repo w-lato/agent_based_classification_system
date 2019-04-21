@@ -74,7 +74,7 @@ public class ResultsHolder
         to_save.add( String.join(":", ids) );
         int N = probs.get( ids.iterator().next() ).size();
         List<double[]> aux = new ArrayList<>();
-        double[] norm_wghts = ClassPred.SoftVotingVariations.normWeights( ids.size(),ids, perf );
+        //double[] norm_wghts = ClassPred.SoftVotingVariations.normWeights( ids.size(),ids, perf );
 
         int num_classes = probs.get( ids.iterator().next() ).get(0).length;
         double[] arr = new double[ num_classes ];
