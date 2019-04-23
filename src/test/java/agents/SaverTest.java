@@ -91,11 +91,11 @@ public class SaverTest
         SMO smo = new SMO();
         smo.buildClassifier( data );
         ClassRes cr = new ClassRes( type, smo, data );
-        Map<String,Double> m = new HashMap<>();
-        m.put("A",9123.01);
-        m.put("B",1.001);
-        m.put("C",5670.0);
-        m.put("D",200.0);
+        Map<String,ClassRes> m = new HashMap<>();
+        m.put("A",new ClassRes(9123.01, 100.0, new double[]{1,2,3}, new double[]{1,2,3}) );
+        m.put("B",new ClassRes(1.001, 1.0, new double[]{3,3,3}, new double[]{3,3,3}));
+        m.put("C",new ClassRes(5670.0, 10.0, new double[]{2,2,2}, new double[]{2,2,2}));
+        m.put("D",new ClassRes(200.0, 30.0, new double[]{1,1,1}, new double[]{1,1,1}));
 
         String cur_dir = Saver.setupNewExp("TEST_DIR");
         String exp_dir =  cur_dir + "/other_id";
@@ -122,7 +122,12 @@ public class SaverTest
 
         // check if files contain valid data
         Assert.assertEquals( type, read_type );
-        String the_rest = "SMO:0.5:0.5\n" + "A:9123.01\n" + "C:5670.0\n" + "D:200.0\n" + "B:1.001\n";
+        String the_rest = "SMO:0.5:0.5\n" +
+                "A@" + m.get("A").toString() + "\n" +
+                "C@" + m.get("C").toString() + "\n" +
+                "D@" + m.get("D").toString() + "\n" +
+                "B@" + m.get("B").toString() + "\n";
+
         StringBuilder read_rest = new StringBuilder();
         for (int i = 0; i < l.size(); i++)
         {
@@ -146,11 +151,11 @@ public class SaverTest
         SMO smo = new SMO();
         smo.buildClassifier( data );
         ClassRes cr = new ClassRes( type, smo, data );
-        Map<String,Double> m = new HashMap<>();
-        m.put("A",9123.01);
-        m.put("B",1.001);
-        m.put("C",5670.0);
-        m.put("D",200.0);
+        Map<String,ClassRes> m = new HashMap<>();
+        m.put("A",new ClassRes(9123.01, 100.0, new double[]{1,2,3}, new double[]{1,2,3}) );
+        m.put("B",new ClassRes(1.001, 1.0, new double[]{3,3,3}, new double[]{3,3,3}));
+        m.put("C",new ClassRes(5670.0, 10.0, new double[]{2,2,2}, new double[]{2,2,2}));
+        m.put("D",new ClassRes(200.0, 30.0, new double[]{1,1,1}, new double[]{1,1,1}));
 
 
         String cur_dir =  Saver.setupNewExp("TEST_DIR");
@@ -162,7 +167,7 @@ public class SaverTest
         smo.buildClassifier( data );
 
         cr = new ClassRes( type, smo, data);
-        m.put( "E",9999.0 );
+        m.put( "E", new ClassRes(9999.0, 3.0, new double[]{5,5,5}, new double[]{5,5,5}));
         Saver.saveModel( exp_dir, smo, cr, type, data, m );
 
         // check updated files
@@ -172,13 +177,19 @@ public class SaverTest
 
         double acc_wght = Double.valueOf( l.get(0).split(":")[1]);
         double f1_wght = Double.valueOf( l.get(0).split(":")[2]);
-        double read_grade  = Double.valueOf( l.get(1).split(":")[1]);
+        double read_grade  = Double.valueOf( l.get(1).split("@")[1].split(":")[0]);
 
         Assert.assertEquals( read_grade, 9999.0,0.001 );
         Assert.assertEquals( acc_wght, 0.5,0.001 );
         Assert.assertEquals( f1_wght,  0.5,0.001 );
 
-        String the_rest = "E:9999.0\n" + "A:9123.01\n" + "C:5670.0\n" + "D:200.0\n" + "B:1.001\n";
+
+        String the_rest =
+                          "E@" + m.get("E").toString() + "\n" +
+                          "A@" + m.get("A").toString() + "\n" +
+                          "C@" + m.get("C").toString() + "\n" +
+                          "D@" + m.get("D").toString() + "\n" +
+                          "B@" + m.get("B").toString() + "\n";
         StringBuilder read_rest = new StringBuilder();
         for (int i = 1; i < l.size(); i++)
         {
@@ -221,7 +232,7 @@ public class SaverTest
         NaiveBayes nb = (NaiveBayes) SerializationHelper.read( m_1 + ".model" );
         List<String> l = Files.readAllLines( Paths.get( m_1 + ".conf" ) );
 
-        String[] conf = l.get(1).split(":")[0].split(",");
+        String[] conf = l.get(1).split("@")[0].split(",");
         if( !conf[0].equals("default") )
         {
             Assert.assertEquals((boolean) Boolean.valueOf(conf[0]), nb.getUseKernelEstimator());
@@ -237,7 +248,7 @@ public class SaverTest
         NaiveBayes nb2 = (NaiveBayes) SerializationHelper.read( m_2 + ".model" );
         List<String> l2 = Files.readAllLines( Paths.get( m_2 + ".conf" ) );
 
-        String[] conf2 = l2.get(1).split(":")[0].split(",");
+        String[] conf2 = l2.get(1).split("@")[0].split(",");
         if( !conf[0].equals("default") )
         {
             Assert.assertEquals((boolean) Boolean.valueOf(conf2[0]), nb2.getUseKernelEstimator());

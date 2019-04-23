@@ -3,6 +3,7 @@ package agh.edu.agents.experiment;
 import agh.edu.agents.Aggregator.AggSetup;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.aggregation.ClassGrade;
+import agh.edu.learning.ClassRes;
 import akka.actor.ActorRef;
 import scala.concurrent.java8.FuturesConvertersImpl;
 import weka.classifiers.Classifier;
@@ -28,15 +29,15 @@ public class Loader
         return S_Type.valueOf( s.get(0).split(":")[0] );
     }
 
-    public static LinkedHashMap<String, Double> getConfigs(Path p) throws IOException
+    public static LinkedHashMap<String, ClassRes> getConfigs(Path p) throws IOException
     {
         List<String> s = Files.readAllLines( p );
-        LinkedHashMap<String, Double> m = new LinkedHashMap<>();
+        LinkedHashMap<String, ClassRes> m = new LinkedHashMap<>();
         for (int i = 1; i < s.size(); i++)
         {
             System.out.println( s.get(i) );
-            String[] aux = s.get(i).split(":");
-            m.put( aux[0], Double.valueOf( aux[1] ) );
+            String[] aux = s.get(i).split("@");
+            m.put( aux[0], ClassRes.fromGrade( ClassGrade.fromString(aux[1]) ) );
         }
         return m;
     }

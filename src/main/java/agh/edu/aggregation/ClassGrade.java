@@ -1,10 +1,11 @@
 package agh.edu.aggregation;
 
 import agh.edu.learning.ClassRes;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
-public final class ClassGrade
+public final class ClassGrade implements Comparable
 {
     private String model_id;
 
@@ -74,5 +75,15 @@ public final class ClassGrade
             auroc[i] = Double.valueOf(au[i]);
         }
         return new ClassGrade( fscore, auroc, acc, acc_wgt, fmeas_wgt, grade );
+    }
+
+    @Override
+    public int compareTo(@NotNull Object o)
+    {
+        if(!(o instanceof ClassGrade)) return 0;
+        else {
+            ClassGrade B = ((ClassGrade) o);
+            return Double.compare(this.grade, B.getGrade() );
+        }
     }
 }

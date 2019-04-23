@@ -40,7 +40,7 @@ public class Learner extends AbstractActorWithTimers {
     private Params params;
 
     private List<String> configs;
-    private Map<String,Double> used_configs;
+    private Map<String, ClassRes> used_configs;
     private Classifier current;
 
     private Instances data;
@@ -80,16 +80,16 @@ public class Learner extends AbstractActorWithTimers {
         System.out.println("  CURRENT : " + current);
         current.buildClassifier( data );
         best_cr = new ClassRes( type,best,data );
-        used_configs.put( best_conf, best_cr.toGrade() );
+        used_configs.put( best_conf, best_cr );
         Saver.saveModel(this.model_id,current, best_cr,type,data,used_configs);
         parent.tell( new BestClass( best, best_conf, best_cr),self());
 
-        System.out.println("Learner created");
+        System.out.println("Learner created: " + model_id + " : AT : " + System.currentTimeMillis());
         getTimers().startSingleTimer(null, "NEW_CONF", Duration.ofSeconds(2));
         getTimers().startSingleTimer(null, "SAVE_MODEL", Duration.ofMinutes(2));
     }
 
-    private Learner(String model_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, Double> used_configs) throws Exception
+    private Learner(String model_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, ClassRes> used_configs) throws Exception
     {
         params = ParamsFactory.getParams( type, data );
         configs = params.getParamsCartProd();
@@ -109,10 +109,10 @@ public class Learner extends AbstractActorWithTimers {
         this.model_id = model_id;
         this.parent = parent;
         this.data = data;
-        r = new Random(System.currentTimeMillis());
+        //r = new Random(System.currentTimeMillis());
         this.type = type;
 
-        System.out.println("Learner from load created");
+        System.out.println( model_id + " Learner from load created AT: " + System.currentTimeMillis());
         getTimers().startSingleTimer(null, "NEW_CONF", Duration.ofSeconds(2));
     }
 
@@ -120,7 +120,7 @@ public class Learner extends AbstractActorWithTimers {
         return Props.create(Learner.class, () -> new Learner(save_id, type, data, parent));
     }
 
-    static public Props props(String save_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, Double> used_configs)
+    static public Props props(String save_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, ClassRes> used_configs)
     {
         return Props.create(Learner.class, () -> new Learner(save_id, best, type, data, parent, used_configs));
     }
@@ -132,8 +132,11 @@ public class Learner extends AbstractActorWithTimers {
         ClassRes new_cr = new ClassRes( type, model, data );
         int cmp = new_cr.compareTo( best_cr );
 
-        if( cmp == 0 ) used_configs.put( curr_conf, new_cr.getGrade() - delta );
-        else used_configs.put(curr_conf, new_cr.getGrade());
+        if( cmp == 0 ){
+            new_cr.substractDelta(delta);
+            used_configs.put( curr_conf, new_cr  );
+        }
+        else used_configs.put(curr_conf, new_cr);
 
         if( cmp > 0 )
         {
@@ -162,7 +165,12 @@ public class Learner extends AbstractActorWithTimers {
 //            curr_conf = configs.remove( r.nextInt( configs.size() ) );
             curr_conf = configs.remove( 0 );
             current = params.clasFromStr( curr_conf );
+            System.out.println( model_id + " : STARTED AT: "+ curr_conf + " : "+ System.currentTimeMillis());
             current.buildClassifier( data );
+            System.out.println( model_id +  " : BUILT AT : " + System.currentTimeMillis() );
+
+//            Saver.saveModel(model_id, current, best_cr, type, data, used_configs);
+//            getContext().stop(self());
             handleEval( type, current, curr_conf);
 
             System.out.println(curr_conf + " :  " + best_conf + " ");

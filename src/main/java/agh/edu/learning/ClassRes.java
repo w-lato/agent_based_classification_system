@@ -6,12 +6,9 @@ import agh.edu.learning.custom.MLP;
 import org.jetbrains.annotations.NotNull;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.evaluation.Prediction;
-import weka.core.Instance;
 import weka.core.Instances;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Random;
 
 public final class ClassRes implements Comparable<ClassRes>
@@ -27,8 +24,8 @@ public final class ClassRes implements Comparable<ClassRes>
     private double acc_wgt = 0.5;
     private double fmeas_wgt = 0.5;
 
-    private List<Prediction> preds;
-    private List<double[]> probs;
+//    private List<Prediction> preds;
+//    private List<double[]> probs;
 
     public double getSumOfFscore() {
         double acc = 0.0;
@@ -38,9 +35,9 @@ public final class ClassRes implements Comparable<ClassRes>
         return acc;
     }
 
-    public List<Prediction> getPreds() { return preds; }
+//    public List<Prediction> getPreds() { return preds; }
 
-    public List<double[]> getProbs() { return probs; }
+//    public List<double[]> getProbs() { return probs; }
 
     public double[] getAUROC() { return AUROC; }
 
@@ -57,6 +54,21 @@ public final class ClassRes implements Comparable<ClassRes>
     public double getFmeas_wgt() { return fmeas_wgt; }
 
     public double getGrade() { return grade; }
+
+    public void substractDelta(double delta) {this.grade -= delta;}
+
+    public ClassRes(double grade,  double acc, double[] fscore, double[] AUROC)
+    {
+        this.grade = grade;
+        this.acc = acc;
+
+        int n = fscore.length;
+        this.fscore = new double[n];
+        this.AUROC = new double[n];
+
+        System.arraycopy( fscore, 0, this.fscore,0, n );
+        System.arraycopy( AUROC, 0, this.AUROC,0, n );
+    }
 
     public ClassRes(S_Type type, Classifier model, Instances data) throws Exception
     {
@@ -76,7 +88,7 @@ public final class ClassRes implements Comparable<ClassRes>
             acc = eval.correct() / data.size();
             acc = Math.round( acc * 100.0 ) / 100.0;
 
-            setupProbsAndPreds( eval, data, model );
+            //setupProbsAndPreds( eval, data, model );
             checkValues();
         }
         this.grade = toGrade();
@@ -116,8 +128,8 @@ public final class ClassRes implements Comparable<ClassRes>
         acc /= N;
         acc = Math.round( acc * 100.0 ) / 100.0;
 
-        Evaluation eval = new Evaluation( data );
-        setupProbsAndPreds( eval, data, mlp );
+//        Evaluation eval = new Evaluation( data );
+//        setupProbsAndPreds( eval, data, mlp );
         checkValues();
 //        System.out.println("ACC: " + acc);
     }
@@ -132,35 +144,36 @@ public final class ClassRes implements Comparable<ClassRes>
         }
     }
 
-    private void setupProbsAndPreds(Evaluation eval, Instances data, Classifier model)
-    {
-        this.preds = eval.predictions();
-        probs = new ArrayList<>();
-        try {
-            for (Instance datum : data) {
-                this.probs.add(model.distributionForInstance(datum));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    private void setupProbsAndPreds(Evaluation eval, Instances data, Classifier model)
+//    {
+//        this.preds = eval.predictions();
+//        probs = new ArrayList<>();
+//        try {
+//            for (Instance datum : data) {
+//                this.probs.add(model.distributionForInstance(datum));
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @Override
     public int compareTo(@NotNull ClassRes o)
     {
         if( this == o ) return 0;
+        else return Double.compare(this.grade, o.grade);
 
-        double A = 0.0;
-        double B = 0.0;
-        for (int i = 0; i < this.fscore.length; i++)
-        {
-            A += this.fscore[i];
-            B += o.fscore[i];
-        }
-        A = A * fmeas_wgt  + acc * acc_wgt;
-        B = B * fmeas_wgt  + o.acc * acc_wgt;
-
-        return Double.compare( A,B );
+//        double A = 0.0;
+//        double B = 0.0;
+//        for (int i = 0; i < this.fscore.length; i++)
+//        {
+//            A += this.fscore[i];
+//            B += o.fscore[i];
+//        }
+//        A = A * fmeas_wgt  + acc * acc_wgt;
+//        B = B * fmeas_wgt  + o.acc * acc_wgt;
+//
+//        return Double.compare( A,B );
     }
 
     public double toGrade()
@@ -197,11 +210,32 @@ public final class ClassRes implements Comparable<ClassRes>
         );
     }
 
+    public static ClassRes fromGrade(ClassGrade cg)
+    {
+        return new ClassRes(
+                cg.getGrade(),
+                cg.getAcc(),
+                cg.getFscore(),
+                cg.getAUROC()
+        );
+    }
+
     public static int compare(@NotNull ClassRes a, ClassRes b)
     {
-        double A = computeWeight( a.getFscore(), a.getAcc(), a.getFmeas_wgt(), a.getAcc() );
-        double B = computeWeight( b.getFscore(), b.getAcc(), b.getFmeas_wgt(), b.getAcc() );
+//        double A = computeWeight( a.getFscore(), a.getAcc(), a.getFmeas_wgt(), a.getAcc() );
+//        double B = computeWeight( b.getFscore(), b.getAcc(), b.getFmeas_wgt(), b.getAcc() );
+        double A = a.getGrade();
+        double B = b.getGrade();
         return Double.compare(A,B);
     }
 
+    @Override
+    public String toString() {
+        return  grade + ":" +
+                acc_wgt + ":" +
+                fmeas_wgt + ":" +
+                acc + ":" +
+                Arrays.toString(fscore) + ":" +
+                Arrays.toString(AUROC);
+    }
 }

@@ -90,7 +90,7 @@ public class LearnerTest
         final TestKit testProbe = new TestKit(system);
         ActorRef test = testProbe.testActor();
 
-        LinkedHashMap<String,Double> used_conf = Loader.getConfigs(Paths.get("EXP/FOR_TESTS_0/NA_1.conf") );
+        LinkedHashMap<String,ClassRes> used_conf = Loader.getConfigs(Paths.get("EXP/FOR_TESTS_0/NA_1.conf") );
         Classifier model = Loader.getModel( "EXP/FOR_TESTS_0/NA_1.model" );
         S = system.actorOf(Learner.props("EXP/FOR_TESTS_0/NA_1",model, S_Type.NA, train, test, used_conf));
 
@@ -110,7 +110,7 @@ public class LearnerTest
         final TestKit testProbe = new TestKit(system);
         ActorRef test = testProbe.testActor();
 
-        LinkedHashMap<String,Double> used_conf = Loader.getConfigs(Paths.get("EXP/FOR_TESTS_0/IBK_1.conf") );
+        LinkedHashMap<String,ClassRes> used_conf = Loader.getConfigs(Paths.get("EXP/FOR_TESTS_0/IBK_1.conf") );
         Classifier model = Loader.getModel( "EXP/FOR_TESTS_0/IBK_1.model" );
         S = system.actorOf(Learner.props("EXP/FOR_TESTS_0/IBK_1",model, S_Type.IBK, train, test, used_conf));
 

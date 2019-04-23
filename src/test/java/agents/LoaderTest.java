@@ -40,11 +40,13 @@ public class LoaderTest
         SMO smo = new SMO();
         smo.buildClassifier( data );
         ClassRes cr = new ClassRes( type, smo, data );
-        Map<String,Double> m = new HashMap<>();
-        m.put("A",9123.01);
-        m.put("B",1.001);
-        m.put("C",5670.0);
-        m.put("D",200.0);
+        Map<String,ClassRes> m = new HashMap<>();
+        m.put("A",new ClassRes(9123.01, 100.0, new double[]{1,2,3}, new double[]{1,2,3}) );
+        m.put("B",new ClassRes(1.001, 1.0, new double[]{3,3,3}, new double[]{3,3,3}));
+        m.put("C",new ClassRes(5670.0, 10.0, new double[]{2,2,2}, new double[]{2,2,2}));
+        m.put("D",new ClassRes(200.0, 30.0, new double[]{1,1,1}, new double[]{1,1,1}));
+
+
 
         String exp_dir = Saver.setupNewExp("TEST_DIR") + "/some_id";
         Saver.saveModel( exp_dir, smo, cr, type, data, m );
@@ -53,10 +55,10 @@ public class LoaderTest
         Path A = Paths.get( exp_dir + ".conf" );
         S_Type loaded_type = Loader.getType( A );
         Assert.assertEquals( type, loaded_type );
-        Map<String,Double> loaded_map = Loader.getConfigs( A );
+        Map<String,ClassRes> loaded_map = Loader.getConfigs( A );
         m.forEach((k,v) -> {
             assert loaded_map.get( k ) != null;
-            Assert.assertEquals( loaded_map.get( k ), v ,0.0001);
+            Assert.assertEquals( loaded_map.get( k ).getGrade(), v.getGrade() ,0.0001);
         });
 
         // test loaded model

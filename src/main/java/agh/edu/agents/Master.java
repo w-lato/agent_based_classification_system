@@ -3,6 +3,7 @@ package agh.edu.agents;
 import agh.edu.agents.ClassSlave.ClassSetup;
 import agh.edu.agents.enums.S_Type;
 import agh.edu.agents.experiment.*;
+import agh.edu.learning.ClassRes;
 import akka.actor.*;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
@@ -144,7 +145,7 @@ public class Master extends AbstractActorWithStash {
                 String d_p =  model_id + ".arff";
 
                 S_Type type = Loader.getType( c_p );
-                LinkedHashMap<String, Double> used_confs = Loader.getConfigs( c_p );
+                LinkedHashMap<String, ClassRes> used_confs = Loader.getConfigs( c_p );
                 Classifier model = Loader.getModel( m_p );
                 Instances data = Loader.getData( d_p );
 
