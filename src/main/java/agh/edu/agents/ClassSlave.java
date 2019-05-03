@@ -1,3 +1,4 @@
+
 package agh.edu.agents;
 
 import agh.edu.agents.Aggregator.PartialRes;

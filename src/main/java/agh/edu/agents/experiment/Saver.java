@@ -7,6 +7,7 @@ import agh.edu.aggregation.ClassPred;
 import agh.edu.aggregation.ResultsHolder;
 import agh.edu.learning.ClassRes;
 import weka.classifiers.Classifier;
+import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 
@@ -57,7 +58,7 @@ public class Saver
     {
         String s = modelMetadata( type, grade, used_configs );
         // save to files
-        SerializationHelper.write(  save_path + ".model", model  );
+        if(model != null) SerializationHelper.write(  save_path + ".model", model  );
         Files.write(Paths.get(          save_path + ".conf"), s.getBytes());
         if( !Files.exists(Paths.get(  save_path + ".arff")))
             Files.write( Paths.get(  save_path + ".arff"), data.toString().getBytes());
@@ -73,7 +74,6 @@ public class Saver
         // CONF_STR@CLASS_GRADE
         used_configs.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .peek(x-> System.out.println(x.getValue().getGrade()))
                 .forEach(x->{
                     s.append(x.getKey()).append("@").append(x.getValue().toString()).append("\n");
                 });
@@ -99,6 +99,13 @@ public class Saver
         String new_arff_data = exp_id + "/AGG/Q_" + query_id + ".arff";
         saveStringIn( new_arff_data, to_save.toString() );
     }
+
+    public static void saveStackData(String exp_id,int query_id, String stack_id, Instances to_save) throws IOException
+    {
+        String new_arff_data = exp_id + "/AGG/Q_" + query_id + "_" + stack_id + ".arff";
+        saveStringIn( new_arff_data, to_save.toString() );
+    }
+
 
     private static void saveStringIn(String path, String to_save) throws IOException
     {
@@ -142,5 +149,11 @@ public class Saver
         Path p = Paths.get( exp_id + "/AGG/Q_"+query_id+ "_"+strat+".pred" );
         String s = to_save.stream().collect(Collectors.joining("\n"));
         Files.write( p, s.getBytes());
+    }
+
+    public static void saveStackingPreds(String exp_id, int query_id, String stack_id, ArrayList<Prediction> preds) throws IOException {
+        String to_save = preds.stream().map(x-> String.valueOf(x.predicted())).collect(Collectors.joining("\n"));
+        Path p = Paths.get( exp_id + "/AGG/Q_"+query_id+ "_STACK_"+ stack_id +".pred" );
+        Files.write( p, to_save.getBytes());
     }
 }

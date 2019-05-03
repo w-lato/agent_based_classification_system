@@ -190,7 +190,7 @@ public class Master extends AbstractActorWithStash {
         }
     }
 
-    private void loadRunConf(String conf_path, String exp_dir_path) throws IOException {
+    private void loadRunConf(String conf_path, String exp_dir_path) throws Exception {
         exp_processing = true;
         onReset("");
         RunConf rc = ConfParser.getConfFrom( conf_path );

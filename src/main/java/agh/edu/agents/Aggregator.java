@@ -10,12 +10,15 @@ import akka.actor.AbstractActorWithStash;
 import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
+import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instances;
+import weka.core.Utils;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 // TODO method which sets class strat & a method which will use all possible strategies
 // TODO load agent's grades - now we have to eval model and then send it to Learner and to aggregator...
@@ -25,9 +28,11 @@ public class Aggregator extends AbstractActorWithStash
 {
     String exp_id; // EXP/exp_id
     ActorRef master;
+    Classifier stacking_model = null;
+    String[] order = null;
 
 
-    ClassStrat strat;
+//    ClassStrat strat;
     Map<String, ClassGrade> perf;
     Map<Integer, ResultsHolder> results;
 
@@ -44,12 +49,14 @@ public class Aggregator extends AbstractActorWithStash
         this.exp_id = exp_id;
     }
 
-    public Aggregator(ActorRef coordinator,String exp_id, Map<String,ClassGrade> m)
+    public Aggregator(ActorRef coordinator,String exp_id, Map<String,ClassGrade> m, Classifier model, String[] order)
     {
         this();
         this.master = coordinator;
         this.exp_id = exp_id;
         this.perf = m;
+        this.stacking_model = model;
+        this.order = order;
         System.out.println( "AGG ## READY" );
     }
 
@@ -61,7 +68,7 @@ public class Aggregator extends AbstractActorWithStash
 
     static public Props props(AggSetup setup)
     {
-        return Props.create(Aggregator.class, () -> new Aggregator(setup.master, setup.exp_id, setup.m));
+        return Props.create(Aggregator.class, () -> new Aggregator(setup.master, setup.exp_id, setup.m, setup.model, setup.order));
     }
 
 
@@ -77,12 +84,8 @@ public class Aggregator extends AbstractActorWithStash
         System.out.println(cg.getModel_id() +  " :: " + System.currentTimeMillis() +" :: " + cg.toString() );
     }
 
-    private void handleClassResult(ClassRes cr)
-    {
 
-    }
-
-    private void handlePartialRes(PartialRes pr) throws IOException
+    private void handlePartialRes(PartialRes pr) throws Exception
     {
         int id = pr.ID;
         String model_id = pr.model_id;
@@ -98,10 +101,73 @@ public class Aggregator extends AbstractActorWithStash
         }
         Saver.saveAgg( exp_id, perf );
         Saver.saveAggResults( exp_id, perf, results );
-        System.out.println( "  :$: QUERY  " + id + "  RES. APPENDED from:  " + model_id  );
+        System.out.println( "  :$: QUERY  " + id + "  RES. APPENDED from:  " + model_id + " : " +System.currentTimeMillis()  );
 //        List<Integer> l = ClassPred.getPreds ( strat, perf, results.get(id).getProbs() );
         // TODO classify each row of data and send the results
         ClassPred.saveClassChangesOverTime( exp_id, id, perf, results.get(id).getProbs());
+
+        // classify using the stacking model
+        if( stacking_model != null &&
+                order.length == results.get(id).getProbs().keySet().size() )
+        {
+            // create .arff
+            Instances to_classify = createDataSetFromProbs( id );
+
+            // save this arff
+            Saver.saveStackData(exp_id,id,Arrays.toString(order),to_classify);
+
+            // classify and save results
+            Evaluation eval = new Evaluation( to_classify );
+            eval.evaluateModel( stacking_model, to_classify );
+            Saver.saveStackingPreds( exp_id, id, "", eval.predictions() );
+        }
+        // if all agents responed then clear query
+        if( perf.keySet().size() == results.get(id).getProbs().keySet().size()  )
+        {
+            System.out.println( "QUERY " + id + " REMOVED AT: " + System.currentTimeMillis());
+            results.remove( id );
+        }
+    }
+
+    private Instances createDataSetFromProbs(int query_id)
+    {
+        Map<String, List<double[]>> res = results.get(query_id).getProbs();
+        String first_key = res.keySet().iterator().next();
+        int N = res.get( first_key ).size();
+        int num_classes = res.get( first_key ).get(0).length;
+
+        // create attributes
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        for (int i = 0; i < order.length; i++)
+        {
+            for (int j = 0; j < num_classes; j++)
+            {
+                attributes.add( new Attribute(order[i]+"_"+j) );
+            }
+        }
+        attributes.add( new Attribute("class"));
+
+        // create instances
+        Instances to_ret = new Instances("QUERY_"+query_id+"_STACKING_SET", attributes, 0);
+        to_ret.setClassIndex( to_ret.numAttributes() - 1 );
+
+        // over all instances
+        for (int i = 0; i < N; i++)
+        {
+            double[] aux = new double[ order.length * num_classes + 1 ];
+            // over the order of models
+            for (int j = 0; j < order.length; j++)
+            {
+                double[] class_prob = res.get( order[j] ).get(i);
+                for (int k = 0; k < num_classes; k++)
+                {
+                    aux[ j*k + k ] = class_prob[k];
+                }
+            }
+            aux[ aux.length -1 ] = -1;// class val. is unknown
+            to_ret.add( new DenseInstance(1.0,aux) );
+        }
+        return to_ret;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -129,6 +195,19 @@ public class Aggregator extends AbstractActorWithStash
         private ActorRef master;
         private String exp_id;
         private Map<String,ClassGrade> m;
+        private Classifier model = null;
+        private String[] order = null;
+
+        public AggSetup(ActorRef master, String exp_id, Map<String, ClassGrade> m, Classifier model, String[] order)
+        {
+            this(master, exp_id, m);
+            this.model = model;
+            if( order != null )
+            {
+                this.order = new String[order.length];
+                System.arraycopy(order,0,this.order,0,order.length);
+            }
+        }
 
         public AggSetup(ActorRef master, String exp_id, Map<String, ClassGrade> m) {
             this.master = master;

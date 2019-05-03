@@ -35,7 +35,6 @@ public class Loader
         LinkedHashMap<String, ClassRes> m = new LinkedHashMap<>();
         for (int i = 1; i < s.size(); i++)
         {
-            System.out.println( s.get(i) );
             String[] aux = s.get(i).split("@");
             m.put( aux[0], ClassRes.fromGrade( ClassGrade.fromString(aux[1]) ) );
         }
@@ -56,10 +55,16 @@ public class Loader
     }
 
 
-    public static AggSetup getAggSetup(Path p, ActorRef master) throws IOException
+    public static AggSetup getAggSetup(Path p, ActorRef master) throws Exception
     {
         List<String> l = Files.readAllLines( p );
-        String exp_id = l.get(0);
+
+        // setup stack model
+        String[] first_line = l.get(0).split(":");
+        String model_id = (first_line.length > 1) ? first_line[1] : "";
+        String[] order = (first_line.length > 1) ? first_line[2].split(",") : null;
+        String exp_id = first_line[0];
+
         Map<String, ClassGrade> m = new HashMap<>();
         if( l.size() > 1 )
         {
@@ -69,7 +74,8 @@ public class Loader
                 m.put( exp_id + "/" +aux[0], ClassGrade.fromString( aux[1] ) );
             }
         }
-        return new AggSetup(master, exp_id, m);
+        Classifier model = !model_id.isEmpty() ? (Classifier) SerializationHelper.read(p.toString()+ "\\AGG\\"+model_id +".model") : null;
+        return new AggSetup(master, exp_id, m, model, order);
     }
 
     public static int getNextQueryID(String s) throws IOException {
