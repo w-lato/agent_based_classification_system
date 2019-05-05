@@ -62,7 +62,7 @@ public class ParamsMLP implements Params
         int[] updaters = {ADAM,MOMENTUM,ADA_GRAD,RMS_PROP};
         int[] num_of_layers = {2, 3};
         double[] learning_rates = {0.001,0.005,0.1};
-        int[] hid_lay_inputs = {100, 300, 500, 1000};
+        double[] hid_lay_inputs = {1.0, 0.8, 0.6, 0.4};
         int[] num_of_iter = {5, 20, 50, 100, 500, 1000};
 
         List<String> l = new ArrayList<>();
@@ -71,7 +71,7 @@ public class ParamsMLP implements Params
                 for(OptimizationAlgorithm opt : opt_algo) {
                     for (Activation activation : activations) {
                         for (int num_of_layer : num_of_layers) {
-                            for (int hid_lay_input : hid_lay_inputs) {
+                            for (double hid_lay_input : hid_lay_inputs) {
                                 for (int i : num_of_iter) {
                                     l.add(
                                           updater + ","
@@ -132,7 +132,7 @@ public class ParamsMLP implements Params
         IUpdater updater = createUpdater( conf );
         OptimizationAlgorithm opt_alg = OptimizationAlgorithm.valueOf( conf[2] );
         Activation activation = Activation.valueOf( conf[3] );
-        int hid_inp = Integer.valueOf(conf[5]);
+        double hid_inp = Integer.valueOf(conf[5]);
 
         return new NeuralNetConfiguration.Builder()
                 .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
@@ -144,12 +144,12 @@ public class ParamsMLP implements Params
                 .layer(0,new DenseLayer.Builder()
                         .hasBias(true)
                         .nIn( features_num )
-                        .nOut( hid_inp )
+                        .nOut((int) (features_num * hid_inp))
                         .activation( activation )
                         .weightInit(WeightInit.NORMAL)
                         .build())
                 .layer(1,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .nIn( hid_inp )
+                        .nIn((int) (features_num * hid_inp))
                         .nOut( classes_num )
                         .activation(Activation.SOFTMAX)
                         .weightInit(WeightInit.NORMAL)
@@ -164,7 +164,7 @@ public class ParamsMLP implements Params
         IUpdater updater = createUpdater( conf );
         OptimizationAlgorithm opt_alg = OptimizationAlgorithm.valueOf( conf[2] );
         Activation activation = Activation.valueOf( conf[3] );
-        int hid_inp = Integer.valueOf(conf[5]);
+        double hid_inp = Integer.valueOf(conf[5]);
 
         return new NeuralNetConfiguration.Builder()
                 .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
@@ -176,18 +176,18 @@ public class ParamsMLP implements Params
                 .layer(0,new DenseLayer.Builder()
                         .hasBias(true)
                         .nIn( features_num )
-                        .nOut( hid_inp )
+                        .nOut((int) (features_num * hid_inp))
                         .activation( activation )
                         .weightInit(WeightInit.NORMAL)
                         .build())
                 .layer(1,new DenseLayer.Builder()
-                        .nIn( hid_inp )
-                        .nOut( hid_inp - ((int) (0.3 * hid_inp)))
+                        .nIn((int) (features_num * hid_inp))
+                        .nOut((int) (features_num * hid_inp - ((int) (0.3 * features_num * hid_inp))))
                         .activation( activation )
                         .weightInit(WeightInit.NORMAL)
                         .build())
                 .layer(2,new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .nIn( hid_inp - ((int) (0.3 * hid_inp)) )
+                        .nIn((int) (features_num * hid_inp - ((int) (0.3 * features_num * hid_inp))))
                         .nOut( classes_num )
                         .activation(Activation.SOFTMAX)
                         .weightInit(WeightInit.NORMAL)

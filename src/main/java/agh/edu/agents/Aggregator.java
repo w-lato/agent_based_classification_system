@@ -111,7 +111,7 @@ public class Aggregator extends AbstractActorWithStash
                 order.length == results.get(id).getProbs().keySet().size() )
         {
             // create .arff
-            Instances to_classify = createDataSetFromProbs( id );
+            Instances to_classify = results.get(id).toStackTrainSet( order );
 
             // save this arff
             Saver.saveStackData(exp_id,id,Arrays.toString(order),to_classify);
@@ -129,46 +129,46 @@ public class Aggregator extends AbstractActorWithStash
         }
     }
 
-    private Instances createDataSetFromProbs(int query_id)
-    {
-        Map<String, List<double[]>> res = results.get(query_id).getProbs();
-        String first_key = res.keySet().iterator().next();
-        int N = res.get( first_key ).size();
-        int num_classes = res.get( first_key ).get(0).length;
-
-        // create attributes
-        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-        for (int i = 0; i < order.length; i++)
-        {
-            for (int j = 0; j < num_classes; j++)
-            {
-                attributes.add( new Attribute(order[i]+"_"+j) );
-            }
-        }
-        attributes.add( new Attribute("class"));
-
-        // create instances
-        Instances to_ret = new Instances("QUERY_"+query_id+"_STACKING_SET", attributes, 0);
-        to_ret.setClassIndex( to_ret.numAttributes() - 1 );
-
-        // over all instances
-        for (int i = 0; i < N; i++)
-        {
-            double[] aux = new double[ order.length * num_classes + 1 ];
-            // over the order of models
-            for (int j = 0; j < order.length; j++)
-            {
-                double[] class_prob = res.get( order[j] ).get(i);
-                for (int k = 0; k < num_classes; k++)
-                {
-                    aux[ j*k + k ] = class_prob[k];
-                }
-            }
-            aux[ aux.length -1 ] = -1;// class val. is unknown
-            to_ret.add( new DenseInstance(1.0,aux) );
-        }
-        return to_ret;
-    }
+//    private Instances createDataSetFromProbs(int query_id)
+//    {
+//        Map<String, List<double[]>> res = results.get(query_id).getProbs();
+//        String first_key = res.keySet().iterator().next();
+//        int N = res.get( first_key ).size();
+//        int num_classes = res.get( first_key ).get(0).length;
+//
+//        // create attributes
+//        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+//        for (int i = 0; i < order.length; i++)
+//        {
+//            for (int j = 0; j < num_classes; j++)
+//            {
+//                attributes.add( new Attribute(order[i]+"_"+j) );
+//            }
+//        }
+//        attributes.add( new Attribute("class"));
+//
+//        // create instances
+//        Instances to_ret = new Instances("QUERY_"+query_id+"_STACKING_SET", attributes, 0);
+//        to_ret.setClassIndex( to_ret.numAttributes() - 1 );
+//
+//        // over all instances
+//        for (int i = 0; i < N; i++)
+//        {
+//            double[] aux = new double[ order.length * num_classes + 1 ];
+//            // over the order of models
+//            for (int j = 0; j < order.length; j++)
+//            {
+//                double[] class_prob = res.get( order[j] ).get(i);
+//                for (int k = 0; k < num_classes; k++)
+//                {
+//                    aux[ j*k + k ] = class_prob[k];
+//                }
+//            }
+//            aux[ aux.length -1 ] = -1;// class val. is unknown
+//            to_ret.add( new DenseInstance(1.0,aux) );
+//        }
+//        return to_ret;
+//    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

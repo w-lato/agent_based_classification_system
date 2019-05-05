@@ -1,6 +1,6 @@
 {
    "paths" : {
-        "train" : "DATA/mnist_train.arff",
+        "train" : "D:\\FILTERED_SPEED_DATA\\FILTERED_PST-K-TCoCrN15N50A (województwo małopolskie).arff",
         "test"  : "DATA/mnist_test.arff"
    },
    "agents" : {

@@ -8,7 +8,7 @@
     },
     "split" : {
          "method" : "OVERLAP",
-          "fill"  : 0.05,
+          "fill"  : 0.01,
     },
     "class_strat" : "WEIGHTED"
 }

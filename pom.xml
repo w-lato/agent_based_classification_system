@@ -76,7 +76,7 @@
 <!--        ========================================================================================-->
 <!--        ========================================================================================-->
 
-        <!-- https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-core -->
+<!--         https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-core-->
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>deeplearning4j-core</artifactId>
@@ -101,7 +101,7 @@
             <version>1.7.5</version>
         </dependency>
 
-<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.nd4j/nd4j-cuda-10.0 &ndash;&gt;-->
+<!--&lt;!&ndash;        &lt;!&ndash; https://mvnrepository.com/artifact/org.nd4j/nd4j-cuda-10.0 &ndash;&gt;&ndash;&gt;-->
 <!--        <dependency>-->
 <!--            <groupId>org.nd4j</groupId>-->
 <!--            <artifactId>nd4j-cuda-10.0</artifactId>-->

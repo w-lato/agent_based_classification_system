@@ -44,12 +44,14 @@ public class MLP extends MultiLayerNetwork implements Classifier, Serializable
         Arrays.fill( arr,0 );
         arr[((int) data.get(0).classValue())] = 1;
         INDArray labels = Nd4j.create( arr );
+//        System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^6");
         for (int i = 1; i < data.size(); i++)
         {
             Arrays.fill(arr,0);
             arr[((int) data.get(i).classValue())] = 1;
             labels = Nd4j.concat( 0, labels, Nd4j.create( arr ) );
         }
+//        System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$4");
         INDArray features = data.stream()
                 .map( Instance::toDoubleArray )
                 .map(x -> Arrays.copyOf(x, x.length - 1))
@@ -57,6 +59,7 @@ public class MLP extends MultiLayerNetwork implements Classifier, Serializable
                 .reduce( (a,b) -> Nd4j.concat(0,a,b))
                 .orElse(null);
 
+//        System.out.println("##############################################################");
         List<DataSet> l = new DataSet( features, labels ).dataSetBatches( batch_size );
         for (int i = 0; i < num_of_iter; i++)
         {

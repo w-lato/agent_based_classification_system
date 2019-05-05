@@ -1,5 +1,13 @@
 package agh.edu.aggregation;
 
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -177,4 +185,59 @@ public class ResultsHolder
         }
         return new ResultsHolder( query_id, m );
     }
+
+    public Instances toStackTrainSet(String[] order) throws IOException {
+        Map<String, List<double[]>> res = this.probs;
+        String first_key = res.keySet().iterator().next();
+        int N = res.get( first_key ).size();
+        int num_classes = res.get( first_key ).get(0).length;
+
+        // create attributes
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        for (int i = 0; i < order.length; i++)
+        {
+            for (int j = 0; j < num_classes; j++)
+            {
+                Attribute att = new Attribute(order[i]+"_"+j);
+                attributes.add( att );
+            }
+        }
+        Attribute class_att = new Attribute("class",new ArrayList<String>(Arrays.asList("0", "1","2","3","4","5","6","7","8","9")));
+        attributes.add(class_att);
+
+        // create instances
+        Instances to_ret = new Instances("QUERY_"+ID+"_STACKING_SET", attributes, 0);
+        to_ret.setClassIndex( to_ret.numAttributes() - 1 );
+
+        // over all instances
+        for (int i = 0; i < N; i++)
+        {
+            double[] aux = new double[ order.length * num_classes + 1 ];
+            // over the order of models
+//            System.out.print(i + " :: ");
+            Instance to_add = new DenseInstance( order.length * num_classes + 1 );
+            for (int j = 0; j < order.length; j++)
+            {
+                double[] class_prob = res.get( order[j] ).get(i);
+                for (int k = 0; k < num_classes; k++)
+                {
+                    to_add.setValue(j*num_classes + k, class_prob[k]  );
+                    aux[ j*num_classes + k ] = class_prob[k];
+//                    System.out.print( class_prob[k] + ", " );
+                }
+            }
+            to_add.setMissing(to_add.numAttributes() -1);
+//            System.out.println("");
+            aux[ aux.length -1 ] = -1;// class val. is unknown
+            System.out.println( "::: :: " + Arrays.toString( aux ) );
+            System.out.println( i + " :: " + to_add );
+            to_ret.add( to_add );
+        }
+        Files.write( Paths.get("D:\\test_test.txt"), to_ret.toString().getBytes() );
+
+        // TODO class nominal
+        return to_ret;
+    }
+
+
 }

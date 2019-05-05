@@ -68,7 +68,7 @@ public class Learner extends AbstractActorWithTimers {
         {
             params = ParamsFactory.getMLP( data.numClasses(), data.numAttributes() - 1 );
             configs = params.getParamsCartProd();
-            current = params.clasFromStr( configs.remove( 0 ) );
+            current = params.clasFromStr( configs.remove( r.nextInt(configs.size()) ) );
         } else {
             params = ParamsFactory.getParams( type );
             configs = params.getParamsCartProd();
@@ -86,7 +86,6 @@ public class Learner extends AbstractActorWithTimers {
 
         System.out.println("Learner created: " + model_id + " : AT : " + System.currentTimeMillis());
         getTimers().startSingleTimer(null, "NEW_CONF", Duration.ofSeconds(2));
-        getTimers().startSingleTimer(null, "SAVE_MODEL", Duration.ofMinutes(2));
     }
 
     private Learner(String model_id, Classifier best, S_Type type, Instances data, ActorRef parent, LinkedHashMap<String, ClassRes> used_configs) throws Exception
@@ -97,7 +96,11 @@ public class Learner extends AbstractActorWithTimers {
         configs = configs.stream().filter( x-> !this.used_configs.containsKey(x) ).collect(Collectors.toList());
         this.best = best;
         this.best_conf = used_configs.keySet().iterator().next();
+        this.best_cr = used_configs.get( this.best_conf );
+
+        System.out.println(" EVAL START : " + model_id + " : " + System.currentTimeMillis());
         this.best_cr = new ClassRes( type, best, data );
+        System.out.println(" EVAL END : " + model_id + " : " + System.currentTimeMillis());
         parent.tell( new BestClass( best, best_conf, best_cr), self());
 
         if( configs.isEmpty() )
@@ -109,7 +112,7 @@ public class Learner extends AbstractActorWithTimers {
         this.model_id = model_id;
         this.parent = parent;
         this.data = data;
-        //r = new Random(System.currentTimeMillis());
+        r = new Random(System.currentTimeMillis());
         this.type = type;
 
         System.out.println( model_id + " Learner from load created AT: " + System.currentTimeMillis());
@@ -128,8 +131,11 @@ public class Learner extends AbstractActorWithTimers {
 
     public void handleEval(S_Type type, Classifier model, String conf) throws Exception
     {
-        System.out.println(model_id + " eval started for " + conf + "  :: " + System.currentTimeMillis());
+        System.out.println(model_id + "STARTED START " + conf + "  :: " + System.currentTimeMillis());
         ClassRes new_cr = new ClassRes( type, model, data );
+        System.out.println(" EVAL END : " + model_id + " : " + System.currentTimeMillis());
+        System.out.println( model_id + " : " + new_cr.toString() );
+
         int cmp = new_cr.compareTo( best_cr );
 
         if( cmp == 0 ){
@@ -144,9 +150,13 @@ public class Learner extends AbstractActorWithTimers {
             best_cr = new_cr;
             best = current;
             best_conf = conf;
-            SerializationHelper.write(model_id + ".model", best );
+            Saver.saveModel(this.model_id,best, best_cr,type,data,used_configs);
+//            SerializationHelper.write(model_id + ".model", best );
             parent.tell( new BestClass( best, best_conf, best_cr), self());
+        } else {
+            Saver.saveModel(this.model_id, null, best_cr,type,data,used_configs);
         }
+
     }
 
 
@@ -162,15 +172,12 @@ public class Learner extends AbstractActorWithTimers {
         try
         {
             System.out.println(" ---------- OPT " + type + " " + System.currentTimeMillis());
-//            curr_conf = configs.remove( r.nextInt( configs.size() ) );
-            curr_conf = configs.remove( 0 );
+            curr_conf = configs.remove( r.nextInt( configs.size() ) );
             current = params.clasFromStr( curr_conf );
             System.out.println( model_id + " : STARTED AT: "+ curr_conf + " : "+ System.currentTimeMillis());
             current.buildClassifier( data );
             System.out.println( model_id +  " : BUILT AT : " + System.currentTimeMillis() );
 
-//            Saver.saveModel(model_id, current, best_cr, type, data, used_configs);
-//            getContext().stop(self());
             handleEval( type, current, curr_conf);
 
             System.out.println(curr_conf + " :  " + best_conf + " ");
@@ -180,19 +187,19 @@ public class Learner extends AbstractActorWithTimers {
         }
     }
 
-    private void onSaveModel(String s) throws Exception
-    {
-        System.out.println(model_id + "  ::  SAVED");
-        Saver.saveModel(model_id, best, best_cr, type, data, used_configs);
-        getTimers().startSingleTimer(null, "SAVE_MODEL", Duration.ofSeconds(2));
-    }
+//    private void onSaveModel(String s) throws Exception
+//    {
+//        System.out.println(model_id + "  ::  SAVED");
+//        Saver.saveModel(model_id, best, best_cr, type, data, used_configs);
+//        getTimers().startSingleTimer(null, "SAVE_MODEL", Duration.ofSeconds(2));
+//    }
 
 
     public Receive createReceive()
     {
         return receiveBuilder()
-                .matchEquals("NEW_CONF", this::onSaveModel)
-                .matchEquals("SAVE_MODEL", this::onOptimizationStart)
+//                .matchEquals("NEW_CONF", this::onSaveModel)
+                .matchEquals("NEW_CONF", this::onOptimizationStart)
                 .match( PoisonPill.class, x -> getContext().stop(self()))
                 .matchAny(m -> {
                     System.out.println("?? : " + m.getClass());
