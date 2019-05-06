@@ -72,7 +72,9 @@ public class ConfParser
                 S_Type.IBK.name(),
                 S_Type.LOG.name(),
                 S_Type.MLP.name(),
-                S_Type.RF.name()
+                S_Type.RF.name(),
+                S_Type.J48.name(),
+                S_Type.PART.name()
         };
         List<S_Type> l = new ArrayList<>();
 

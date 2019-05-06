@@ -3,6 +3,7 @@ package agh.edu.utils;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,12 +62,14 @@ public class ResultsValidator
 //        String exp_id = "EXP/MNIST_32_MLP_SIMPLE_4";
 //        String exp_id = "EXP\\MNIST_8_OF_ALL_SIMPLE_5";
         String exp_id = "EXP/TIME_SMO_8_0.1_8";
-        int query_id = 11;
+        int query_id = 12;
 
         String test_data_path = exp_id + "\\AGG\\Q_" + query_id + ".arff";
         String results_path_1 = exp_id + "\\AGG\\Q_" + query_id + "_MAJORITY.pred";
         String results_path_2 = exp_id + "\\AGG\\Q_" + query_id + "_WEIGHTED.pred";
         String results_path_3 = exp_id + "\\AGG\\Q_" + query_id + "_PROB_WEIGHT.pred";
+        String results_path_4 = exp_id + "\\AGG\\Q_" + query_id + "_F1_SCORE_VOTING.pred";
+        String results_path_5 = exp_id + "\\AGG\\Q_" + query_id + "_F1_SCORE_PROB.pred";
 
 //        String results_path_4 = exp_id + "\\AGG\\Q_" + query_id + "_F1_SCORE_VOTING.pred";
 
@@ -77,6 +80,21 @@ public class ResultsValidator
         System.out.println("============================ PROB_WEIGHTED");
         ResultsValidator.compare(results_path_3, test_data_path);
 
+        if(Files.exists( Paths.get( results_path_4 ) ))
+        {
+            System.out.println("============================ F1_SCORE_VOTING");
+            ResultsValidator.compare(results_path_4, test_data_path);
+        } else {
+            System.out.println("NO F1_SCORE_VOTING_FILE");
+        }
+
+        if(Files.exists( Paths.get( results_path_5 ) ))
+        {
+            System.out.println("============================ F1_SCORE_PROB_VOTING");
+            ResultsValidator.compare(results_path_5, test_data_path);
+        } else {
+            System.out.println("NO F1_PROB_FILE");
+        }
 
 //        String exp_id = "EXP\\SLAVE_ONLY_TEST_1";
 //        int query_id = 40;

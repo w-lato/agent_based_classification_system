@@ -54,11 +54,12 @@ public class Learner extends AbstractActorWithTimers {
      */
     public Learner(String model_id, S_Type type, Instances data, ActorRef parent) throws Exception
     {
+        System.out.println("HELLO :: " + model_id + " :: " + System.currentTimeMillis());
         used_configs = new HashMap<>();
         this.model_id = model_id;
         this.parent = parent;
         this.data = data;
-        r = new Random(System.currentTimeMillis());
+        r = new Random(System.nanoTime());
         this.type = type;
 
         params = ParamsFactory.getParams( type, data );
@@ -77,7 +78,7 @@ public class Learner extends AbstractActorWithTimers {
         best = current;
 
         // eval
-        System.out.println("  CURRENT : " + current);
+        System.out.println(model_id + "  CURRENT : " + type);
         current.buildClassifier( data );
         best_cr = new ClassRes( type,best,data );
         used_configs.put( best_conf, best_cr );
@@ -112,7 +113,7 @@ public class Learner extends AbstractActorWithTimers {
         this.model_id = model_id;
         this.parent = parent;
         this.data = data;
-        r = new Random(System.currentTimeMillis());
+        r = new Random(System.nanoTime());
         this.type = type;
 
         System.out.println( model_id + " Learner from load created AT: " + System.currentTimeMillis());

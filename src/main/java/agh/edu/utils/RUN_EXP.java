@@ -23,23 +23,20 @@ public class RUN_EXP
 //        RunConf rc = ConfParser.getConfFrom( "CONF/MNIST_8_OF_ALL_SIMPLE" );
 //        RunConf rc = ConfParser.getConfFrom( "CONF/MNIST_SMO_128" );
 //        RunConf rc = ConfParser.getConfFrdom( "CONF/TIME_SMO_8_0.01" );
-        RunConf rc = ConfParser.getConfFrom( "CONF/first_data_limits" );
+//        RunConf rc = ConfParser.getConfFrom( "CONF/first_data_limits" );
+//        RunConf rc = ConfParser.getConfFrom( "CONF/LOG_TEST" );
+//        RunConf rc = ConfParser.getConfFrom( "CONF/5_SMO_2_J48_5_PART_MNIST_10" );
         ActorSystem system = ActorSystem.create("test_sys");
         ActorRef m = system.actorOf( Master.props() ,"master" );
         System.out.println("START AT: " + System.currentTimeMillis());
 
-//        m.tell( new Master.LoadExp("EXP/TIME_SMO_8_0.1_8"), ActorRef.noSender());
+//        m.tell( new Master.LoadExp("EXP/5_SMO_2_J48_5_PART_MNIST_10_19"), ActorRef.noSender());
 //        m.tell( rc, ActorRef.noSender() );
-
-//        m.tell( new Master.LoadExp("EXP/TIME_SMO_8_0.0.5_1"), ActorRef.noSender());
-
+//        m.tell( new Master.LoadExp("EXP/FIRST_DATA_LIMITS_14"), ActorRef.noSender());
 
 
-//        m.tell( new Master.SlaveOnlyExp("EXP/MNIST_8_OF_ALL_SIMPLE_5"), ActorRef.noSender());
-//        m.tell( new Master.SlaveOnlyExp("EXP/MNIST_SMO_128_6"), ActorRef.noSender());
-//        m.tell( new Master.SlaveOnlyExp("EXP/BEST_128_SMO_0"), ActorRef.noSender());
+
         m.tell( new Master.SlaveOnlyExp("EXP/TIME_SMO_8_0.1_8"), ActorRef.noSender());
-
 //        Instances test = ConverterUtils.DataSource.read("D:\\FILTERED_SPEED_DATA\\FILTERED_PST-K-TCoCrN15N50A (województwo małopolskie).arff");
         Instances test = new ConverterUtils.DataSource("DATA/mnist_test.arff").getDataSet();
         m.tell( test, ActorRef.noSender());

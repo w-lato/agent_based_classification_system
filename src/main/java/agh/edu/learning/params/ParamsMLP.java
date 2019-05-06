@@ -103,7 +103,8 @@ public class ParamsMLP implements Params
                         "0,0.005,CONJUGATE_GRADIENT,CUBE",
                         "0,0.001,LBFGS,CUBE",
                         "0,0.005,LBFGS,CUBE",
-                        "0,0.1,CONJUGATE_GRADIENT,CUBE"
+                        "0,0.1,CONJUGATE_GRADIENT,CUBE",
+                        "3,0.005,LBFGS,CUBE,3,0.8,20"
                 )
         );
         l = l.stream().filter( x-> {
@@ -132,7 +133,7 @@ public class ParamsMLP implements Params
         IUpdater updater = createUpdater( conf );
         OptimizationAlgorithm opt_alg = OptimizationAlgorithm.valueOf( conf[2] );
         Activation activation = Activation.valueOf( conf[3] );
-        double hid_inp = Integer.valueOf(conf[5]);
+        double hid_inp = Double.valueOf(conf[5]);
 
         return new NeuralNetConfiguration.Builder()
                 .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
@@ -164,7 +165,7 @@ public class ParamsMLP implements Params
         IUpdater updater = createUpdater( conf );
         OptimizationAlgorithm opt_alg = OptimizationAlgorithm.valueOf( conf[2] );
         Activation activation = Activation.valueOf( conf[3] );
-        double hid_inp = Integer.valueOf(conf[5]);
+        double hid_inp = Double.valueOf(conf[5]);
 
         return new NeuralNetConfiguration.Builder()
                 .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)

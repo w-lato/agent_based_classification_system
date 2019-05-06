@@ -7,6 +7,8 @@ import weka.classifiers.functions.Logistic;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.lazy.IBk;
 import weka.classifiers.meta.AdaBoostM1;
+import weka.classifiers.rules.PART;
+import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
 
 public class DefaultClassifierFactory
@@ -21,7 +23,9 @@ public class DefaultClassifierFactory
             case LOG: return new Logistic();
             case RF: return new RandomForest();
             case ADA: return new AdaBoostM1();
-            default: return null;
+            case PART: return new PART();
+            case J48: return new J48();
+             default: return null;
         }
     }
 }

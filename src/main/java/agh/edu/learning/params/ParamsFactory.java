@@ -31,6 +31,8 @@ public class ParamsFactory
             case LOG: return new ParamsLog();
             case RF: return new ParamsRF();
             case ADA: return new ParamsADA();
+            case PART: return new ParamsPART();
+            case J48: return new ParamsJ48();
             default: return null;
         }
     }

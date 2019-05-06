@@ -34,7 +34,7 @@ public class ParamsSMO implements Params
             if( i == POLY)
             {
                 // 15 possible exp values
-                for (double j = 0.0; j < 15; j+=1.0)
+                for (double j = 1.0; j < 15; j+=1.0)
                 {
                     // lower_order - BOOLEAN
                     for (int k = 0; k < 2; k++)

@@ -1,5 +1,6 @@
 package agh.edu.aggregation;
 
+import agh.edu.learning.ClassRes;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -229,15 +230,61 @@ public class ResultsHolder
             to_add.setMissing(to_add.numAttributes() -1);
 //            System.out.println("");
             aux[ aux.length -1 ] = -1;// class val. is unknown
-            System.out.println( "::: :: " + Arrays.toString( aux ) );
-            System.out.println( i + " :: " + to_add );
+//            System.out.println( "::: :: " + Arrays.toString( aux ) );
+//            System.out.println( i + " :: " + to_add );
             to_ret.add( to_add );
         }
-        Files.write( Paths.get("D:\\test_test.txt"), to_ret.toString().getBytes() );
 
         // TODO class nominal
         return to_ret;
     }
 
+    public Instances toMaxStackSet(String[] order) throws IOException {
+        Map<String, List<double[]>> res = this.probs;
+        String first_key = res.keySet().iterator().next();
+        int N = res.get( first_key ).size();
+        int num_classes = res.get( first_key ).get(0).length;
+
+        // create attributes
+        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+        for (int i = 0; i < order.length; i++)
+        {
+            Attribute att = new Attribute(order[i]);
+            attributes.add(att);
+        }
+        Attribute class_att = new Attribute("class",new ArrayList<String>(Arrays.asList("0", "1","2","3","4","5","6","7","8","9")));
+        attributes.add(class_att);
+
+        // create instances
+        Instances to_ret = new Instances("QUERY_"+ID+"_STACKING_SET", attributes, 0);
+        to_ret.setClassIndex( to_ret.numAttributes() - 1 );
+
+        // over all instances
+        for (int i = 0; i < N; i++)
+        {
+            // over the order of models
+            Instance to_add = new DenseInstance( order.length + 1);
+            for (int j = 0; j < order.length; j++)
+            {
+                double[] class_prob = res.get( order[j] ).get(i);
+                double max = class_prob[0];
+                int max_idx = 0;
+                for (int k = 1; k < class_prob.length; k++)
+                {
+                    if( max - class_prob[k] < 0 )
+                    {
+                        max_idx = k;
+                        max = class_prob[k];
+                    }
+                }
+                to_add.setValue(j, max_idx );
+            }
+            to_add.setMissing(to_add.numAttributes() -1);
+            System.out.println( i + " :: " + to_add );
+            to_ret.add( to_add );
+        }
+        System.out.println( to_ret.toString() );
+        return to_ret;
+    }
 
 }

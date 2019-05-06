@@ -22,7 +22,8 @@ public class ClassPred
             case WEIGHTED: return soft_v1(perf,probs);
             case PROB_WEIGHT: return soft_prob(perf,probs);
 //            case PROB_ENTROPY: return prob_entropy(perf,probs); // TODO bad performance
-//            case F1_SCORE_VOTING: return f1_score_voting(perf,probs);
+            case F1_SCORE_VOTING: return f1_score_voting(perf,probs);
+            case F1_SCORE_PROB: return soft_prob_fscore( perf, probs );
             default: return null;
         }
     }
@@ -84,10 +85,19 @@ public class ClassPred
     static List<Integer> soft_prob(Map<String, ClassGrade> perf, LinkedHashMap<String,List<double[]>> probs )
     {
         SoftVotingVariations svv = new SoftVotingVariations( perf, probs );
-        List<Integer> res = svv.getProbSoft();
+        List<Integer> res = svv.getProbSoft( 0 );
         svv = null;
         return res;
     }
+
+    static List<Integer> soft_prob_fscore(Map<String, ClassGrade> perf, LinkedHashMap<String,List<double[]>> probs )
+    {
+        SoftVotingVariations svv = new SoftVotingVariations( perf, probs );
+        List<Integer> res = svv.getProbSoft(1);
+        svv = null;
+        return res;
+    }
+
 
     static List<Integer> prob_entropy(Map<String, ClassGrade> perf, LinkedHashMap<String,List<double[]>> probs )
     {
@@ -122,12 +132,13 @@ public class ClassPred
         int N = ((List<double[]>) probs.values().toArray()[0]).size();
         List<Integer> l = new ArrayList<>();
         int[] tmp = new int[ probs.keySet().size() ];
+        Set<String> models = probs.keySet();
 
         for (int i = 0, ctr = 0; i < N; i++, ctr = 0)
         {
-            for (List<double[]> it : probs.values())
+            for (String id : models)
             {
-                tmp[ ctr ] = maxIdxFrom( it.get( i ) );
+                tmp[ ctr ] = maxIdxFrom( probs.get( id ).get( i ) );
                 ctr++;
             }
             l.add( get_highest_f1_class( tmp, perf, probs ) );
@@ -168,7 +179,8 @@ public class ClassPred
         for (String id : probs.keySet())
         {
             int class_num = arr[ctr];
-            aux[ctr] = perf.get( id ).getFscore()[class_num] * perf.get( id ).getAUROC()[class_num] * perf.get( id ).getGrade();
+            aux[ctr] = perf.get( id ).getFscore()[ class_num ];// * perf.get( id ).getAUROC()[class_num];// * perf.get( id ).getGrade();
+            ctr++;
         }
         return arr[ maxIdxFrom(aux) ];
     }
@@ -248,7 +260,7 @@ public class ClassPred
         }
 
         // probabilities are multiplied by wights and ummed up
-        public List<Integer> getProbSoft()
+        public List<Integer> getProbSoft(int version)
         {
             double[] aux = new double[ num_of_classes ];
             return IntStream.range(0,rows)
@@ -263,7 +275,11 @@ public class ClassPred
                             double[] arr = probs.get(id).get(x);
                             for (int i = 0; i < arr.length; i++)
                             {
-                                aux[i] += arr[i] * norm_wghts[ctr];
+                                // by weight
+                                if(version == 0 ) aux[i] += arr[i] * norm_wghts[ctr];
+
+                                // by f_score
+                                if(version == 1 ) aux[i] += arr[i] * perf.get(id).getFscore()[i];
                             }
                             ctr++;
                         }
