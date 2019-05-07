@@ -54,7 +54,7 @@ public class Aggregator extends AbstractActorWithStash
         this();
         this.master = coordinator;
         this.exp_id = exp_id;
-        this.perf = m;
+        m.forEach( (k,v)->this.perf.put(k,v) );
         this.stacking_model = model;
         this.order = order;
         System.out.println( "AGG ## READY" );

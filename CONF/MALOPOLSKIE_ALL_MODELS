@@ -1,17 +1,15 @@
 {
    "paths" : {
-        "train" : "DATA/PST_MALOPOLSKIE_TRAIN.arff"
-        "train" : "DATA/PST_MALOPOLSKIE_TEST.arff"
+        "train" : "DATA/PST_MALOPOLSKIE_TRAIN.arff",
+        "test" : "DATA/PST_MALOPOLSKIE_TEST.arff"
    },
    "agents" : {
-        "SMO"  : 1,
-        "RF"   : 1,
-        "ADA"  : 1,
-        "LOG"  : 1,
-        "NA"   : 1,
-        "IBK"  : 1,
-        "PART" : 1,
-        "J48"  : 1
+        "SMO"  : 2,
+        "RF"   : 2,
+        "NA"   : 2,
+        "IBK"  : 2,
+        "PART" : 2,
+        "J48"  : 2
    },
    "split" : {
         "method" : "OVERLAP",

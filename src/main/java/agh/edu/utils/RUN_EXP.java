@@ -17,15 +17,7 @@ import java.nio.file.Files;
 public class RUN_EXP
 {
     public static void main(String[] args) throws Exception {
-//        RunConf rc = ConfParser.getConfFrom( "CONF/MNIST_8_EQ_SPLIT" );
-//        RunConf rc = ConfParser.getConfFrom( "CONF/SPAM_SMO_8_SIMPLE" );
-//        RunConf rc = ConfParser.getConfFrom( "CONF/MNIST_32_MLP_SIMPLE" );
-//        RunConf rc = ConfParser.getConfFrom( "CONF/MNIST_8_OF_ALL_SIMPLE" );
-//        RunConf rc = ConfParser.getConfFrom( "CONF/MNIST_SMO_128" );
-//        RunConf rc = ConfParser.getConfFrdom( "CONF/TIME_SMO_8_0.01" );
-//        RunConf rc = ConfParser.getConfFrom( "CONF/first_data_limits" );
-//        RunConf rc = ConfParser.getConfFrom( "CONF/LOG_TEST" );
-//        RunConf rc = ConfParser.getConfFrom( "CONF/5_SMO_2_J48_5_PART_MNIST_10" );
+        RunConf rc = ConfParser.getConfFrom( "CONF/MAZOWIECKIE_8_SMO" );
         ActorSystem system = ActorSystem.create("test_sys");
         ActorRef m = system.actorOf( Master.props() ,"master" );
         System.out.println("START AT: " + System.currentTimeMillis());
@@ -36,9 +28,10 @@ public class RUN_EXP
 
 
 
-        m.tell( new Master.SlaveOnlyExp("EXP/TIME_SMO_8_0.1_8"), ActorRef.noSender());
+        m.tell( new Master.SlaveOnlyExp("EXP/MAZOWIECKIE_8_SMO_27"), ActorRef.noSender());
 //        Instances test = ConverterUtils.DataSource.read("D:\\FILTERED_SPEED_DATA\\FILTERED_PST-K-TCoCrN15N50A (województwo małopolskie).arff");
-        Instances test = new ConverterUtils.DataSource("DATA/mnist_test.arff").getDataSet();
+//        Instances test = new ConverterUtils.DataSource("DATA/mnist_test.arff").getDataSet();
+        Instances test = new ConverterUtils.DataSource("DATA/MAZOWIECKIE_TRAIN.arff").getDataSet();
         m.tell( test, ActorRef.noSender());
     }
 }

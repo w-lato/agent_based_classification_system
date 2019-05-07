@@ -78,7 +78,7 @@ public class Learner extends AbstractActorWithTimers {
         best = current;
 
         // eval
-        System.out.println(model_id + "  CURRENT : " + type);
+        System.out.println(model_id + "  CURRENT : " + type +  " DATA size: " + data.size());
         current.buildClassifier( data );
         best_cr = new ClassRes( type,best,data );
         used_configs.put( best_conf, best_cr );

@@ -61,8 +61,17 @@ public class ResultsValidator
 //        String exp_id = "EXP/BEST_128_SMO_0";
 //        String exp_id = "EXP/MNIST_32_MLP_SIMPLE_4";
 //        String exp_id = "EXP\\MNIST_8_OF_ALL_SIMPLE_5";
-        String exp_id = "EXP/TIME_SMO_8_0.1_8";
-        int query_id = 12;
+        Instances train = ConverterUtils.DataSource.read("DATA/MAZOWIECKIE_TRAIN.arff");
+        train.setClassIndex( train.numAttributes() - 1 );
+        PREPARE_SPEED_DATA.countClasses( train );
+
+        Instances test = ConverterUtils.DataSource.read("DATA/MAZOWIECKIE_TEST.arff");
+        test.setClassIndex( test.numAttributes() - 1 );
+        PREPARE_SPEED_DATA.countClasses( test );
+
+
+        String exp_id = "EXP/MAZOWIECKIE_8_SMO_27";
+        int query_id = 1;
 
         String test_data_path = exp_id + "\\AGG\\Q_" + query_id + ".arff";
         String results_path_1 = exp_id + "\\AGG\\Q_" + query_id + "_MAJORITY.pred";

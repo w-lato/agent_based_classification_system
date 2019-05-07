@@ -1,0 +1,14 @@
+{
+    "paths" : {
+         "train" : "DATA/MAZOWIECKIE_TRAIN.arff",
+         "test"  : "DATA/MAZOWIECKIE_TEST.arff"
+    },
+    "agents" : {
+         "SMO"  : 8,
+    },
+    "split" : {
+         "method" : "OVERLAP",
+         "fill"  : 0.2
+    },
+    "class_strat" : "WEIGHTED"
+ }

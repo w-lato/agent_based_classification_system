@@ -203,7 +203,8 @@ public class ResultsHolder
                 attributes.add( att );
             }
         }
-        Attribute class_att = new Attribute("class",new ArrayList<String>(Arrays.asList("0", "1","2","3","4","5","6","7","8","9")));
+//        Attribute class_att = new Attribute("class",new ArrayList<String>(Arrays.asList("0", "1","2","3","4","5","6","7","8","9")));
+        Attribute class_att = new Attribute("class",new ArrayList<String>(Arrays.asList("30","40","50","60","70","80","90","100","110","120")));
         attributes.add(class_att);
 
         // create instances
@@ -213,9 +214,6 @@ public class ResultsHolder
         // over all instances
         for (int i = 0; i < N; i++)
         {
-            double[] aux = new double[ order.length * num_classes + 1 ];
-            // over the order of models
-//            System.out.print(i + " :: ");
             Instance to_add = new DenseInstance( order.length * num_classes + 1 );
             for (int j = 0; j < order.length; j++)
             {
@@ -223,15 +221,9 @@ public class ResultsHolder
                 for (int k = 0; k < num_classes; k++)
                 {
                     to_add.setValue(j*num_classes + k, class_prob[k]  );
-                    aux[ j*num_classes + k ] = class_prob[k];
-//                    System.out.print( class_prob[k] + ", " );
                 }
             }
             to_add.setMissing(to_add.numAttributes() -1);
-//            System.out.println("");
-            aux[ aux.length -1 ] = -1;// class val. is unknown
-//            System.out.println( "::: :: " + Arrays.toString( aux ) );
-//            System.out.println( i + " :: " + to_add );
             to_ret.add( to_add );
         }
 
@@ -252,7 +244,8 @@ public class ResultsHolder
             Attribute att = new Attribute(order[i]);
             attributes.add(att);
         }
-        Attribute class_att = new Attribute("class",new ArrayList<String>(Arrays.asList("0", "1","2","3","4","5","6","7","8","9")));
+//        Attribute class_att = new Attribute("class",new ArrayList<String>(Arrays.asList("0", "1","2","3","4","5","6","7","8","9")));
+        Attribute class_att = new Attribute("class",new ArrayList<String>(Arrays.asList("30","40","50","60","70","80","90","100","110","120")));
         attributes.add(class_att);
 
         // create instances
