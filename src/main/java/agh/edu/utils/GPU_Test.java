@@ -29,6 +29,8 @@ import weka.classifiers.functions.SMO;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -167,13 +169,60 @@ public class GPU_Test
         ParamsMLP params = new ParamsMLP( TRAIN_RAW );
 
         List<String> confs = params.getParamsCartProd();
-        TRAIN_RAW.stratify(10);
-        TRAIN_RAW = TRAIN_RAW.testCV(10,0);
+        TRAIN_RAW.stratify(100);
+        TRAIN_RAW = TRAIN_RAW.testCV(100,0);
 
         TEST_RAW.stratify(20);
         TEST_RAW = TEST_RAW.testCV(20,0);
+        System.out.println("TRAIN SIZE: " + TRAIN_RAW.size());
+        System.out.println("TEST SIZE: " + TEST_RAW.size());
         System.out.println( confs.size() );
-        for (int i = 3635; i < confs.size(); i++)
+
+        String[] arr = new String[]{
+                "3,0.1,LBFGS,CUBE,3,500,20",
+                "3,0.1,LBFGS,CUBE,3,500,50",
+                "3,0.1,LBFGS,CUBE,3,500,100",
+                "3,0.1,LBFGS,CUBE,2,500,5",
+                "3,0.1,LBFGS,CUBE,2,1000,5",
+                "3,0.1,LBFGS,CUBE,3,500,500",
+                "3,0.1,LBFGS,CUBE,2,1000,500",
+                "3,0.1,LBFGS,CUBE,2,500,100",
+                "3,0.1,LBFGS,CUBE,2,500,500",
+                "3,0.1,LBFGS,CUBE,2,1000,100",
+                "3,0.1,LBFGS,CUBE,2,1000,1000",
+                "3,0.1,LBFGS,CUBE,2,1000,20",
+                "3,0.1,LBFGS,CUBE,2,1000,50",
+                "3,0.1,LBFGS,CUBE,3,500,1000",
+                "3,0.1,LBFGS,CUBE,2,500,50",
+                "3,0.1,LBFGS,CUBE,2,500,1000",
+                "3,0.1,LBFGS,CUBE,2,500,20"
+        };
+//        List<String> cpu_confs_to_do = Arrays.asList( arr );
+//
+        arr = new String[]{
+                "0,0.1,LBFGS,CUBE,2,1000,100",
+                "3,0.1,LBFGS,CUBE,2,1000,5",
+                "3,0.1,LBFGS,CUBE,2,1000,500",
+                "0,0.1,LBFGS,CUBE,2,1000,20",
+                "0,0.1,LBFGS,CUBE,2,1000,500",
+                "3,0.1,LBFGS,CUBE,2,1000,100",
+                "3,0.1,LBFGS,CUBE,2,1000,1000",
+                "2,0.1,LBFGS,CUBE,2,1000,50",
+                "3,0.1,LBFGS,CUBE,2,1000,20",
+                "3,0.1,LBFGS,CUBE,2,1000,50",
+                "0,0.1,LBFGS,CUBE,2,1000,50",
+                "2,0.1,LBFGS,CUBE,2,1000,5",
+                "2,0.1,LBFGS,CUBE,2,1000,20",
+                "0,0.1,LBFGS,CUBE,2,1000,5",
+                "0,0.1,LBFGS,CUBE,2,1000,1000",
+                "2,0.1,LBFGS,CUBE,2,1000,500",
+                "2,0.1,LBFGS,CUBE,2,1000,100",
+                "2,0.1,LBFGS,CUBE,2,1000,1000"
+        };
+//
+        List<String> GPU_confs_to_do = Arrays.asList( arr );
+        confs = GPU_confs_to_do;
+        for (int i = 0; i < confs.size(); i++)
         {
             try {
                 MLP raw = (MLP) params.clasFromStr( confs.get( i ) );
@@ -192,5 +241,8 @@ public class GPU_Test
                 ex.printStackTrace();
             }
         }
+
+
+
     }
 }

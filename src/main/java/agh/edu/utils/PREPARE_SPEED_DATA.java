@@ -8,6 +8,7 @@ import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.NumericToNominal;
 import weka.filters.unsupervised.attribute.Reorder;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,14 +41,19 @@ public class PREPARE_SPEED_DATA
 
     public static void main(String[] args) throws Exception
     {
-        Instances data =  ConverterUtils.DataSource.read("D:\\FILTERED_SPEED_DATA\\FILTERED_PST-K-TCoCrN15N50A (województwo małopolskie).arff");
+        Instances data =  ConverterUtils.DataSource.read("D:\\MAZOWIECKIE_SPEED_LIMITS.arff\\MAZOWIECKIE_SPEED_LIMITS.arff");
         data.setClassIndex( data.numAttributes() - 1 );
 //
         countClasses( data );
 
-//        data.stratify( 10 );
-//        Instances test = data.testCV( 10, 0 );
-//        test.setClassIndex( data.numAttributes() - 1 );
+        data.stratify( 10 );
+        Instances test = data.testCV( 10, 0 );
+        test.setClassIndex( test.numAttributes() - 1 );
+        Files.write( Paths.get("D:\\MAZOWIECKIE_SPEED_LIMITS.arff\\MAZOWIECKIE_TEST.arff"), test.toString().getBytes() );
+
+        Instances train = data.trainCV(10,0);
+        train.setClassIndex(train.numAttributes() - 1);
+        Files.write( Paths.get("D:\\MAZOWIECKIE_SPEED_LIMITS.arff\\MAZOWIECKIE_TRAIN.arff"), train.toString().getBytes() );
 //
 //        data = data.trainCV(10,0);
 //
@@ -61,40 +67,40 @@ public class PREPARE_SPEED_DATA
 
 
 //        Instances all = null; //Instances.mergeInstances(null,null);
-        for (Path path : Files.list(Paths.get("D:\\speed-limit")).collect(Collectors.toList()))
-        {
-            String name = path.getFileName().toString();
-//            if( name.startsWith("PST-") )
-            if( name.contains("mazowieckie") )
-//            if( name.startsWith("P-") || name.startsWith("T-") )
-            {
-                System.out.println( name );
-                System.out.println( path.toAbsolutePath().toString() );
-                String new_path = "D:\\FILTERED_SPEED_DATA\\FILTERED_" + path.getFileName().toString();//.replaceAll("[ół() \\-]","");
-
-                // load and delete ID column
-                Instances data_set = ConverterUtils.DataSource.read( path.toString() );
-                data_set.deleteAttributeAt(0);
-
-                // set max_speed as the last column
-                Reorder reorder = new Reorder();
-                String order = "2-last,first";
-                reorder.setAttributeIndices(order);
-                reorder.setInputFormat( data_set );
-                data_set = Filter.useFilter( data_set, reorder );
-
-                // numeric max_speed to nominal
-                NumericToNominal convert = new NumericToNominal();
-                String[] options= new String[2];
-                options[0]="-R";
-                options[1]="last";  //range of variables to make numeric
-                convert.setInputFormat( data_set );
+//        for (Path path : Files.list(Paths.get("D:\\speed-limit")).collect(Collectors.toList()))
+//        {
+//            String name = path.getFileName().toString();
+////            if( name.startsWith("PST-") )
+//            if( name.contains("mazowieckie") )
+////            if( name.startsWith("P-") || name.startsWith("T-") )
+//            {
+//                System.out.println( name );
+//                System.out.println( path.toAbsolutePath().toString() );
+//                String new_path = "D:\\FILTERED_SPEED_DATA\\FILTERED_" + path.getFileName().toString();//.replaceAll("[ół() \\-]","");
 //
-                Instances new_data = Filter.useFilter(data_set, convert);
-                Files.write( Paths.get(  new_path ), new_data.toString().getBytes());
+//                // load and delete ID column
+//                Instances data_set = ConverterUtils.DataSource.read( path.toString() );
+//                data_set.deleteAttributeAt(0);
+//
+//                // set max_speed as the last column
+//                Reorder reorder = new Reorder();
+//                String order = "2-last,first";
+//                reorder.setAttributeIndices(order);
+//                reorder.setInputFormat( data_set );
+//                data_set = Filter.useFilter( data_set, reorder );
+//
+//                // numeric max_speed to nominal
+////                NumericToNominal convert = new NumericToNominal();
+////                String[] options= new String[2];
+////                options[0]="-R";
+////                options[1]="last";  //range of variables to make numeric
+////                convert.setInputFormat( data_set );
+//////
+////                Instances new_data = Filter.useFilter(data_set, convert);
+////                Files.write( Paths.get(  new_path ), new_data.toString().getBytes());
 //                Files.write( Paths.get(  new_path ), data_set.toString().getBytes());
-            }
-        }
+//            }
+//        }
 //        all.deleteAttributeAt(0);
 //        System.out.println( all.numAttributes() );
 //

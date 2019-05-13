@@ -70,8 +70,8 @@ public class ResultsValidator
         PREPARE_SPEED_DATA.countClasses( test );
 
 
-        String exp_id = "EXP/MAZOWIECKIE_8_SMO_27";
-        int query_id = 1;
+        String exp_id = "EXP/MAZOWIECKIE_8_SMO_28";
+        int query_id = 2;
 
         String test_data_path = exp_id + "\\AGG\\Q_" + query_id + ".arff";
         String results_path_1 = exp_id + "\\AGG\\Q_" + query_id + "_MAJORITY.pred";

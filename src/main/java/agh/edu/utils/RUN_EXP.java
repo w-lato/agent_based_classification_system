@@ -28,10 +28,10 @@ public class RUN_EXP
 
 
 
-        m.tell( new Master.SlaveOnlyExp("EXP/MAZOWIECKIE_8_SMO_27"), ActorRef.noSender());
+        m.tell( new Master.SlaveOnlyExp("EXP/MAZOWIECKIE_8_SMO_28"), ActorRef.noSender());
 //        Instances test = ConverterUtils.DataSource.read("D:\\FILTERED_SPEED_DATA\\FILTERED_PST-K-TCoCrN15N50A (województwo małopolskie).arff");
 //        Instances test = new ConverterUtils.DataSource("DATA/mnist_test.arff").getDataSet();
-        Instances test = new ConverterUtils.DataSource("DATA/MAZOWIECKIE_TRAIN.arff").getDataSet();
+        Instances test = new ConverterUtils.DataSource("DATA/MAZOWIECKIE_TEST.arff").getDataSet();
         m.tell( test, ActorRef.noSender());
     }
 }

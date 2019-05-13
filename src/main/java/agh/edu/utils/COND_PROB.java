@@ -36,6 +36,7 @@ public class COND_PROB
             if( it.getValue() >= acc_thresh ) B++;
             if( ctr == conf.length && (it.getValue() >= acc_thresh) ) AnB++;
         }
+//        System.out.println( conf[0] + " :: " + AnB );
         return (AnB / results.size()) / (B / results.size());
     }
 
@@ -45,7 +46,8 @@ public class COND_PROB
         Map<String,Double> results = new HashMap<>();
 
 //        List<String> res = Files.readAllLines(Paths.get("D:\\gpu_all_measures.txt") );
-        List<String> res = Files.readAllLines(Paths.get("D:\\MLP_GPU_ALL_CONFS.txt") );
+//        List<String> res = Files.readAllLines(Paths.get("D:\\MLP_GPU_ALL_CONFS.txt") );
+        List<String> res = Files.readAllLines(Paths.get("D:\\CLEANED_RESULTS\\GPU_ALL.txt") );
         String conf = "";
         for (String re : res)
         {
@@ -85,19 +87,19 @@ public class COND_PROB
                 .sorted( Map.Entry.comparingByValue())
                 .forEach( System.out::println );
 
-String s = "3,0.001,STOCHASTIC_GRADIENT_DESCENT";
+        String s = "3,0.001,STOCHASTIC_GRADIENT_DESCENT";
         Map<String[], Double> results_1 = new HashMap<>();
         for (Map.Entry<String, Double> stringDoubleEntry : results.entrySet()) {
             results_1.put( stringDoubleEntry.getKey().split(","), stringDoubleEntry.getValue() );
         }
-        System.out.println( calcProb(results_1,s.split(","),80.0) );
+        System.out.println( calcProb(results_1,s.split(","),85.0) );
 
 
         // generate permutations of configurations
         List<String[]> perms = new ArrayList<>();
         int[] keys =  new int[] {0,1,2,3,4,5,6};
 
-        String[] activations = {"RELU", "SOFTMAX", "CUBE"};
+        String[] activations = {"RELU", "TANH", "CUBE"};
         String[] opt_algo = {"CONJUGATE_GRADIENT","LBFGS", "STOCHASTIC_GRADIENT_DESCENT"};
         String[] updaters = {"ADAM","MOMENTUM","ADA_GRAD","RMS_PROP"};
         String[] num_of_layers = {"2", "3"};
@@ -122,8 +124,16 @@ String s = "3,0.001,STOCHASTIC_GRADIENT_DESCENT";
         }
         for (int[] perm : Combination.perms)
         {
-            int N = 3;
+            int N = 4;
             if( perm.length != N ) continue;
+
+            if( N == 1 )
+            {
+                for (int i = 0; i < params.get( perm[ 0 ] ).length; i++)
+                {
+                    perf.put( new String[]{ params.get( perm[0] )[i] }, 0.0 );
+                }
+            }
 
             if( N == 2 )
             {
@@ -132,7 +142,7 @@ String s = "3,0.001,STOCHASTIC_GRADIENT_DESCENT";
                 {
                     for (int j = 0; j < params.get( perm[ 1 ] ).length; j++)
                     {
-                           perf.put( new String[]{ params.get(0)[i], params.get(1)[j] }, 0.0 );
+                           perf.put( new String[]{ params.get( perm[0] )[i], params.get( perm[1] )[j] }, 0.0 );
                     }
                 }
             }
@@ -212,16 +222,23 @@ String s = "3,0.001,STOCHASTIC_GRADIENT_DESCENT";
         }
 
         perf.forEach( (k,v)-> {
-            perf.put( k, calcProb(results_1, k, 79.99) );
+            perf.put( k, calcProb(results_1, k, 84.99) );
         } );
 
 
+        List<String> st = new ArrayList<>();
         perf.entrySet().stream()
                 .sorted( Map.Entry.comparingByValue())
                 .forEach((x->{
-                    System.out.println( String.join(",", x.getKey()) + " :: " + x.getValue() );
+                    st.add( String.join(",", x.getKey()) + " & " + (x.getValue()*100) + "\\% \\\\" );
+//                    System.out.println( String.join(",", x.getKey()) + " & " + (x.getValue()*100) + "\\% \\\\");
                 }));
 
+        for (int i = st.size()-1; i >= 0; i--)
+        {
+            System.out.println( st.get(i) );
+            System.out.println( "\\hline" );
+        }
 //        results.forEach( (k,v)->{
 //            System.out.println( k + " : : " + v );
 //        } );

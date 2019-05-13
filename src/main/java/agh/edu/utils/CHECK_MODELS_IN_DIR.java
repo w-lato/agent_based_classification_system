@@ -18,7 +18,7 @@ public class CHECK_MODELS_IN_DIR
 {
     public static void main(String[] args) throws Exception
     {
-        String dir_path = "EXP/MAZOWIECKIE_8_SMO_27";
+        String dir_path = "EXP/MAZOWIECKIE_8_SMO_28";
         List<Path> models = Files.walk(Paths.get(dir_path)).filter(x->x.getFileName().toString().contains(".model")).collect(Collectors.toList());
 
         Instances test = ConverterUtils.DataSource.read( "DATA/MAZOWIECKIE_TEST.arff" );

@@ -36,10 +36,10 @@ public class AGG_DATA_PREP
     }
 
     public static void main(String[] args) throws Exception {
-        String[] order = "EXP/MAZOWIECKIE_8_SMO_27/SMO_4:EXP/MAZOWIECKIE_8_SMO_27/SMO_3:EXP/MAZOWIECKIE_8_SMO_27/SMO_1:EXP/MAZOWIECKIE_8_SMO_27/SMO_2:EXP/MAZOWIECKIE_8_SMO_27/SMO_8:EXP/MAZOWIECKIE_8_SMO_27/SMO_6:EXP/MAZOWIECKIE_8_SMO_27/SMO_7:EXP/MAZOWIECKIE_8_SMO_27/SMO_5".split(":");
+        String[] order = "EXP/MAZOWIECKIE_8_SMO_28/SMO_1:EXP/MAZOWIECKIE_8_SMO_28/SMO_2:EXP/MAZOWIECKIE_8_SMO_28/SMO_3:EXP/MAZOWIECKIE_8_SMO_28/SMO_4:EXP/MAZOWIECKIE_8_SMO_28/SMO_7:EXP/MAZOWIECKIE_8_SMO_28/SMO_5:EXP/MAZOWIECKIE_8_SMO_28/SMO_6:EXP/MAZOWIECKIE_8_SMO_28/SMO_8".split(":");
 
-        String path_to_train_probs = "EXP/MAZOWIECKIE_8_SMO_27/AGG/Q_RAW_2.res";
-        String path_to_test_probs = "EXP/MAZOWIECKIE_8_SMO_27/AGG/Q_RAW_1.res";
+        String path_to_train_probs = "EXP/MAZOWIECKIE_8_SMO_28/AGG/Q_RAW_1.res";
+        String path_to_test_probs = "EXP/MAZOWIECKIE_8_SMO_28/AGG/Q_RAW_2.res";
 
         String path_to_train_data = "DATA/MAZOWIECKIE_TRAIN.arff";
         String path_to_test_data = "DATA/MAZOWIECKIE_TEST.arff";
